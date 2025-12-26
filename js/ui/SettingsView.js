@@ -1,0 +1,259 @@
+/**
+ * SettingsView - Application settings management
+ *
+ * Features:
+ * - Dark/Light mode toggle
+ * - Load sample data
+ * - Import/Export JSON
+ * - Clear all data
+ * - App information
+ */
+
+import StateManager from '../services/StateManager.js';
+import DataService from '../services/DataService.js';
+
+export class SettingsView {
+    #modalId = 'settingsModal';
+    #theme = 'light';
+
+    constructor() {
+        this.#loadTheme();
+    }
+
+    /**
+     * Initialize settings
+     */
+    init() {
+        this.#applyTheme();
+        this.#setupEventListeners();
+    }
+
+    /**
+     * Open settings modal
+     */
+    open() {
+        const modal = document.getElementById(this.#modalId);
+        if (!modal) return;
+
+        // Update UI to reflect current settings
+        this.#updateSettingsUI();
+
+        modal.classList.remove('hidden', 'pointer-events-none');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.classList.add('opacity-100', 'pointer-events-auto');
+        }, 10);
+    }
+
+    /**
+     * Close settings modal
+     */
+    close() {
+        const modal = document.getElementById(this.#modalId);
+        if (!modal) return;
+
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    /**
+     * Setup event listeners
+     * @private
+     */
+    #setupEventListeners() {
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.#toggleTheme());
+        }
+
+        // Load sample data
+        const loadSampleBtn = document.getElementById('btnLoadSample');
+        if (loadSampleBtn) {
+            loadSampleBtn.addEventListener('click', () => this.#loadSampleData());
+        }
+
+        // Export data
+        const exportBtn = document.getElementById('btnExportSettings');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.#exportData());
+        }
+
+        // Import data
+        const importBtn = document.getElementById('btnImportSettings');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => this.#importData());
+        }
+
+        // Clear all data
+        const clearBtn = document.getElementById('btnClearSettings');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.#clearAllData());
+        }
+
+        // Close button
+        const closeBtn = document.querySelector('[data-modal-close="settingsModal"]');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.close());
+        }
+    }
+
+    /**
+     * Update settings UI to reflect current state
+     * @private
+     */
+    #updateSettingsUI() {
+        // Update theme toggle icon
+        const themeIcon = document.getElementById('themeIcon');
+        if (themeIcon) {
+            themeIcon.className = this.#theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        const themeLabel = document.getElementById('themeLabel');
+        if (themeLabel) {
+            themeLabel.textContent = this.#theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        }
+
+        // Update data statistics
+        const state = StateManager.getState();
+        const statsEl = document.getElementById('dataStats');
+        if (statsEl) {
+            statsEl.innerHTML = `
+                <div class="text-sm text-slate-600 dark:text-slate-400">
+                    <div><strong>${state.events.length}</strong> travel events</div>
+                    <div><strong>${state.constraints.length}</strong> constraints</div>
+                    <div>Fiscal Year: <strong>${state.fiscalYear}</strong></div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Toggle between dark and light theme
+     * @private
+     */
+    #toggleTheme() {
+        this.#theme = this.#theme === 'light' ? 'dark' : 'light';
+        this.#saveTheme();
+        this.#applyTheme();
+        this.#updateSettingsUI();
+    }
+
+    /**
+     * Apply current theme
+     * @private
+     */
+    #applyTheme() {
+        const html = document.documentElement;
+        if (this.#theme === 'dark') {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+    }
+
+    /**
+     * Load theme from localStorage
+     * @private
+     */
+    #loadTheme() {
+        const saved = localStorage.getItem('travelPlannerTheme');
+        if (saved) {
+            this.#theme = saved;
+        } else {
+            // Check system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                this.#theme = 'dark';
+            }
+        }
+    }
+
+    /**
+     * Save theme to localStorage
+     * @private
+     */
+    #saveTheme() {
+        localStorage.setItem('travelPlannerTheme', this.#theme);
+    }
+
+    /**
+     * Load sample data
+     * @private
+     */
+    async #loadSampleData() {
+        if (!confirm('This will replace your current data with sample data. Continue?')) {
+            return;
+        }
+
+        try {
+            // Fetch sample data
+            const response = await fetch('./data/SampleData2026.json');
+            if (!response.ok) {
+                throw new Error('Failed to load sample data');
+            }
+
+            const sampleData = await response.json();
+            StateManager.importState(sampleData);
+
+            alert('Sample data loaded successfully!');
+            this.#updateSettingsUI();
+        } catch (error) {
+            console.error('Error loading sample data:', error);
+            alert(`Failed to load sample data: ${error.message}`);
+        }
+    }
+
+    /**
+     * Export data to JSON file
+     * @private
+     */
+    #exportData() {
+        const state = StateManager.getState();
+        DataService.downloadJSON(state);
+        alert('Data exported successfully!');
+    }
+
+    /**
+     * Import data from JSON file
+     * @private
+     */
+    async #importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const contents = await DataService.readFile(file);
+                const data = DataService.importFromJSON(contents);
+                StateManager.importState(data);
+                alert('Data imported successfully!');
+                this.#updateSettingsUI();
+            } catch (error) {
+                alert(`Import failed: ${error.message}`);
+            }
+        };
+
+        input.click();
+    }
+
+    /**
+     * Clear all data
+     * @private
+     */
+    #clearAllData() {
+        if (!confirm('Are you sure? This will delete all events and constraints. This cannot be undone.')) {
+            return;
+        }
+
+        StateManager.clearAll();
+        alert('All data cleared successfully!');
+        this.#updateSettingsUI();
+    }
+}
+
+export default SettingsView;

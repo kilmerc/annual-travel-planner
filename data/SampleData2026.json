@@ -1,0 +1,179 @@
+{
+  "year": 2026,
+  "viewMode": "calendar",
+  "events": [
+    {
+      "id": "1704067200000",
+      "title": "London Division Visit",
+      "type": "division",
+      "location": "London",
+      "startDate": "2026-02-02",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1706659200000",
+      "title": "GTS All-Hands Meeting",
+      "type": "gts",
+      "location": "Charlotte",
+      "startDate": "2026-03-02",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1709251200000",
+      "title": "PI Planning - Spring",
+      "type": "pi",
+      "location": "London",
+      "startDate": "2026-04-06",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1711843200000",
+      "title": "Singapore Operations Review",
+      "type": "division",
+      "location": "Singapore",
+      "startDate": "2026-05-04",
+      "duration": 1,
+      "isFixed": false
+    },
+    {
+      "id": "1714435200000",
+      "title": "BP Team Offsite",
+      "type": "bp",
+      "location": "Austin",
+      "startDate": "2026-06-01",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1717027200000",
+      "title": "Berlin Tech Conference",
+      "type": "other",
+      "location": "Berlin",
+      "startDate": "2026-07-06",
+      "duration": 1,
+      "isFixed": false
+    },
+    {
+      "id": "1719619200000",
+      "title": "Austin Division Quarterly Review",
+      "type": "division",
+      "location": "Austin",
+      "startDate": "2026-08-03",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1722211200000",
+      "title": "PI Planning - Fall",
+      "type": "pi",
+      "location": "Charlotte",
+      "startDate": "2026-09-07",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1724803200000",
+      "title": "London Strategy Session",
+      "type": "division",
+      "location": "London",
+      "startDate": "2026-10-12",
+      "duration": 1,
+      "isFixed": false
+    },
+    {
+      "id": "1727395200000",
+      "title": "Year-End GTS All-Hands",
+      "type": "gts",
+      "location": "Charlotte",
+      "startDate": "2026-11-09",
+      "duration": 1,
+      "isFixed": true
+    },
+    {
+      "id": "1729987200000",
+      "title": "Holiday Planning Meeting",
+      "type": "bp",
+      "location": "Virtual",
+      "startDate": "2026-12-01",
+      "duration": 1,
+      "isFixed": true
+    }
+  ],
+  "constraints": [
+    {
+      "id": "1703462400000",
+      "title": "Winter Break",
+      "type": "vacation",
+      "startDate": "2025-12-22"
+    },
+    {
+      "id": "1705276800000",
+      "title": "New Year Holiday",
+      "type": "holiday",
+      "startDate": "2025-12-29"
+    },
+    {
+      "id": "1708300800000",
+      "title": "Presidents Day",
+      "type": "holiday",
+      "startDate": "2026-02-16"
+    },
+    {
+      "id": "1710720000000",
+      "title": "Kids Spring Camp",
+      "type": "preference",
+      "startDate": "2026-03-23"
+    },
+    {
+      "id": "1713139200000",
+      "title": "Memorial Day",
+      "type": "holiday",
+      "startDate": "2026-05-25"
+    },
+    {
+      "id": "1715558400000",
+      "title": "Summer Vacation - Europe",
+      "type": "vacation",
+      "startDate": "2026-06-22"
+    },
+    {
+      "id": "1718841600000",
+      "title": "Independence Day",
+      "type": "holiday",
+      "startDate": "2026-06-29"
+    },
+    {
+      "id": "1721260800000",
+      "title": "Q3 Planning Blackout",
+      "type": "blackout",
+      "startDate": "2026-07-27"
+    },
+    {
+      "id": "1723680000000",
+      "title": "Labor Day",
+      "type": "holiday",
+      "startDate": "2026-08-31"
+    },
+    {
+      "id": "1726099200000",
+      "title": "Kids Fall Camp",
+      "type": "preference",
+      "startDate": "2026-09-28"
+    },
+    {
+      "id": "1729728000000",
+      "title": "Thanksgiving Break",
+      "type": "vacation",
+      "startDate": "2026-11-23"
+    },
+    {
+      "id": "1732147200000",
+      "title": "Year-End Blackout",
+      "type": "blackout",
+      "startDate": "2026-12-21"
+    }
+  ]
+}

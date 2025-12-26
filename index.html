@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Business Travel Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./styles/custom.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fas fa-plane-departure text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-200">Travel Optimizer</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Annual Travel Planning</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-md p-1">
+                <button id="btnYearPrev" class="p-2 hover:bg-white dark:hover:bg-slate-600 rounded shadow-sm transition text-slate-700 dark:text-slate-300"><i class="fas fa-chevron-left"></i></button>
+                <span id="displayYear" class="px-4 font-semibold font-mono text-slate-700 dark:text-slate-200">2025</span>
+                <button id="btnYearNext" class="p-2 hover:bg-white dark:hover:bg-slate-600 rounded shadow-sm transition text-slate-700 dark:text-slate-300"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="h-8 w-px bg-slate-200 dark:bg-slate-600 mx-2"></div>
+
+            <button id="btnSettings" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" title="Settings">
+                <i class="fas fa-cog text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Metrics Bar -->
+    <div id="metricsBar" class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-2 flex gap-8 text-sm overflow-x-auto">
+        <!-- Populated by MetricsBar.js -->
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="mainContent" class="flex-1 overflow-x-auto overflow-y-hidden relative">
+        <!-- ViewManager renders here -->
+    </main>
+
+    <!-- Add Event/Constraint Modal -->
+    <div id="addModal" class="modal fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center opacity-0 pointer-events-none">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-700 dark:text-slate-200">Add to Plan</h3>
+                <button data-modal-close="addModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-6">
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-200 dark:border-slate-600 mb-6">
+                    <button class="tab-btn px-4 py-2 border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 font-medium" data-tab="trip">Plan Trip</button>
+                    <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" data-tab="constraint">Add Constraint</button>
+                </div>
+
+                <!-- Trip Form -->
+                <form id="tripForm" class="space-y-4 tab-content block">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Mode</label>
+                            <select id="tripMode" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                <option value="flexible">Flexible (Suggest Week)</option>
+                                <option value="fixed">Fixed Date</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Type</label>
+                            <select id="tripType" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                <option value="division">Division Visit</option>
+                                <option value="gts">GTS All-Hands</option>
+                                <option value="pi">PI Planning</option>
+                                <option value="bp">BP Team Meeting</option>
+                                <option value="other">Other Business</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Title</label>
+                        <input type="text" id="tripTitle" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London Team Visit">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location (City)</label>
+                        <input type="text" id="tripLocation" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London, Singapore, Austin">
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Required for optimization logic.</p>
+                    </div>
+
+                    <!-- Flexible Inputs -->
+                    <div id="flexibleInputs" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Target Quarter</label>
+                            <select id="tripQuarter" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                <option value="1">Q1 (Feb - Apr)</option>
+                                <option value="2">Q2 (May - Jul)</option>
+                                <option value="3">Q3 (Aug - Oct)</option>
+                                <option value="4">Q4 (Nov - Jan)</option>
+                            </select>
+                        </div>
+                        <button type="button" id="btnFindBest" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded shadow-sm font-medium transition">
+                            <i class="fas fa-magic mr-2"></i> Find Best Weeks
+                        </button>
+                    </div>
+
+                    <!-- Fixed Inputs -->
+                    <div id="fixedInputs" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
+                            <input type="date" id="tripDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
+                            <input type="date" id="tripEndDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        </div>
+                        <button type="button" id="btnSaveFixedTrip" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded shadow-sm font-medium transition">
+                            Save Trip
+                        </button>
+                    </div>
+
+                    <!-- Suggestions Result Area -->
+                    <div id="suggestionResults" class="hidden mt-4 space-y-2 max-h-40 overflow-y-auto border-t dark:border-slate-600 pt-4">
+                        <!-- Filled by ModalManager.js -->
+                    </div>
+                </form>
+
+                <!-- Constraint Form -->
+                <form id="constraintForm" class="space-y-4 tab-content hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Constraint Type</label>
+                        <select id="constraintType" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                            <option value="vacation">Personal Vacation (Hard Stop)</option>
+                            <option value="holiday">Company Holiday (Hard Stop)</option>
+                            <option value="blackout">Business Blackout (Hard Stop)</option>
+                            <option value="preference">Prefer No Travel (Soft)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Description</label>
+                        <input type="text" id="constraintTitle" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. Family Trip">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
+                        <input type="date" id="constraintDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
+                        <input type="date" id="constraintEndDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">If a constraint falls within Mon-Fri of any week, the entire week is blocked.</p>
+                    </div>
+                    <button type="button" id="btnSaveConstraint" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition">
+                        Add Constraint
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export/Import Modal -->
+    <div id="exportModal" class="modal fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center opacity-0 pointer-events-none">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 class="font-bold text-lg mb-4 text-slate-700 dark:text-slate-200">Data Management</h3>
+            <textarea id="ioTextarea" class="w-full h-32 border dark:border-slate-600 rounded p-2 text-xs font-mono mb-4 bg-slate-50 dark:bg-slate-900 dark:text-slate-200"></textarea>
+            <div class="flex gap-2">
+                <button id="btnExportData" class="flex-1 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 py-2 rounded text-sm font-medium text-slate-700 dark:text-slate-200">Download JSON</button>
+                <button id="btnImportData" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">Import JSON</button>
+            </div>
+            <button data-modal-close="exportModal" class="w-full mt-2 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 py-2">Close</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center opacity-0 pointer-events-none">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center sticky top-0">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-cog text-blue-600 dark:text-blue-400 text-xl"></i>
+                    <h3 class="font-bold text-lg text-slate-700 dark:text-slate-200">Settings</h3>
+                </div>
+                <button data-modal-close="settingsModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <!-- Appearance Section -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Appearance</h4>
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                        <button id="themeToggle" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 transition">
+                            <div class="flex items-center gap-3">
+                                <i id="themeIcon" class="fas fa-moon text-blue-600 dark:text-blue-400"></i>
+                                <span id="themeLabel" class="font-medium text-slate-700 dark:text-slate-200">Switch to Dark Mode</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Management Section -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Data Management</h4>
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                        <!-- Load Sample Data -->
+                        <button id="btnLoadSample" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-database text-purple-600 dark:text-purple-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Load Sample Data</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Populate with demo travel events</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400"></i>
+                        </button>
+
+                        <!-- Export Data -->
+                        <button id="btnExportSettings" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-download text-green-600 dark:text-green-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Export Data</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Download JSON backup</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-green-600 dark:group-hover:text-green-400"></i>
+                        </button>
+
+                        <!-- Import Data -->
+                        <button id="btnImportSettings" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-upload text-blue-600 dark:text-blue-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Import Data</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Restore from JSON backup</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"></i>
+                        </button>
+
+                        <!-- Clear Data -->
+                        <button id="btnClearSettings" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-trash-alt text-red-600 dark:text-red-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Clear All Data</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Delete all events and constraints</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-red-600 dark:group-hover:text-red-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Current Data Section -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Current Data</h4>
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                        <div id="dataStats" class="text-slate-600 dark:text-slate-400">
+                            <!-- Populated by SettingsView.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div>
+                    <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">About</h4>
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                            <div class="font-bold text-slate-700 dark:text-slate-200 mb-2">Smart Business Travel Planner</div>
+                            <div>Version 2.0.0</div>
+                            <div class="mt-2 text-xs">
+                                Built with vanilla JavaScript ES6 modules<br>
+                                No build tools required
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Application -->
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
