@@ -97,49 +97,48 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
 ### **3.1. Dashboard Header**
 
 * **Year Control:** Buttons to navigate between calendar years (e.g., 2025, 2026)
-* **View Toggles:** Switch between "Calendar", "Quarters", and "Timeline" modes
 * **Metrics Bar:** Real-time counters for "Weeks Traveling," "Weeks Home," and "Conflicts"
 * **Settings Button:** Access to application settings and data management
+* **Add Plan Button:** Opens modal for adding trips or constraints
 
-### **3.2. View Mode A: Calendar (Year-at-a-Glance)**
+### **3.2. Calendar View (Year-at-a-Glance)**
 
-* **Layout:** Grid of 12 month calendars (January through December)
-* **Visualization:**
-  * Color-coded days indicating events and constraints
-  * Legend showing color meanings for each event/constraint type
-  * Interactive days that open quick-add modal when clicked
-* **Event Types Colors:**
+The application uses a single, unified calendar view displaying all 12 months of the year.
+
+* **Layout:** Grid of 12 month calendars (January through December) in a responsive layout
+* **Day Cell Structure:**
+  * Day number displayed at top of cell
+  * Colored bars for each constraint that occurs on that specific date
+  * Colored bars for each event that occurs on that specific date
+  * Multiple items can appear on the same day as separate bars
+  * Only weekdays (Mon-Fri) display colored bars; weekends remain plain
+
+* **Visual Display Rules:**
+  * **Events and constraints appear ONLY on their actual dates**
+  * A 1-day constraint shows as a bar only on that 1 day
+  * A 3-day trip shows as bars on those 3 specific days
+  * Flexible trips (week-based) show bars on all 5 weekdays of their week
+  * If many items exist on one day, the cell becomes scrollable
+
+* **Interaction:**
+  * Click on a colored bar → Opens edit modal for that specific event/constraint
+  * Click on empty day space → Opens add modal with that date pre-filled
+  * Hover over bars → Shows tooltip with full details
+
+* **Event Type Colors:**
   * Division Visit: Blue
   * GTS All-Hands: Purple
   * PI Planning: Orange
   * BP Team Meeting: Green
   * Other Business: Gray
+
 * **Constraint Type Colors:**
   * Vacation: Red
   * Holiday: Pink
   * Blackout: Dark Rose
   * Preference: Yellow
 
-### **3.3. View Mode B: Quarterly Grid (Vertical List)**
-
-* **Layout:** Four columns representing Q1–Q4
-* **Structure:** Vertical stack of weeks
-* **Visualization:**
-  * Weeks explicitly labeled (e.g., "Week of 12th")
-  * Constraints render as colored background rows (Red for hard, Yellow for soft)
-  * Events render as colored cards inside the week slot
-  * Quick add buttons on hover
-
-### **3.4. View Mode C: Timeline (Gantt Style)**
-
-* **Layout:** Horizontal scrolling timeline
-* **Structure:** One continuous row of weeks grouped by Month headers
-* **Visualization:**
-  * **Constraints:** Rendered as hatched background patterns behind the grid
-  * **Events:** Rendered as compact, colored bars floating over the week columns
-  * **Interaction:** Hovering over empty slots reveals a "Quick Add" button
-
-### **3.5. Input Panel (Modal)**
+### **3.3. Input Panel (Modal)**
 
 * **Tabbed Interface:** "Plan Trip" vs. "Add Constraint"
 * **Smart Forms:**
@@ -155,7 +154,7 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
   * Save updates existing record instead of creating new one
   * All fields are editable including dates, title, type, and location
 
-### **3.6. Settings Panel**
+### **3.4. Settings Panel**
 
 * **Appearance:** Dark/Light mode toggle
 * **Data Management:**
@@ -195,10 +194,10 @@ TravelPlanner/
 │   │   ├── ScoringEngine.js    # Optimization algorithm
 │   │   └── DataService.js      # JSON import/export
 │   ├── ui/
-│   │   ├── ViewManager.js      # View orchestration
+│   │   ├── ViewManager.js      # View orchestration (Calendar only)
 │   │   ├── CalendarView.js     # Calendar rendering
-│   │   ├── QuartersView.js     # Quarterly grid rendering
-│   │   ├── TimelineView.js     # Gantt timeline rendering
+│   │   ├── QuartersView.js     # [Deprecated - not in use]
+│   │   ├── TimelineView.js     # [Deprecated - not in use]
 │   │   ├── MetricsBar.js       # Statistics display
 │   │   ├── ModalManager.js     # Modal dialogs
 │   │   └── SettingsView.js     # Settings panel
@@ -276,6 +275,17 @@ User Action → UI Component → StateManager → localStorage
   * Edit functionality for both events and constraints
   * Fixed timezone issues preventing date shifting/persistence problems
   * Week-level overlap detection for algorithm while displaying actual dates visually
+* **Phase 8 (UI Simplification & Visual Precision):** Complete. Features include:
+  * Removed Quarters and Timeline views - application now uses Calendar view exclusively
+  * Removed view toggle buttons from header
+  * **Visual precision:** Events and constraints now display ONLY on their actual dates
+    * 1-day constraint shows on 1 day only (not full week)
+    * 3-day trip shows on 3 days only (not full week)
+    * Flexible trips still show on all 5 weekdays of their assigned week
+  * **Algorithm unchanged:** Still operates at week level for scheduling logic
+  * Clicking colored bars opens edit modal (not just delete)
+  * Multiple overlapping events/constraints visible on same day as separate bars
+  * Improved calendar layout - all weeks visible, scrollable day cells when needed
 
 ## **6. Key Technical Decisions**
 
@@ -298,6 +308,32 @@ Native browser modules (no transpilation):
 - Timezone-aware date conversion (local time, not UTC) to prevent date shifting
 - ISO format (YYYY-MM-DD) for storage and interchange
 - Week overlap detection: If a constraint/trip falls within any Mon-Fri week, the entire week is blocked for algorithmic purposes
+
+### **6.4. Visual vs. Algorithmic Behavior (Critical Distinction)**
+
+The application maintains a clear separation between what users SEE and how the optimizer THINKS:
+
+**Visual Layer (CalendarView):**
+- Events and constraints display as colored bars **only on their actual dates**
+- A 1-day vacation (e.g., Friday Jan 17) shows as a single red bar on Friday only
+- A 3-day trip (e.g., Tue-Thu Jan 14-16) shows as three blue bars on those specific days
+- Users see precise date information matching their input
+
+**Algorithmic Layer (ScoringEngine):**
+- Operates at the **Mon-Fri week level** for scheduling decisions
+- If ANY date in a Mon-Fri week has a hard constraint, the ENTIRE week is blocked
+- If a trip occurs Wed-Fri of Week 3, scheduling another trip in Week 3 checks for location conflicts
+- Example: Friday vacation blocks the whole Mon-Fri week for new trip suggestions
+
+**Why This Design:**
+1. **Visual Precision:** Users need to see exact dates for planning (e.g., "I'm off Jan 17, not the whole week")
+2. **Week-Level Logic:** Business travel typically happens in week-long chunks, so the optimizer thinks in weeks
+3. **Best of Both:** Precise visual feedback + practical week-based scheduling recommendations
+
+**Implementation:**
+- `CalendarView.js` filters events/constraints by exact date range for display
+- `ScoringEngine.js` uses `overlapsWithWeek()` function to check Mon-Fri week conflicts
+- `Event` and `Constraint` models store precise dates without normalization (except flexible trips)
 
 ## **7. Running the Application**
 
