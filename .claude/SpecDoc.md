@@ -35,7 +35,8 @@ The system distinguishes between "Fixed" events (dates set by others) and "Flexi
 2. **GTS All-Hands:** Usually fixed dates
 3. **PI Planning:** Fixed dates, can be Physical or Virtual
 4. **BP Team Meetings:** Fixed or Flexible
-5. **Other Business:** Ad-hoc
+5. **Conference:** Professional conferences and events
+6. **Other Business:** Ad-hoc
 
 **B. Event Attributes:**
 
@@ -74,6 +75,7 @@ Core logic component that scores specific weeks:
    * *Effect:* Optimizer prevents scheduling
 
 2. **Soft Constraints (Prefer Not to Travel):**
+   * **Business Soft:** Business commitments that can be attended virtually (e.g., virtual meetings that can be joined from trip location)
    * **Preference:** Date ranges marked as "Low Preference" (e.g., Kids' camps)
    * *Effect:* Optimizer penalizes these weeks but allows them if necessary
 
@@ -98,6 +100,11 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
 
 * **Year Control:** Buttons to navigate between calendar years (e.g., 2025, 2026)
 * **Metrics Bar:** Real-time counters for "Weeks Traveling," "Weeks Home," and "Conflicts"
+  * **Clickable Metrics:** Conflicts metric is clickable when conflicts exist
+  * **Conflict Details Modal:** Clicking conflicts opens a detailed modal showing:
+    * Hard constraint conflicts (event overlapping with vacation/holiday/blackout)
+    * Double-booking conflicts (overlapping events in different locations)
+    * Each conflict displays event details, dates, and descriptions
 * **Settings Button:** Access to application settings and data management
 * **Add Plan Button:** Opens modal for adding trips or constraints
 
@@ -130,12 +137,14 @@ The application uses a single, unified calendar view displaying all 12 months of
   * GTS All-Hands: Purple
   * PI Planning: Orange
   * BP Team Meeting: Green
+  * Conference: Teal
   * Other Business: Gray
 
 * **Constraint Type Colors:**
   * Vacation: Red
   * Holiday: Pink
   * Blackout: Dark Rose
+  * Business Soft: Light Orange
   * Preference: Yellow
 
 ### **3.3. Input Panel (Modal)**
@@ -145,6 +154,16 @@ The application uses a single, unified calendar view displaying all 12 months of
   * **Trip Mode Toggle:** "Fixed Date" vs. "Flexible/Suggest"
     * **Flexible Mode:** Shows quarter selector and "Find Best Weeks" button with suggestion results
     * **Fixed Mode:** Shows start date and end date inputs for specific date ranges
+  * **Location Selection:**
+    * **Division Dropdown:** Pre-populated alphabetical list of division codes (DAL, VAL, VCE, VCW, VER, VIN, VNE, VNY, VSC, VTX, VUT)
+    * **Custom Location Option:** Select "Other Location (Custom)" to enter any city/location
+    * Ensures accurate location entry and reduces typing errors for common destinations
+  * **Multi-Add Mode:**
+    * Optional checkbox to enable adding multiple date ranges for the same trip type or constraint
+    * "Add Another Date Range" button appears when multi-add is enabled
+    * Each additional date range can be removed individually
+    * All date ranges are saved with the same title and type in a single save operation
+    * Useful for recurring events like monthly PI planning sessions
   * **Constraint Form:** Start date and end date inputs for specifying constraint duration
   * Dynamic suggestions area that appears when "Find Best Weeks" is clicked
   * Dark mode compatible inputs and styling
@@ -153,6 +172,7 @@ The application uses a single, unified calendar view displaying all 12 months of
   * Edit button (pencil icon) appears on all events and constraints
   * Save updates existing record instead of creating new one
   * All fields are editable including dates, title, type, and location
+  * **Cross-Type Editing:** When editing a constraint and switching to the trip tab (or vice versa), the system properly converts the item by deleting the original and creating the new type, preventing duplicate entries
 
 ### **3.4. Settings Panel**
 
@@ -221,7 +241,7 @@ TravelPlanner/
     {
       "id": "...",
       "title": "...",
-      "type": "division|gts|pi|bp|other",
+      "type": "division|gts|pi|bp|conference|other",
       "location": "...",
       "startDate": "YYYY-MM-DD",
       "endDate": "YYYY-MM-DD",  // Only for fixed trips with date ranges, null for flexible
@@ -233,7 +253,7 @@ TravelPlanner/
     {
       "id": "...",
       "title": "...",
-      "type": "vacation|holiday|blackout|preference",
+      "type": "vacation|holiday|blackout|business-soft|preference",
       "startDate": "YYYY-MM-DD",  // Actual start date of constraint
       "endDate": "YYYY-MM-DD"     // Actual end date of constraint
     }
@@ -286,6 +306,13 @@ User Action → UI Component → StateManager → localStorage
   * Clicking colored bars opens edit modal (not just delete)
   * Multiple overlapping events/constraints visible on same day as separate bars
   * Improved calendar layout - all weeks visible, scrollable day cells when needed
+* **Phase 9 (Enhanced UX & Data Entry):** Complete. Features include:
+  * **Division Location Dropdown:** Pre-populated alphabetical dropdown of 11 division codes with custom location fallback
+  * **Multi-Add Mode:** Ability to add multiple date ranges for the same event type or constraint in a single operation
+  * **Conference Trip Type:** Added "Conference" as a distinct trip type category
+  * **Business Soft Constraint:** New soft constraint type for virtual/flexible business commitments
+  * **Clickable Metrics:** Conflicts metric opens detailed modal showing all conflict information with categorization
+  * **Cross-Type Edit Fix:** Proper handling when converting constraints to trips (or vice versa) during edit operations
 
 ## **6. Key Technical Decisions**
 
