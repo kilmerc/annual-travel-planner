@@ -213,6 +213,30 @@ export class ModalManager {
             tripLocationSelect.addEventListener('change', () => this.#toggleLocationInput());
         }
 
+        // Multi-add mode toggle for trips
+        const multiAddMode = document.getElementById('multiAddMode');
+        if (multiAddMode) {
+            multiAddMode.addEventListener('change', () => this.#toggleMultiAddMode());
+        }
+
+        // Multi-add mode toggle for constraints
+        const multiAddModeConstraint = document.getElementById('multiAddModeConstraint');
+        if (multiAddModeConstraint) {
+            multiAddModeConstraint.addEventListener('change', () => this.#toggleMultiAddModeConstraint());
+        }
+
+        // Add date range button for trips
+        const btnAddDateRange = document.getElementById('btnAddDateRange');
+        if (btnAddDateRange) {
+            btnAddDateRange.addEventListener('click', () => this.#addDateRangeInput());
+        }
+
+        // Add date range button for constraints
+        const btnAddConstraintDateRange = document.getElementById('btnAddConstraintDateRange');
+        if (btnAddConstraintDateRange) {
+            btnAddConstraintDateRange.addEventListener('click', () => this.#addConstraintDateRangeInput());
+        }
+
         // Find best weeks button
         const findBestBtn = document.getElementById('btnFindBest');
         if (findBestBtn) {
@@ -333,6 +357,112 @@ export class ModalManager {
     }
 
     /**
+     * Toggle multi-add mode for trips
+     * @private
+     */
+    #toggleMultiAddMode() {
+        const isChecked = document.getElementById('multiAddMode').checked;
+        const btnAddDateRange = document.getElementById('btnAddDateRange');
+
+        if (isChecked) {
+            btnAddDateRange.classList.remove('hidden');
+        } else {
+            btnAddDateRange.classList.add('hidden');
+            // Remove extra date ranges, keep only the first
+            const container = document.getElementById('dateRangesContainer');
+            const dateRanges = container.querySelectorAll('.date-range-group');
+            dateRanges.forEach((range, index) => {
+                if (index > 0) range.remove();
+            });
+        }
+    }
+
+    /**
+     * Toggle multi-add mode for constraints
+     * @private
+     */
+    #toggleMultiAddModeConstraint() {
+        const isChecked = document.getElementById('multiAddModeConstraint').checked;
+        const btnAddConstraintDateRange = document.getElementById('btnAddConstraintDateRange');
+
+        if (isChecked) {
+            btnAddConstraintDateRange.classList.remove('hidden');
+        } else {
+            btnAddConstraintDateRange.classList.add('hidden');
+            // Remove extra date ranges, keep only the first
+            const container = document.getElementById('constraintDateRangesContainer');
+            const dateRanges = container.querySelectorAll('.constraint-date-range-group');
+            dateRanges.forEach((range, index) => {
+                if (index > 0) range.remove();
+            });
+        }
+    }
+
+    /**
+     * Add a new date range input for trips
+     * @private
+     */
+    #addDateRangeInput() {
+        const container = document.getElementById('dateRangesContainer');
+        const dateRangeCount = container.querySelectorAll('.date-range-group').length;
+
+        const newRange = document.createElement('div');
+        newRange.className = 'date-range-group space-y-2 p-3 border dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900/50 mb-2 relative';
+        newRange.innerHTML = `
+            <button type="button" class="remove-date-range absolute top-2 right-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                <i class="fas fa-times-circle"></i>
+            </button>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
+                <input type="date" class="trip-start-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
+                <input type="date" class="trip-end-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+            </div>
+        `;
+
+        // Add remove button listener
+        newRange.querySelector('.remove-date-range').addEventListener('click', () => {
+            newRange.remove();
+        });
+
+        container.appendChild(newRange);
+    }
+
+    /**
+     * Add a new date range input for constraints
+     * @private
+     */
+    #addConstraintDateRangeInput() {
+        const container = document.getElementById('constraintDateRangesContainer');
+        const dateRangeCount = container.querySelectorAll('.constraint-date-range-group').length;
+
+        const newRange = document.createElement('div');
+        newRange.className = 'constraint-date-range-group space-y-2 p-3 border dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900/50 mb-2 relative';
+        newRange.innerHTML = `
+            <button type="button" class="remove-constraint-date-range absolute top-2 right-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                <i class="fas fa-times-circle"></i>
+            </button>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
+                <input type="date" class="constraint-start-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
+                <input type="date" class="constraint-end-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+            </div>
+        `;
+
+        // Add remove button listener
+        newRange.querySelector('.remove-constraint-date-range').addEventListener('click', () => {
+            newRange.remove();
+        });
+
+        container.appendChild(newRange);
+    }
+
+    /**
      * Get suggestions for flexible trip
      * @private
      */
@@ -434,17 +564,24 @@ export class ModalManager {
     #saveFixedTrip() {
         const title = document.getElementById('tripTitle').value;
         const location = document.getElementById('tripLocation').value;
-        const startDateVal = document.getElementById('tripDate').value;
-        const endDateVal = document.getElementById('tripEndDate').value;
         const type = document.getElementById('tripType').value;
+        const isMultiAdd = document.getElementById('multiAddMode').checked;
 
-        if (!title || !startDateVal || !endDateVal) {
-            alert('Title, Start Date, and End Date are required');
+        if (!title) {
+            alert('Title is required');
             return;
         }
 
         if (this.#editingEventId) {
             // Update existing event
+            const startDateVal = document.getElementById('tripDate').value;
+            const endDateVal = document.getElementById('tripEndDate').value;
+
+            if (!startDateVal || !endDateVal) {
+                alert('Start Date and End Date are required');
+                return;
+            }
+
             StateManager.updateEvent(this.#editingEventId, {
                 title,
                 location,
@@ -456,16 +593,43 @@ export class ModalManager {
             });
             this.#editingEventId = null;
         } else {
-            // Add new event
-            StateManager.addEvent({
-                id: Date.now().toString(),
-                title,
-                location,
-                type,
-                startDate: startDateVal,
-                endDate: endDateVal,
-                duration: 1,
-                isFixed: true
+            // Add new event(s)
+            const container = document.getElementById('dateRangesContainer');
+            const dateRangeGroups = container.querySelectorAll('.date-range-group');
+
+            let allValid = true;
+            const dateRanges = [];
+
+            dateRangeGroups.forEach(group => {
+                const startInput = group.querySelector('.trip-start-date');
+                const endInput = group.querySelector('.trip-end-date');
+                const startDateVal = startInput.value;
+                const endDateVal = endInput.value;
+
+                if (startDateVal && endDateVal) {
+                    dateRanges.push({ startDate: startDateVal, endDate: endDateVal });
+                } else if (startDateVal || endDateVal) {
+                    allValid = false;
+                }
+            });
+
+            if (!allValid || dateRanges.length === 0) {
+                alert('Please fill in both Start Date and End Date for all date ranges');
+                return;
+            }
+
+            // Create an event for each date range
+            dateRanges.forEach(range => {
+                StateManager.addEvent({
+                    id: Date.now().toString() + Math.random(),
+                    title,
+                    location,
+                    type,
+                    startDate: range.startDate,
+                    endDate: range.endDate,
+                    duration: 1,
+                    isFixed: true
+                });
             });
         }
 
@@ -473,6 +637,8 @@ export class ModalManager {
 
         // Reset form
         document.getElementById('tripForm').reset();
+        document.getElementById('multiAddMode').checked = false;
+        this.#toggleMultiAddMode();
     }
 
     /**
@@ -482,16 +648,23 @@ export class ModalManager {
     #saveConstraint() {
         const title = document.getElementById('constraintTitle').value;
         const type = document.getElementById('constraintType').value;
-        const startDateVal = document.getElementById('constraintDate').value;
-        const endDateVal = document.getElementById('constraintEndDate').value;
+        const isMultiAdd = document.getElementById('multiAddModeConstraint').checked;
 
-        if (!title || !startDateVal || !endDateVal) {
-            alert('Title, Start Date, and End Date are required');
+        if (!title) {
+            alert('Title is required');
             return;
         }
 
         if (this.#editingConstraintId) {
             // Update existing constraint
+            const startDateVal = document.getElementById('constraintDate').value;
+            const endDateVal = document.getElementById('constraintEndDate').value;
+
+            if (!startDateVal || !endDateVal) {
+                alert('Start Date and End Date are required');
+                return;
+            }
+
             StateManager.updateConstraint(this.#editingConstraintId, {
                 title,
                 type,
@@ -500,13 +673,40 @@ export class ModalManager {
             });
             this.#editingConstraintId = null;
         } else {
-            // Add new constraint
-            StateManager.addConstraint({
-                id: Date.now().toString(),
-                title,
-                type,
-                startDate: startDateVal,
-                endDate: endDateVal
+            // Add new constraint(s)
+            const container = document.getElementById('constraintDateRangesContainer');
+            const dateRangeGroups = container.querySelectorAll('.constraint-date-range-group');
+
+            let allValid = true;
+            const dateRanges = [];
+
+            dateRangeGroups.forEach(group => {
+                const startInput = group.querySelector('.constraint-start-date');
+                const endInput = group.querySelector('.constraint-end-date');
+                const startDateVal = startInput.value;
+                const endDateVal = endInput.value;
+
+                if (startDateVal && endDateVal) {
+                    dateRanges.push({ startDate: startDateVal, endDate: endDateVal });
+                } else if (startDateVal || endDateVal) {
+                    allValid = false;
+                }
+            });
+
+            if (!allValid || dateRanges.length === 0) {
+                alert('Please fill in both Start Date and End Date for all date ranges');
+                return;
+            }
+
+            // Create a constraint for each date range
+            dateRanges.forEach(range => {
+                StateManager.addConstraint({
+                    id: Date.now().toString() + Math.random(),
+                    title,
+                    type,
+                    startDate: range.startDate,
+                    endDate: range.endDate
+                });
             });
         }
 
@@ -514,6 +714,8 @@ export class ModalManager {
 
         // Reset form
         document.getElementById('constraintForm').reset();
+        document.getElementById('multiAddModeConstraint').checked = false;
+        this.#toggleMultiAddModeConstraint();
     }
 
     /**

@@ -133,14 +133,25 @@
 
                     <!-- Fixed Inputs -->
                     <div id="fixedInputs" class="hidden space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
-                            <input type="date" id="tripDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <input type="checkbox" id="multiAddMode" class="w-4 h-4 text-blue-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500">
+                            <label for="multiAddMode" class="text-xs font-medium text-slate-600 dark:text-slate-400">Multi-Add Mode (add multiple date ranges)</label>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
-                            <input type="date" id="tripEndDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        <div id="dateRangesContainer">
+                            <div class="date-range-group space-y-2 p-3 border dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900/50 mb-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
+                                    <input type="date" id="tripDate" class="trip-start-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
+                                    <input type="date" id="tripEndDate" class="trip-end-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                </div>
+                            </div>
                         </div>
+                        <button type="button" id="btnAddDateRange" class="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded shadow-sm font-medium transition hidden">
+                            <i class="fas fa-plus mr-2"></i>Add Another Date Range
+                        </button>
                         <button type="button" id="btnSaveFixedTrip" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded shadow-sm font-medium transition">
                             Save Trip
                         </button>
@@ -167,15 +178,26 @@
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Description</label>
                         <input type="text" id="constraintTitle" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. Family Trip">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
-                        <input type="date" id="constraintDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="multiAddModeConstraint" class="w-4 h-4 text-red-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-red-500">
+                        <label for="multiAddModeConstraint" class="text-xs font-medium text-slate-600 dark:text-slate-400">Multi-Add Mode (add multiple date ranges)</label>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
-                        <input type="date" id="constraintEndDate" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">If a constraint falls within Mon-Fri of any week, the entire week is blocked.</p>
+                    <div id="constraintDateRangesContainer">
+                        <div class="constraint-date-range-group space-y-2 p-3 border dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900/50 mb-2">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Start Date</label>
+                                <input type="date" id="constraintDate" class="constraint-start-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">End Date</label>
+                                <input type="date" id="constraintEndDate" class="constraint-end-date w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">If a constraint falls within Mon-Fri of any week, the entire week is blocked.</p>
+                            </div>
+                        </div>
                     </div>
+                    <button type="button" id="btnAddConstraintDateRange" class="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded shadow-sm font-medium transition hidden">
+                        <i class="fas fa-plus mr-2"></i>Add Another Date Range
+                    </button>
                     <button type="button" id="btnSaveConstraint" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition">
                         Add Constraint
                     </button>
