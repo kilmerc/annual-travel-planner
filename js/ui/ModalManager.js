@@ -44,6 +44,11 @@ export class ModalManager {
         document.getElementById('tripForm').reset();
         document.getElementById('constraintForm').reset();
 
+        // Reset location dropdown and hide custom input
+        document.getElementById('tripLocationSelect').value = '';
+        document.getElementById('tripLocation').classList.add('hidden');
+        document.getElementById('tripLocation').value = '';
+
         if (prefilledDate) {
             document.getElementById('tripDate').value = prefilledDate;
             document.getElementById('tripEndDate').value = prefilledDate;
@@ -80,9 +85,22 @@ export class ModalManager {
 
         // Pre-fill form with event data
         document.getElementById('tripTitle').value = event.title || '';
-        document.getElementById('tripLocation').value = event.location || '';
         document.getElementById('tripType').value = event.type || 'division';
         document.getElementById('tripMode').value = event.isFixed ? 'fixed' : 'flexible';
+
+        // Handle location - check if it's a division code or custom location
+        const divisionCodes = ['DAL', 'VAL', 'VCE', 'VCW', 'VER', 'VIN', 'VNE', 'VNY', 'VSC', 'VTX', 'VUT'];
+        const location = event.location || '';
+
+        if (divisionCodes.includes(location.toUpperCase())) {
+            document.getElementById('tripLocationSelect').value = location.toUpperCase();
+            document.getElementById('tripLocation').value = location.toUpperCase();
+            document.getElementById('tripLocation').classList.add('hidden');
+        } else {
+            document.getElementById('tripLocationSelect').value = 'custom';
+            document.getElementById('tripLocation').value = location;
+            document.getElementById('tripLocation').classList.remove('hidden');
+        }
 
         if (event.isFixed && event.endDate) {
             document.getElementById('tripDate').value = event.startDate;
@@ -189,6 +207,12 @@ export class ModalManager {
             tripModeSelect.addEventListener('change', () => this.#toggleTripMode());
         }
 
+        // Location dropdown toggle
+        const tripLocationSelect = document.getElementById('tripLocationSelect');
+        if (tripLocationSelect) {
+            tripLocationSelect.addEventListener('change', () => this.#toggleLocationInput());
+        }
+
         // Find best weeks button
         const findBestBtn = document.getElementById('btnFindBest');
         if (findBestBtn) {
@@ -287,6 +311,24 @@ export class ModalManager {
         } else {
             flexibleInputs.classList.add('hidden');
             fixedInputs.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Toggle location input (dropdown vs custom text)
+     * @private
+     */
+    #toggleLocationInput() {
+        const selectValue = document.getElementById('tripLocationSelect').value;
+        const customInput = document.getElementById('tripLocation');
+
+        if (selectValue === 'custom') {
+            customInput.classList.remove('hidden');
+            customInput.value = '';
+            customInput.focus();
+        } else {
+            customInput.classList.add('hidden');
+            customInput.value = selectValue;
         }
     }
 

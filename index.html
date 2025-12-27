@@ -95,8 +95,23 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location (City)</label>
-                        <input type="text" id="tripLocation" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London, Singapore, Austin">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
+                        <select id="tripLocationSelect" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                            <option value="">Select Division...</option>
+                            <option value="DAL">DAL</option>
+                            <option value="VAL">VAL</option>
+                            <option value="VCE">VCE</option>
+                            <option value="VCW">VCW</option>
+                            <option value="VER">VER</option>
+                            <option value="VIN">VIN</option>
+                            <option value="VNE">VNE</option>
+                            <option value="VNY">VNY</option>
+                            <option value="VSC">VSC</option>
+                            <option value="VTX">VTX</option>
+                            <option value="VUT">VUT</option>
+                            <option value="custom">Other Location (Custom)...</option>
+                        </select>
+                        <input type="text" id="tripLocation" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 hidden" placeholder="Enter city (e.g. London, Singapore, Austin)">
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Required for optimization logic.</p>
                     </div>
 
