@@ -13,6 +13,7 @@ import ScoringEngine from '../services/ScoringEngine.js';
 
 export class MetricsBar {
     #container = null;
+    #currentMetrics = null;
 
     /**
      * Initialize the metrics bar
@@ -29,8 +30,23 @@ export class MetricsBar {
         EventBus.on('constraint:added', () => this.update());
         EventBus.on('constraint:deleted', () => this.update());
 
+        // Setup event listeners
+        this.#setupEventListeners();
+
         // Initial render
         this.update();
+    }
+
+    /**
+     * Setup event listeners for clickable metrics
+     * @private
+     */
+    #setupEventListeners() {
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#metricConflicts')) {
+                this.#showConflictsModal();
+            }
+        });
     }
 
     /**
@@ -67,6 +83,7 @@ export class MetricsBar {
         if (!this.#container) return;
 
         const metrics = this.calculate();
+        this.#currentMetrics = metrics;
 
         this.#container.innerHTML = `
             <div class="flex items-center gap-2">
@@ -79,16 +96,99 @@ export class MetricsBar {
                 <span class="font-semibold text-slate-700 dark:text-slate-300">Weeks Home:</span>
                 <span id="statHomeWeeks" class="font-mono font-bold text-green-600 dark:text-green-400">${metrics.weeksHome}</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div id="metricConflicts" class="flex items-center gap-2 ${metrics.conflicts > 0 ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded px-2 py-1 -mx-2 transition' : ''}">
                 <i class="fas fa-exclamation-triangle ${metrics.conflicts > 0 ? 'text-red-500 dark:text-red-400' : 'text-slate-300 dark:text-slate-600'}"></i>
                 <span class="font-semibold text-slate-700 dark:text-slate-300">Conflicts:</span>
                 <span id="statConflicts" class="font-mono font-bold ${metrics.conflicts > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-600'}">${metrics.conflicts}</span>
+                ${metrics.conflicts > 0 ? '<i class="fas fa-chevron-right text-xs text-slate-400 ml-1"></i>' : ''}
             </div>
             <div class="flex-grow"></div>
             <button id="btnAddPlan" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md text-sm font-medium shadow-sm transition flex items-center gap-2">
                 <i class="fas fa-plus"></i> Plan Travel / Constraint
             </button>
         `;
+    }
+
+    /**
+     * Show conflicts modal
+     * @private
+     */
+    #showConflictsModal() {
+        if (!this.#currentMetrics || this.#currentMetrics.conflicts === 0) {
+            return;
+        }
+
+        const modal = document.getElementById('conflictsModal');
+        const content = document.getElementById('conflictsContent');
+
+        if (!modal || !content) return;
+
+        // Populate modal content
+        if (this.#currentMetrics.conflictDetails.length === 0) {
+            content.innerHTML = '<p class="text-slate-500 dark:text-slate-400">No conflicts found.</p>';
+        } else {
+            content.innerHTML = `
+                <div class="space-y-4">
+                    ${this.#currentMetrics.conflictDetails.map((conflict, index) => this.#renderConflict(conflict, index)).join('')}
+                </div>
+            `;
+        }
+
+        // Open modal
+        this.#openModal(modal);
+    }
+
+    /**
+     * Render a single conflict
+     * @private
+     */
+    #renderConflict(conflict, index) {
+        if (conflict.type === 'hard-constraint') {
+            return `
+                <div class="border border-red-200 dark:border-red-800 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mt-1"></i>
+                        <div class="flex-1">
+                            <div class="font-bold text-red-900 dark:text-red-200 mb-1">Hard Constraint Conflict</div>
+                            <div class="text-sm text-slate-700 dark:text-slate-300">${conflict.message}</div>
+                            <div class="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                                <div><strong>Event:</strong> ${conflict.event.title} (${conflict.event.startDate} to ${conflict.event.endDate || conflict.event.startDate})</div>
+                                <div><strong>Constraint:</strong> ${conflict.constraint.title} (${conflict.constraint.startDate} to ${conflict.constraint.endDate})</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (conflict.type === 'double-booking') {
+            return `
+                <div class="border border-orange-200 dark:border-orange-800 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-calendar-times text-orange-600 dark:text-orange-400 text-xl mt-1"></i>
+                        <div class="flex-1">
+                            <div class="font-bold text-orange-900 dark:text-orange-200 mb-1">Double Booking</div>
+                            <div class="text-sm text-slate-700 dark:text-slate-300">${conflict.message}</div>
+                            <div class="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                                <div><strong>Event 1:</strong> ${conflict.event1.title} (${conflict.event1.startDate} to ${conflict.event1.endDate || conflict.event1.startDate})</div>
+                                <div><strong>Event 2:</strong> ${conflict.event2.title} (${conflict.event2.startDate} to ${conflict.event2.endDate || conflict.event2.startDate})</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        return '';
+    }
+
+    /**
+     * Open modal with animation
+     * @private
+     */
+    #openModal(modal) {
+        modal.classList.remove('hidden', 'pointer-events-none');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.classList.add('opacity-100', 'pointer-events-auto');
+        }, 10);
     }
 
     /**
