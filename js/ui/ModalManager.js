@@ -592,6 +592,28 @@ export class ModalManager {
                 isFixed: true
             });
             this.#editingEventId = null;
+        } else if (this.#editingConstraintId) {
+            // Converting constraint to trip - delete constraint and create trip
+            const startDateVal = document.getElementById('tripDate').value;
+            const endDateVal = document.getElementById('tripEndDate').value;
+
+            if (!startDateVal || !endDateVal) {
+                alert('Start Date and End Date are required');
+                return;
+            }
+
+            StateManager.deleteConstraint(this.#editingConstraintId);
+            StateManager.addEvent({
+                id: Date.now().toString(),
+                title,
+                location,
+                type,
+                startDate: startDateVal,
+                endDate: endDateVal,
+                duration: 1,
+                isFixed: true
+            });
+            this.#editingConstraintId = null;
         } else {
             // Add new event(s)
             const container = document.getElementById('dateRangesContainer');
@@ -672,6 +694,25 @@ export class ModalManager {
                 endDate: endDateVal
             });
             this.#editingConstraintId = null;
+        } else if (this.#editingEventId) {
+            // Converting trip to constraint - delete event and create constraint
+            const startDateVal = document.getElementById('constraintDate').value;
+            const endDateVal = document.getElementById('constraintEndDate').value;
+
+            if (!startDateVal || !endDateVal) {
+                alert('Start Date and End Date are required');
+                return;
+            }
+
+            StateManager.deleteEvent(this.#editingEventId);
+            StateManager.addConstraint({
+                id: Date.now().toString(),
+                title,
+                type,
+                startDate: startDateVal,
+                endDate: endDateVal
+            });
+            this.#editingEventId = null;
         } else {
             // Add new constraint(s)
             const container = document.getElementById('constraintDateRangesContainer');
