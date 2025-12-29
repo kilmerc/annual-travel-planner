@@ -111,6 +111,14 @@ class TravelPlannerApp {
                 this.settingsView.open();
             });
         }
+
+        // Help button
+        const btnHelp = document.getElementById('btnHelp');
+        if (btnHelp) {
+            btnHelp.addEventListener('click', () => {
+                TutorialService.start();
+            });
+        }
     }
 
     /**

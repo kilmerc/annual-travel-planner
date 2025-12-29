@@ -56,11 +56,13 @@ class TutorialService {
      * Check if this is the user's first time and show tutorial
      */
     checkFirstTime() {
+        console.log('Checking first time tutorial...', { hasCompletedTutorial: this.#hasCompletedTutorial });
         if (!this.#hasCompletedTutorial) {
-            // Small delay to let the UI fully render
+            console.log('First time detected - will start tutorial in 1 second');
+            // Delay to let the UI fully render (calendar, metrics, etc.)
             setTimeout(() => {
                 this.start();
-            }, 500);
+            }, 1000);
         }
     }
 
@@ -68,7 +70,12 @@ class TutorialService {
      * Start the tutorial
      */
     start() {
+        console.log('Starting tutorial...');
         this.#initDriver();
+        if (!this.#driver) {
+            console.error('Failed to initialize driver.js - tutorial cannot start');
+            return;
+        }
         this.#driver.setSteps(this.#getSteps());
         this.#driver.drive();
     }
