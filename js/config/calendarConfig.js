@@ -118,6 +118,28 @@ export const BUILT_IN_LOCATIONS = Object.freeze([
     'DAL', 'VAL', 'VCE', 'VCW', 'VER', 'VIN', 'VNE', 'VNY', 'VSC', 'VTX', 'VUT'
 ]);
 
+// Backward compatibility exports for tests
+export const EVENT_TYPES = BUILT_IN_EVENT_TYPES;
+
+export const EVENT_TYPE_LABELS = Object.freeze({
+    division: DEFAULT_EVENT_TYPE_CONFIGS.division.label,
+    gts: DEFAULT_EVENT_TYPE_CONFIGS.gts.label,
+    pi: DEFAULT_EVENT_TYPE_CONFIGS.pi.label,
+    bp: DEFAULT_EVENT_TYPE_CONFIGS.bp.label,
+    other: DEFAULT_EVENT_TYPE_CONFIGS.other.label
+});
+
+export const CONSTRAINT_TYPES = BUILT_IN_CONSTRAINT_TYPES;
+
+export const CONSTRAINT_TYPE_LABELS = Object.freeze({
+    vacation: 'Personal Vacation (Hard Stop)',
+    holiday: 'Company Holiday (Hard Stop)',
+    blackout: 'Business Blackout (Hard Stop)',
+    preference: 'Prefer No Travel (Soft)'
+});
+
+export const HARD_CONSTRAINT_TYPES = Object.freeze(['vacation', 'holiday', 'blackout']);
+
 /**
  * Get quarter for a given month index
  * @param {number} monthIndex - Month index (0-11)

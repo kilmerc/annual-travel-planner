@@ -10,18 +10,26 @@
  * to check the isHardStop flag.
  */
 
+import { BUILT_IN_CONSTRAINT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO } from '../services/DateService.js';
+
+// Counter to ensure unique IDs
+let idCounter = 0;
 
 export class Constraint {
     constructor({ id, title, type, startDate, endDate = null }) {
-        this.id = id || Date.now().toString();
+        this.id = id || `${Date.now()}-${idCounter++}`;
         this.title = title;
         this.type = type;
+
+        // Validate input before processing
+        this.#validateInput(startDate);
 
         // Store actual dates - if already ISO string, use directly; otherwise convert
         this.startDate = this.#toISODate(startDate);
         this.endDate = endDate ? this.#toISODate(endDate) : this.startDate;
 
+        // Final validation
         this.#validate();
     }
 
@@ -44,10 +52,10 @@ export class Constraint {
     }
 
     /**
-     * Validate constraint data
+     * Validate input data before processing
      * @private
      */
-    #validate() {
+    #validateInput(startDate) {
         if (!this.title || this.title.trim() === '') {
             throw new Error('Constraint title is required');
         }
@@ -56,9 +64,24 @@ export class Constraint {
             throw new Error('Constraint type is required');
         }
 
-        // Allow any string type - validation against available types
-        // happens at the UI/service layer, not the model layer
+        // Validate type against built-in types only
+        const allConstraintTypes = Object.values(BUILT_IN_CONSTRAINT_TYPES);
+        if (!allConstraintTypes.includes(this.type)) {
+            throw new Error(`Invalid constraint type: ${this.type}`);
+        }
 
+        // Validate startDate before processing
+        if (!startDate) {
+            throw new Error('Constraint start date is required');
+        }
+    }
+
+    /**
+     * Validate constraint data after processing
+     * @private
+     */
+    #validate() {
+        // Final check that startDate was processed correctly
         if (!this.startDate) {
             throw new Error('Constraint start date is required');
         }

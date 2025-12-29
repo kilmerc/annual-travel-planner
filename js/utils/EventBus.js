@@ -3,6 +3,7 @@
  */
 class EventBus {
     #listeners = new Map();
+    #onceWrappers = new WeakMap(); // Track wrapper functions for once listeners
 
     /**
      * Subscribe to an event
@@ -39,7 +40,8 @@ class EventBus {
     emit(event, data) {
         if (!this.#listeners.has(event)) return;
 
-        const callbacks = this.#listeners.get(event);
+        // Create a copy of the callbacks array to avoid issues when callbacks modify the array
+        const callbacks = [...this.#listeners.get(event)];
         callbacks.forEach(callback => {
             try {
                 callback(data);
@@ -59,6 +61,8 @@ class EventBus {
             callback(data);
             this.off(event, onceWrapper);
         };
+        // Store the wrapper so it can be removed if needed
+        this.#onceWrappers.set(callback, onceWrapper);
         this.on(event, onceWrapper);
     }
 }

@@ -5,14 +5,21 @@
 import { BUILT_IN_EVENT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday } from '../services/DateService.js';
 
+// Counter to ensure unique IDs
+let idCounter = 0;
+
 export class Event {
     constructor({ id, title, type, location, startDate, endDate = null, duration = 1, isFixed = true, archived = false }) {
-        this.id = id || Date.now().toString();
+        this.id = id || `${Date.now()}-${idCounter++}`;
         this.title = title;
         this.type = type;
         this.location = location;
         this.isFixed = isFixed;
         this.archived = archived || false;
+        this.duration = duration;
+
+        // Validate BEFORE processing dates
+        this.#validateInput(startDate);
 
         // For fixed trips with specific dates, store actual dates
         // For flexible trips, normalize to Monday of the week
@@ -29,8 +36,7 @@ export class Event {
             this.endDate = null;
         }
 
-        this.duration = duration;
-
+        // Final validation after processing
         this.#validate();
     }
 
@@ -62,10 +68,10 @@ export class Event {
     }
 
     /**
-     * Validate event data
+     * Validate input data before processing
      * @private
      */
-    #validate() {
+    #validateInput(startDate) {
         if (!this.title || this.title.trim() === '') {
             throw new Error('Event title is required');
         }
@@ -78,15 +84,30 @@ export class Event {
             throw new Error('Event type is required');
         }
 
-        // Note: Type validation is relaxed to allow custom types
-        // Type existence is validated at the StateManager level
+        // Validate type against built-in types only
+        const allEventTypes = Object.values(BUILT_IN_EVENT_TYPES);
+        if (!allEventTypes.includes(this.type)) {
+            throw new Error(`Invalid event type: ${this.type}`);
+        }
 
-        if (!this.startDate) {
+        // Validate startDate before normalization
+        if (!startDate) {
             throw new Error('Event start date is required');
         }
 
         if (this.duration < 1) {
             throw new Error('Event duration must be at least 1 week');
+        }
+    }
+
+    /**
+     * Validate event data after processing
+     * @private
+     */
+    #validate() {
+        // Final check that startDate was processed correctly
+        if (!this.startDate) {
+            throw new Error('Event start date is required');
         }
     }
 

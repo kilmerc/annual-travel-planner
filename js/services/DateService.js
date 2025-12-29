@@ -209,8 +209,17 @@ export function getCalendarGrid(year, monthIndex) {
  * @returns {boolean} True if the date range overlaps with the Mon-Fri week
  */
 export function overlapsWithWeek(startDate, endDate, weekDate) {
-    const rangeStart = new Date(startDate);
-    const rangeEnd = new Date(endDate);
+    // Parse ISO date strings in local time to avoid timezone issues
+    const parseLocalDate = (dateStr) => {
+        if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+        return new Date(dateStr);
+    };
+
+    const rangeStart = parseLocalDate(startDate);
+    const rangeEnd = parseLocalDate(endDate);
     const weekMonday = getMonday(weekDate);
     const weekFriday = getFriday(weekDate);
 

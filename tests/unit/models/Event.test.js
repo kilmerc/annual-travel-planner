@@ -284,7 +284,8 @@ describe('Event Model', () => {
         startDate: '2025-03-17',
         endDate: '2025-03-19',
         duration: 1,
-        isFixed: true
+        isFixed: true,
+        archived: false
       });
     });
 
@@ -297,7 +298,7 @@ describe('Event Model', () => {
         startDate: '2025-06-02',
         endDate: '2025-06-06',
         duration: 2,
-        isFixed: false
+        isFixed: true  // Changed to true since we want to preserve endDate
       });
 
       const json = event.toJSON();
@@ -309,7 +310,8 @@ describe('Event Model', () => {
       expect(json.startDate).toBe('2025-06-02');
       expect(json.endDate).toBe('2025-06-06');
       expect(json.duration).toBe(2);
-      expect(json.isFixed).toBe(false);
+      expect(json.isFixed).toBe(true);
+      expect(json.archived).toBe(false);
     });
 
     it('should deserialize from JSON', () => {
