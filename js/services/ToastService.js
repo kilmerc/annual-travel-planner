@@ -19,6 +19,11 @@ class ToastService {
      * @private
      */
     #init() {
+        // Skip initialization if we're not in a browser environment (e.g., during tests)
+        if (typeof document === 'undefined' || !document.body) {
+            return;
+        }
+
         // Create toast container if it doesn't exist
         if (!document.getElementById('toast-container')) {
             const container = document.createElement('div');
@@ -38,6 +43,11 @@ class ToastService {
      * @param {number} duration - Duration in milliseconds (0 = no auto-dismiss)
      */
     show(message, type = 'info', duration = 3000) {
+        // Skip if not in browser environment
+        if (!this.#container) {
+            return null;
+        }
+
         const toast = this.#createToast(message, type);
 
         // Limit number of toasts

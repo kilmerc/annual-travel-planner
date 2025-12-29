@@ -106,6 +106,16 @@ export class CalendarView {
         container.innerHTML = '';
         container.className = 'flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-hidden';
 
+        // Check if there are no events or constraints (empty state)
+        const hasEvents = state.events && state.events.length > 0;
+        const hasConstraints = state.constraints && state.constraints.length > 0;
+
+        if (!hasEvents && !hasConstraints) {
+            // Show empty state
+            this.#renderEmptyState(container);
+            return;
+        }
+
         // Add legend
         const legend = this.#renderLegend();
         container.appendChild(legend);
@@ -137,6 +147,40 @@ export class CalendarView {
 
         container.appendChild(calendarGrid);
         this.#attachEventListeners();
+    }
+
+    /**
+     * Render empty state
+     * @private
+     */
+    #renderEmptyState(container) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'flex flex-col items-center justify-center h-full text-center p-8';
+        emptyState.innerHTML = `
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-12 max-w-md">
+                <div class="mb-6">
+                    <i class="fas fa-calendar-alt text-6xl text-slate-300 dark:text-slate-600"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-700 dark:text-slate-200 mb-3">
+                    No trips planned yet
+                </h3>
+                <p class="text-slate-500 dark:text-slate-400 mb-6">
+                    Click "Plan Travel / Constraint" to get started!
+                </p>
+                <button id="btnEmptyStateAdd" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow-sm transition flex items-center gap-2 mx-auto">
+                    <i class="fas fa-plus"></i> Plan Travel / Constraint
+                </button>
+            </div>
+        `;
+        container.appendChild(emptyState);
+
+        // Add event listener for empty state button
+        const btn = emptyState.querySelector('#btnEmptyStateAdd');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                EventBus.emit('modal:open', 'addModal');
+            });
+        }
     }
 
     /**

@@ -109,7 +109,7 @@ export class MetricsBar {
                 ${metrics.conflicts > 0 ? '<i class="fas fa-chevron-right text-xs text-slate-400 ml-1"></i>' : ''}
             </div>
             <div class="flex-grow"></div>
-            <button id="btnAddPlan" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md text-sm font-medium shadow-sm transition flex items-center gap-2">
+            <button id="btnAddPlan" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md text-sm font-medium shadow-sm transition flex items-center gap-2" data-tooltip="Add trips and constraints">
                 <i class="fas fa-plus"></i> Plan Travel / Constraint
             </button>
         `;

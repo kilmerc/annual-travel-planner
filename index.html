@@ -32,18 +32,18 @@
 
         <div class="flex items-center gap-4">
             <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-md p-1">
-                <button id="btnYearPrev" class="p-2 hover:bg-white dark:hover:bg-slate-600 rounded shadow-sm transition text-slate-700 dark:text-slate-300"><i class="fas fa-chevron-left"></i></button>
+                <button id="btnYearPrev" class="p-2 hover:bg-white dark:hover:bg-slate-600 rounded shadow-sm transition text-slate-700 dark:text-slate-300" data-tooltip="Previous year"><i class="fas fa-chevron-left"></i></button>
                 <span id="displayYear" class="px-4 font-semibold font-mono text-slate-700 dark:text-slate-200">2025</span>
-                <button id="btnYearNext" class="p-2 hover:bg-white dark:hover:bg-slate-600 rounded shadow-sm transition text-slate-700 dark:text-slate-300"><i class="fas fa-chevron-right"></i></button>
+                <button id="btnYearNext" class="p-2 hover:bg-white dark:hover:bg-slate-600 rounded shadow-sm transition text-slate-700 dark:text-slate-300" data-tooltip="Next year"><i class="fas fa-chevron-right"></i></button>
             </div>
 
             <div class="h-8 w-px bg-slate-200 dark:bg-slate-600 mx-2"></div>
 
-            <button id="btnHelp" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" title="Help & Tutorial">
+            <button id="btnHelp" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" data-tooltip="Restart tutorial">
                 <i class="fas fa-question-circle text-lg"></i>
             </button>
 
-            <button id="btnSettings" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" title="Settings">
+            <button id="btnSettings" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" data-tooltip="Open settings">
                 <i class="fas fa-cog text-lg"></i>
             </button>
         </div>

@@ -9,6 +9,7 @@ import EventBus from '../utils/EventBus.js';
 import { Event } from '../models/Event.js';
 import { Constraint } from '../models/Constraint.js';
 import { DEFAULT_EVENT_TYPE_CONFIGS, DEFAULT_CONSTRAINT_TYPE_CONFIGS } from '../config/calendarConfig.js';
+import ToastService from './ToastService.js';
 
 class StateManager {
     #state = {
@@ -433,8 +434,10 @@ class StateManager {
         try {
             const data = this.getState();
             localStorage.setItem(this.#storageKey, JSON.stringify(data));
+            ToastService.info('Saved', 1000);
         } catch (error) {
             console.error('Error saving state to localStorage:', error);
+            ToastService.error('Failed to save', 2000);
         }
     }
 }
