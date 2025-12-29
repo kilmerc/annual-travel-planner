@@ -253,6 +253,9 @@ class StateManager {
                 this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
                 this.#state.customLocations = data.customLocations || [];
 
+                // MIGRATION: Auto-create configs for types found in old data
+                const migrated = this.#migrateOldData();
+
                 // Set current viewing year based on existing events or current year
                 if (this.#state.events.length > 0) {
                     const firstEventDate = new Date(this.#state.events[0].startDate);
@@ -260,11 +263,74 @@ class StateManager {
                 } else {
                     this.#state.currentYear = new Date().getFullYear();
                 }
+
+                // If migration occurred, persist the updated state
+                if (migrated) {
+                    console.log('Migrated old data format to new structure');
+                    this.#persist();
+                }
             }
         } catch (error) {
             console.error('Error loading state from localStorage:', error);
             // Keep default state
         }
+    }
+
+    /**
+     * Migrate old data: create type configs for types found in events/constraints
+     * @private
+     * @returns {boolean} True if migration occurred
+     */
+    #migrateOldData() {
+        let migrated = false;
+
+        const oldBuiltInEventTypes = {
+            division: { label: 'Division Visit', color: '#3b82f6', colorDark: '#60a5fa', isHardStop: false },
+            gts: { label: 'GTS All-Hands', color: '#a855f7', colorDark: '#c084fc', isHardStop: false },
+            pi: { label: 'PI Planning', color: '#f97316', colorDark: '#fb923c', isHardStop: false },
+            bp: { label: 'BP Team Meeting', color: '#22c55e', colorDark: '#4ade80', isHardStop: false },
+            conference: { label: 'Conference', color: '#14b8a6', colorDark: '#2dd4bf', isHardStop: false },
+            other: { label: 'Other Business', color: '#6b7280', colorDark: '#9ca3af', isHardStop: false }
+        };
+
+        const oldBuiltInConstraintTypes = {
+            vacation: { label: 'Personal Vacation', color: '#ef4444', colorDark: '#f87171', isHardStop: true },
+            holiday: { label: 'Public Holiday', color: '#ec4899', colorDark: '#f472b6', isHardStop: true },
+            blackout: { label: 'Blackout Period', color: '#be123c', colorDark: '#e11d48', isHardStop: true },
+            preference: { label: 'Preference', color: '#eab308', colorDark: '#facc15', isHardStop: false }
+        };
+
+        // Check events for types without configs
+        this.#state.events.forEach(event => {
+            if (!this.#state.eventTypeConfigs[event.type]) {
+                // Use old built-in config if available, otherwise create generic
+                const config = oldBuiltInEventTypes[event.type] || {
+                    label: event.type.charAt(0).toUpperCase() + event.type.slice(1),
+                    color: '#6b7280',
+                    colorDark: '#9ca3af',
+                    isHardStop: false
+                };
+                this.#state.eventTypeConfigs[event.type] = { ...config, isBuiltIn: false };
+                migrated = true;
+            }
+        });
+
+        // Check constraints for types without configs
+        this.#state.constraints.forEach(constraint => {
+            if (!this.#state.constraintTypeConfigs[constraint.type]) {
+                // Use old built-in config if available, otherwise create generic
+                const config = oldBuiltInConstraintTypes[constraint.type] || {
+                    label: constraint.type.charAt(0).toUpperCase() + constraint.type.slice(1),
+                    color: '#6b7280',
+                    colorDark: '#9ca3af',
+                    isHardStop: false
+                };
+                this.#state.constraintTypeConfigs[constraint.type] = { ...config, isBuiltIn: false };
+                migrated = true;
+            }
+        });
+
+        return migrated;
     }
 
     /**

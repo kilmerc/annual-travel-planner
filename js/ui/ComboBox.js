@@ -191,22 +191,16 @@ export class ComboBox {
             this.#dropdown.appendChild(separator);
         }
 
-        // Show filtered options
-        if (filtered.length === 0 && !this.allowCreate) {
+        // Show options (filtered or all)
+        const optionsToShow = text ? filtered : this.#options;
+
+        if (optionsToShow.length === 0) {
             const noResults = document.createElement('div');
             noResults.className = 'px-3 py-2 text-sm text-slate-500 dark:text-slate-400';
             noResults.textContent = 'No options found';
             this.#dropdown.appendChild(noResults);
         } else {
-            filtered.forEach(opt => {
-                const item = this.#createDropdownItem(opt);
-                this.#dropdown.appendChild(item);
-            });
-        }
-
-        // Show all options if no filter
-        if (!text) {
-            this.#options.forEach(opt => {
+            optionsToShow.forEach(opt => {
                 const item = this.#createDropdownItem(opt);
                 this.#dropdown.appendChild(item);
             });
@@ -274,16 +268,13 @@ export class ComboBox {
      */
     #handleCreate(value) {
         const label = value;
-        const newOption = { value, label, isBuiltIn: false };
 
-        // Add to options
-        this.#options.push(newOption);
-
-        // Call onCreate callback
+        // Call onCreate callback (parent will handle adding to options via updateOptions)
         this.#onAdd(value, label);
 
-        // Select the new option
-        this.#handleSelect(value, label);
+        // Close dropdown and clear input
+        this.#closeDropdown();
+        this.#input.value = '';
     }
 
     /**

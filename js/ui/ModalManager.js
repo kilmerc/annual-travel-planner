@@ -27,6 +27,8 @@ export class ModalManager {
     #tripTypeComboBox = null;
     #tripLocationComboBox = null;
     #constraintTypeComboBox = null;
+    #pendingTripTypeSelection = null;
+    #pendingConstraintTypeSelection = null;
 
     /**
      * Initialize modal manager
@@ -40,7 +42,7 @@ export class ModalManager {
         EventBus.on('calendar:day-clicked', (data) => this.openAddModal(data.date));
 
         // Listen for type configuration changes to refresh ComboBoxes
-        EventBus.on('type:configured', () => this.#refreshComboBoxOptions());
+        EventBus.on('type:configured', (data) => this.#handleTypeConfigured(data));
         EventBus.on('type:deleted', () => this.#refreshComboBoxOptions());
         EventBus.on('location:added', () => this.#refreshLocationComboBox());
         EventBus.on('location:deleted', () => this.#refreshLocationComboBox());
@@ -65,6 +67,8 @@ export class ModalManager {
             placeholder: 'Select trip type...',
             onChange: (value) => {},
             onAdd: (value, label) => {
+                // Track that we want to select this type after it's configured
+                this.#pendingTripTypeSelection = value.toLowerCase().replace(/\s+/g, '-');
                 // Open type config modal to configure the new type
                 EventBus.emit('type-config:open', { kind: 'event', typeId: null, suggestedId: value, suggestedLabel: label });
             },
@@ -145,6 +149,8 @@ export class ModalManager {
             placeholder: 'Select constraint type...',
             onChange: (value) => {},
             onAdd: (value, label) => {
+                // Track that we want to select this type after it's configured
+                this.#pendingConstraintTypeSelection = value.toLowerCase().replace(/\s+/g, '-');
                 // Open type config modal to configure the new type
                 EventBus.emit('type-config:open', { kind: 'constraint', typeId: null, suggestedId: value, suggestedLabel: label });
             },
@@ -178,6 +184,27 @@ export class ModalManager {
             allowDelete: true
         });
         this.#constraintTypeComboBox.render(document.getElementById('constraintTypeContainer'));
+    }
+
+    /**
+     * Handle type configuration event
+     * @private
+     */
+    #handleTypeConfigured(data) {
+        this.#refreshComboBoxOptions();
+
+        // Auto-select newly created type if pending
+        if (data.kind === 'event' && this.#pendingTripTypeSelection) {
+            if (data.typeId === this.#pendingTripTypeSelection) {
+                this.#tripTypeComboBox.setValue(data.typeId);
+                this.#pendingTripTypeSelection = null;
+            }
+        } else if (data.kind === 'constraint' && this.#pendingConstraintTypeSelection) {
+            if (data.typeId === this.#pendingConstraintTypeSelection) {
+                this.#constraintTypeComboBox.setValue(data.typeId);
+                this.#pendingConstraintTypeSelection = null;
+            }
+        }
     }
 
     /**
@@ -686,7 +713,7 @@ export class ModalManager {
         const state = StateManager.getState();
         const suggestions = ScoringEngine.getSuggestionsForTimeRange(
             timeRangeId,
-            state.year,
+            StateManager.getYear(),
             location,
             state.events,
             state.constraints
@@ -968,7 +995,7 @@ export class ModalManager {
      */
     #exportData() {
         const state = StateManager.getState();
-        DataService.downloadJSON(state, `travel_plan_${state.year}.json`);
+        DataService.downloadJSON(state, `travel_plan_${StateManager.getYear()}.json`);
     }
 
     /**
@@ -1206,7 +1233,7 @@ export class ModalManager {
 
         // Get suggestions for each trip
         const state = StateManager.getState();
-        const year = state.year;
+        const year = StateManager.getYear();
         const events = state.events;
         const constraints = state.constraints;
 

@@ -92,7 +92,7 @@ export class CalendarView {
     render(container) {
         this.#container = container;
         const state = StateManager.getState();
-        const year = state.year;
+        const year = StateManager.getYear();
 
         // Debug: Check what data we have
         console.log('CalendarView - Rendering with state:', {
