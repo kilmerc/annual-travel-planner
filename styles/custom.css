@@ -192,3 +192,15 @@ body {
     border: 2px solid #34d399 !important;
     box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
 }
+
+.highlight-conflict {
+    background-color: #fee2e2 !important;
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.dark .highlight-conflict {
+    background-color: #7f1d1d !important;
+    border: 2px solid #f87171 !important;
+    box-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
+}

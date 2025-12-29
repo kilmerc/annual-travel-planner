@@ -44,7 +44,7 @@ export class MetricsBar {
     #setupEventListeners() {
         document.addEventListener('click', (e) => {
             if (e.target.closest('#metricConflicts')) {
-                this.#showConflictsModal();
+                this.#highlightConflicts();
             } else if (e.target.closest('#metricTraveling')) {
                 this.#highlightTravelingWeeks();
             } else if (e.target.closest('#metricHome')) {
@@ -215,6 +215,63 @@ export class MetricsBar {
         const state = StateManager.getState();
         const travelWeeks = state.events.map(e => e.startDate);
         EventBus.emit('highlight:home-weeks', { travelWeeks });
+    }
+
+    /**
+     * Highlight conflict days
+     * @private
+     */
+    #highlightConflicts() {
+        if (!this.#currentMetrics || this.#currentMetrics.conflicts === 0) {
+            return;
+        }
+
+        // Collect all dates involved in conflicts
+        const conflictDates = new Set();
+
+        this.#currentMetrics.conflictDetails.forEach(conflict => {
+            if (conflict.type === 'hard-constraint') {
+                // Add all dates from the event
+                const eventStart = new Date(conflict.event.startDate);
+                const eventEnd = new Date(conflict.event.endDate || conflict.event.startDate);
+                for (let d = new Date(eventStart); d <= eventEnd; d.setDate(d.getDate() + 1)) {
+                    conflictDates.add(this.#dateToISO(d));
+                }
+
+                // Add all dates from the constraint
+                const constraintStart = new Date(conflict.constraint.startDate);
+                const constraintEnd = new Date(conflict.constraint.endDate);
+                for (let d = new Date(constraintStart); d <= constraintEnd; d.setDate(d.getDate() + 1)) {
+                    conflictDates.add(this.#dateToISO(d));
+                }
+            } else if (conflict.type === 'double-booking') {
+                // Add all dates from both events
+                const event1Start = new Date(conflict.event1.startDate);
+                const event1End = new Date(conflict.event1.endDate || conflict.event1.startDate);
+                for (let d = new Date(event1Start); d <= event1End; d.setDate(d.getDate() + 1)) {
+                    conflictDates.add(this.#dateToISO(d));
+                }
+
+                const event2Start = new Date(conflict.event2.startDate);
+                const event2End = new Date(conflict.event2.endDate || conflict.event2.startDate);
+                for (let d = new Date(event2Start); d <= event2End; d.setDate(d.getDate() + 1)) {
+                    conflictDates.add(this.#dateToISO(d));
+                }
+            }
+        });
+
+        EventBus.emit('highlight:conflicts', { conflictDates: Array.from(conflictDates) });
+    }
+
+    /**
+     * Convert date to ISO string
+     * @private
+     */
+    #dateToISO(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     /**

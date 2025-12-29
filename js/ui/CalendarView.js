@@ -11,28 +11,32 @@ import { getCalendarGrid, dateToISO, getMonday, overlapsWithWeek } from '../serv
 
 export class CalendarView {
     #container = null;
-    #highlightMode = null; // 'traveling', 'home', or null
+    #highlightMode = null; // 'traveling', 'home', 'conflicts', or null
     #travelWeeks = [];
+    #conflictDates = [];
 
     constructor() {
         // Listen for highlight events
-        EventBus.on('highlight:traveling-weeks', (data) => this.#toggleHighlight('traveling', data.weeks));
-        EventBus.on('highlight:home-weeks', (data) => this.#toggleHighlight('home', data.travelWeeks));
+        EventBus.on('highlight:traveling-weeks', (data) => this.#toggleHighlight('traveling', data.weeks, []));
+        EventBus.on('highlight:home-weeks', (data) => this.#toggleHighlight('home', data.travelWeeks, []));
+        EventBus.on('highlight:conflicts', (data) => this.#toggleHighlight('conflicts', [], data.conflictDates));
     }
 
     /**
      * Toggle week highlighting
      * @private
      */
-    #toggleHighlight(mode, weeks) {
+    #toggleHighlight(mode, weeks, conflictDates) {
         if (this.#highlightMode === mode) {
             // Toggle off
             this.#highlightMode = null;
             this.#travelWeeks = [];
+            this.#conflictDates = [];
         } else {
             // Toggle on
             this.#highlightMode = mode;
             this.#travelWeeks = weeks || [];
+            this.#conflictDates = conflictDates || [];
         }
         this.#updateHighlighting();
     }
@@ -46,7 +50,7 @@ export class CalendarView {
 
         // Remove all existing highlights
         this.#container.querySelectorAll('.day-cell').forEach(cell => {
-            cell.classList.remove('highlight-travel', 'highlight-home');
+            cell.classList.remove('highlight-travel', 'highlight-home', 'highlight-conflict');
         });
 
         if (this.#highlightMode === null) return;
@@ -71,6 +75,10 @@ export class CalendarView {
             } else if (this.#highlightMode === 'home') {
                 if (!this.#travelWeeks.includes(mondayISO)) {
                     cell.classList.add('highlight-home');
+                }
+            } else if (this.#highlightMode === 'conflicts') {
+                if (this.#conflictDates.includes(dateStr)) {
+                    cell.classList.add('highlight-conflict');
                 }
             }
         });
