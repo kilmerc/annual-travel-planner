@@ -37,7 +37,7 @@ export class TypeDeletionModal {
      */
     #createModal() {
         const modalHTML = `
-            <div id="${this.#modalId}" class="modal fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center opacity-0 pointer-events-none">
+            <div id="${this.#modalId}" class="modal fixed inset-0 bg-black/50 z-[70] hidden flex items-center justify-center opacity-0 pointer-events-none">
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
                     <div class="bg-rose-50 dark:bg-rose-900/20 px-6 py-4 border-b border-rose-200 dark:border-rose-700 flex items-center gap-3">
                         <i class="fas fa-exclamation-triangle text-rose-600 dark:text-rose-400 text-xl"></i>

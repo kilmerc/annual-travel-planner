@@ -65,7 +65,7 @@ export class ModalManager {
             onChange: (value) => {},
             onAdd: (value, label) => {
                 // Open type config modal to configure the new type
-                EventBus.emit('type-config:open', { kind: 'event', typeId: value });
+                EventBus.emit('type-config:open', { kind: 'event', typeId: null, suggestedId: value, suggestedLabel: label });
             },
             onDelete: async (value) => {
                 const config = StateManager.getEventTypeConfig(value);
@@ -144,7 +144,7 @@ export class ModalManager {
             onChange: (value) => {},
             onAdd: (value, label) => {
                 // Open type config modal to configure the new type
-                EventBus.emit('type-config:open', { kind: 'constraint', typeId: value });
+                EventBus.emit('type-config:open', { kind: 'constraint', typeId: null, suggestedId: value, suggestedLabel: label });
             },
             onDelete: async (value) => {
                 const config = StateManager.getConstraintTypeConfig(value);

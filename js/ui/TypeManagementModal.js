@@ -13,7 +13,6 @@ import ConfirmDialog from '../services/ConfirmDialog.js';
 
 export class TypeManagementModal {
     #modalId = 'typeManagementModal';
-    #currentKind = null; // 'event' or 'constraint'
 
     /**
      * Initialize modal
@@ -23,7 +22,7 @@ export class TypeManagementModal {
         this.#setupEventListeners();
 
         // Listen for type management requests
-        EventBus.on('manage-types:open', (data) => this.open(data.kind));
+        EventBus.on('manage-types:open', () => this.open());
 
         // Listen for type updates to refresh the list
         EventBus.on('type:configured', () => this.#refreshList());
@@ -38,28 +37,54 @@ export class TypeManagementModal {
     #createModal() {
         const modalHTML = `
             <div id="${this.#modalId}" class="modal fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center opacity-0 pointer-events-none">
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden">
                     <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
                         <h3 class="font-bold text-lg text-slate-700 dark:text-slate-200">
-                            <i id="typeManagementIcon" class="fas fa-palette mr-2"></i>
-                            <span id="typeManagementTitle">Manage Types</span>
+                            <i class="fas fa-palette mr-2"></i>
+                            <span>Manage Event Types</span>
                         </h3>
                         <button data-modal-close="${this.#modalId}" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
 
-                    <div class="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
-                        <div id="typeManagementList" class="space-y-2">
-                            <!-- Populated dynamically -->
+                    <div class="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
+                        <!-- Trip Types Section -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-semibold text-md text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                    <i class="fas fa-plane text-blue-600 dark:text-blue-400"></i>
+                                    Trip Types
+                                </h4>
+                                <button id="btnAddEventType" class="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition">
+                                    <i class="fas fa-plus"></i>
+                                    Add Trip Type
+                                </button>
+                            </div>
+                            <div id="eventTypesList" class="space-y-2">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Constraint Types Section -->
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-semibold text-md text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                    <i class="fas fa-ban text-red-600 dark:text-red-400"></i>
+                                    Constraint Types
+                                </h4>
+                                <button id="btnAddConstraintType" class="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition">
+                                    <i class="fas fa-plus"></i>
+                                    Add Constraint Type
+                                </button>
+                            </div>
+                            <div id="constraintTypesList" class="space-y-2">
+                                <!-- Populated dynamically -->
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                        <button id="btnAddType" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition">
-                            <i class="fas fa-plus"></i>
-                            <span>Add New Type</span>
-                        </button>
+                    <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-end items-center">
                         <button data-modal-close="${this.#modalId}" class="px-4 py-2 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 rounded font-medium transition">
                             Done
                         </button>
@@ -76,9 +101,14 @@ export class TypeManagementModal {
      * @private
      */
     #setupEventListeners() {
-        // Add new type button
-        document.getElementById('btnAddType')?.addEventListener('click', () => {
-            EventBus.emit('type-config:open', { kind: this.#currentKind, typeId: null });
+        // Add new event type button
+        document.getElementById('btnAddEventType')?.addEventListener('click', () => {
+            EventBus.emit('type-config:open', { kind: 'event', typeId: null });
+        });
+
+        // Add new constraint type button
+        document.getElementById('btnAddConstraintType')?.addEventListener('click', () => {
+            EventBus.emit('type-config:open', { kind: 'constraint', typeId: null });
         });
 
         // Modal close buttons
@@ -92,24 +122,9 @@ export class TypeManagementModal {
 
     /**
      * Open modal for managing types
-     * @param {string} kind - 'event' or 'constraint'
      */
-    open(kind) {
-        this.#currentKind = kind;
-
-        // Update title and icon
-        const titleEl = document.getElementById('typeManagementTitle');
-        const iconEl = document.getElementById('typeManagementIcon');
-
-        if (kind === 'event') {
-            titleEl.textContent = 'Manage Event Types';
-            iconEl.className = 'fas fa-palette mr-2';
-        } else {
-            titleEl.textContent = 'Manage Constraint Types';
-            iconEl.className = 'fas fa-ban mr-2';
-        }
-
-        // Render list
+    open() {
+        // Render both lists
         this.#refreshList();
 
         // Open modal
@@ -117,48 +132,71 @@ export class TypeManagementModal {
     }
 
     /**
-     * Refresh the type list
+     * Refresh the type lists
      * @private
      */
     #refreshList() {
-        const listEl = document.getElementById('typeManagementList');
-        if (!listEl || !this.#currentKind) return;
+        // Refresh event types
+        const eventListEl = document.getElementById('eventTypesList');
+        if (eventListEl) {
+            const eventConfigs = StateManager.getAllEventTypeConfigs();
+            eventListEl.innerHTML = '';
 
-        const configs = this.#currentKind === 'event'
-            ? StateManager.getAllEventTypeConfigs()
-            : StateManager.getAllConstraintTypeConfigs();
-
-        listEl.innerHTML = '';
-
-        // Check if list is empty
-        if (Object.keys(configs).length === 0) {
-            listEl.innerHTML = `
-                <div class="text-center py-8 text-slate-500 dark:text-slate-400">
-                    <i class="fas fa-inbox text-4xl mb-3"></i>
-                    <p>No types defined yet.</p>
-                    <p class="text-sm mt-1">Click "Add New Type" to create one.</p>
-                </div>
-            `;
-            return;
+            if (Object.keys(eventConfigs).length === 0) {
+                eventListEl.innerHTML = `
+                    <div class="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">
+                        <p>No trip types defined.</p>
+                        <p class="mt-1">Click "Add Trip Type" to create one.</p>
+                    </div>
+                `;
+            } else {
+                Object.entries(eventConfigs).forEach(([typeId, config]) => {
+                    const typeItem = this.#createTypeItem(typeId, config, 'event');
+                    eventListEl.appendChild(typeItem);
+                });
+            }
         }
 
-        // Render each type
-        Object.entries(configs).forEach(([typeId, config]) => {
-            const typeItem = this.#createTypeItem(typeId, config);
-            listEl.appendChild(typeItem);
-        });
+        // Refresh constraint types
+        const constraintListEl = document.getElementById('constraintTypesList');
+        if (constraintListEl) {
+            const constraintConfigs = StateManager.getAllConstraintTypeConfigs();
+            constraintListEl.innerHTML = '';
+
+            if (Object.keys(constraintConfigs).length === 0) {
+                constraintListEl.innerHTML = `
+                    <div class="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">
+                        <p>No constraint types defined.</p>
+                        <p class="mt-1">Click "Add Constraint Type" to create one.</p>
+                    </div>
+                `;
+            } else {
+                Object.entries(constraintConfigs).forEach(([typeId, config]) => {
+                    const typeItem = this.#createTypeItem(typeId, config, 'constraint');
+                    constraintListEl.appendChild(typeItem);
+                });
+            }
+        }
     }
 
     /**
      * Create a type list item
      * @private
+     * @param {string} typeId - Type ID
+     * @param {object} config - Type configuration
+     * @param {string} kind - 'event' or 'constraint'
      */
-    #createTypeItem(typeId, config) {
+    #createTypeItem(typeId, config, kind) {
         const item = document.createElement('div');
         item.className = 'flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-600';
 
         const isDarkMode = document.documentElement.classList.contains('dark');
         const color = isDarkMode ? config.colorDark : config.color;
+
+        // Check if this is the 'archived' type (should not be editable)
+        const isArchived = typeId === 'archived';
+        const canEdit = !isArchived;
+        const canDelete = !config.isBuiltIn && !isArchived;
 
         item.innerHTML = `
             <div class="flex items-center gap-3 flex-1">
@@ -170,16 +208,19 @@ export class TypeManagementModal {
                             <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">${typeId}</code>
                             ${config.isHardStop ? '<span class="text-red-600 dark:text-red-400">• Hard Stop</span>' : '<span class="text-blue-600 dark:text-blue-400">• Soft</span>'}
                             ${config.isBuiltIn ? '<span class="text-amber-600 dark:text-amber-400">• Built-in</span>' : ''}
+                            ${isArchived ? '<span class="text-slate-600 dark:text-slate-400">• System</span>' : ''}
                         </span>
                     </div>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button class="btn-edit-type p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" data-type-id="${typeId}" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                ${!config.isBuiltIn ? `
-                    <button class="btn-delete-type p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-type-id="${typeId}" title="Delete">
+                ${canEdit ? `
+                    <button class="btn-edit-type p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" data-type-id="${typeId}" data-kind="${kind}" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                ` : ''}
+                ${canDelete ? `
+                    <button class="btn-delete-type p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-type-id="${typeId}" data-kind="${kind}" title="Delete">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 ` : ''}
@@ -189,13 +230,13 @@ export class TypeManagementModal {
         // Edit button
         item.querySelector('.btn-edit-type')?.addEventListener('click', (e) => {
             e.stopPropagation();
-            EventBus.emit('type-config:open', { kind: this.#currentKind, typeId });
+            EventBus.emit('type-config:open', { kind, typeId });
         });
 
         // Delete button
         item.querySelector('.btn-delete-type')?.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.#handleDelete(typeId, config.label);
+            this.#handleDelete(typeId, config.label, kind);
         });
 
         return item;
@@ -204,12 +245,15 @@ export class TypeManagementModal {
     /**
      * Handle type deletion
      * @private
+     * @param {string} typeId - Type ID
+     * @param {string} typeLabel - Type label
+     * @param {string} kind - 'event' or 'constraint'
      */
-    async #handleDelete(typeId, typeLabel) {
+    async #handleDelete(typeId, typeLabel, kind) {
         // Check if there are events/constraints using this type
         const state = StateManager.getState();
 
-        if (this.#currentKind === 'event') {
+        if (kind === 'event') {
             const eventsWithType = state.events.filter(e => e.type === typeId);
 
             if (eventsWithType.length > 0) {
@@ -283,8 +327,6 @@ export class TypeManagementModal {
         modal.classList.add('opacity-0', 'pointer-events-none');
 
         setTimeout(() => modal.classList.add('hidden'), 300);
-
-        this.#currentKind = null;
     }
 }
 

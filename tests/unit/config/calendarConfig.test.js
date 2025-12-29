@@ -129,9 +129,9 @@ describe('calendarConfig', () => {
       expect(EVENT_TYPES.OTHER).toBe('other');
     });
 
-    it('should have 5 event types', () => {
+    it('should have 6 event types', () => {
       const keys = Object.keys(EVENT_TYPES);
-      expect(keys).toHaveLength(5);
+      expect(keys).toHaveLength(6);
     });
 
     it('should be frozen (immutable)', () => {
@@ -146,6 +146,7 @@ describe('calendarConfig', () => {
       expect(EVENT_TYPE_LABELS.pi).toBe('PI Planning');
       expect(EVENT_TYPE_LABELS.bp).toBe('BP Team Meeting');
       expect(EVENT_TYPE_LABELS.other).toBe('Other Business');
+      expect(EVENT_TYPE_LABELS.archived).toBe('Archived');
     });
 
     it('should have matching keys with EVENT_TYPES values', () => {

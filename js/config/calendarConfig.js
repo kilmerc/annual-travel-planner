@@ -31,7 +31,8 @@ export const BUILT_IN_EVENT_TYPES = Object.freeze({
     GTS: 'gts',
     PI: 'pi',
     BP: 'bp',
-    OTHER: 'other'
+    OTHER: 'other',
+    ARCHIVED: 'archived'
 });
 
 // Default event type configurations
@@ -68,6 +69,13 @@ export const DEFAULT_EVENT_TYPE_CONFIGS = Object.freeze({
         label: 'Other Business',
         color: '#64748b', // slate-500
         colorDark: '#94a3b8', // slate-400
+        isHardStop: false,
+        isBuiltIn: true
+    },
+    archived: {
+        label: 'Archived',
+        color: '#9ca3af', // gray-400
+        colorDark: '#6b7280', // gray-500
         isHardStop: false,
         isBuiltIn: true
     }
@@ -126,7 +134,8 @@ export const EVENT_TYPE_LABELS = Object.freeze({
     gts: DEFAULT_EVENT_TYPE_CONFIGS.gts.label,
     pi: DEFAULT_EVENT_TYPE_CONFIGS.pi.label,
     bp: DEFAULT_EVENT_TYPE_CONFIGS.bp.label,
-    other: DEFAULT_EVENT_TYPE_CONFIGS.other.label
+    other: DEFAULT_EVENT_TYPE_CONFIGS.other.label,
+    archived: DEFAULT_EVENT_TYPE_CONFIGS.archived.label
 });
 
 export const CONSTRAINT_TYPES = BUILT_IN_CONSTRAINT_TYPES;

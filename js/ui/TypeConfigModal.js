@@ -24,7 +24,7 @@ export class TypeConfigModal {
         this.#setupEventListeners();
 
         // Listen for type management requests
-        EventBus.on('type-config:open', (data) => this.open(data.kind, data.typeId));
+        EventBus.on('type-config:open', (data) => this.open(data.kind, data.typeId, data.suggestedId, data.suggestedLabel));
     }
 
     /**
@@ -33,7 +33,7 @@ export class TypeConfigModal {
      */
     #createModal() {
         const modalHTML = `
-            <div id="${this.#modalId}" class="modal fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center opacity-0 pointer-events-none">
+            <div id="${this.#modalId}" class="modal fixed inset-0 bg-black/50 z-[70] hidden flex items-center justify-center opacity-0 pointer-events-none">
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
                     <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
                         <h3 class="font-bold text-lg text-slate-700 dark:text-slate-200">
@@ -84,8 +84,9 @@ export class TypeConfigModal {
                                     <div>
                                         <div class="font-medium text-sm text-slate-700 dark:text-slate-200">Hard Stop (Algorithm Constraint)</div>
                                         <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                            When enabled, the scheduling algorithm will treat this as a blocking constraint.
-                                            Events/constraints of this type will prevent trip scheduling in overlapping weeks.
+                                            <strong>When enabled (Hard Stop):</strong> The scheduling algorithm will treat this as a blocking constraint that prevents trip scheduling in overlapping weeks.
+                                            <br><br>
+                                            <strong>When disabled (Soft):</strong> The algorithm will penalize but not block trip scheduling, allowing flexibility while discouraging conflicts.
                                         </div>
                                     </div>
                                 </label>
@@ -162,8 +163,10 @@ export class TypeConfigModal {
      * Open modal to add or edit type
      * @param {string} kind - 'event' or 'constraint'
      * @param {string|null} typeId - Type ID to edit, or null to create new
+     * @param {string|null} suggestedId - Suggested ID for new type
+     * @param {string|null} suggestedLabel - Suggested label for new type
      */
-    open(kind, typeId = null) {
+    open(kind, typeId = null, suggestedId = null, suggestedLabel = null) {
         this.#editingKind = kind;
         this.#editingType = typeId;
 
@@ -199,13 +202,17 @@ export class TypeConfigModal {
         } else {
             // Creating new type
             titleEl.textContent = `Add ${kind === 'event' ? 'Event' : 'Constraint'} Type`;
-            idInput.value = '';
+
+            // Use suggested values if provided, otherwise generate from existing types
+            const suggestedColors = this.#getNextUniqueColor(kind);
+
+            idInput.value = suggestedId ? suggestedId.toLowerCase().replace(/\s+/g, '-') : '';
             idInput.disabled = false;
-            labelInput.value = '';
-            colorInput.value = '#3b82f6';
-            colorHexInput.value = '#3b82f6';
-            colorDarkInput.value = '#60a5fa';
-            colorDarkHexInput.value = '#60a5fa';
+            labelInput.value = suggestedLabel || '';
+            colorInput.value = suggestedColors.color;
+            colorHexInput.value = suggestedColors.color;
+            colorDarkInput.value = suggestedColors.colorDark;
+            colorDarkHexInput.value = suggestedColors.colorDark;
             hardStopCheckbox.checked = false;
         }
 
@@ -239,6 +246,53 @@ export class TypeConfigModal {
         modal.classList.add('opacity-0', 'pointer-events-none');
 
         setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    /**
+     * Get next unique color for a new type
+     * @private
+     * @param {string} kind - 'event' or 'constraint'
+     * @returns {object} Color object with color and colorDark properties
+     */
+    #getNextUniqueColor(kind) {
+        // Color palette with light and dark mode variants
+        const colorPalette = [
+            { color: '#3b82f6', colorDark: '#60a5fa' }, // blue
+            { color: '#a855f7', colorDark: '#c084fc' }, // purple
+            { color: '#f97316', colorDark: '#fb923c' }, // orange
+            { color: '#22c55e', colorDark: '#4ade80' }, // green
+            { color: '#ef4444', colorDark: '#f87171' }, // red
+            { color: '#ec4899', colorDark: '#f472b6' }, // pink
+            { color: '#14b8a6', colorDark: '#2dd4bf' }, // teal
+            { color: '#eab308', colorDark: '#facc15' }, // yellow
+            { color: '#8b5cf6', colorDark: '#a78bfa' }, // violet
+            { color: '#06b6d4', colorDark: '#22d3ee' }, // cyan
+            { color: '#f59e0b', colorDark: '#fbbf24' }, // amber
+            { color: '#10b981', colorDark: '#34d399' }, // emerald
+            { color: '#6366f1', colorDark: '#818cf8' }, // indigo
+            { color: '#84cc16', colorDark: '#a3e635' }, // lime
+            { color: '#64748b', colorDark: '#94a3b8' }, // slate
+        ];
+
+        // Get existing colors
+        const existingConfigs = kind === 'event'
+            ? StateManager.getAllEventTypeConfigs()
+            : StateManager.getAllConstraintTypeConfigs();
+
+        const usedColors = new Set();
+        Object.values(existingConfigs).forEach(config => {
+            usedColors.add(config.color);
+        });
+
+        // Find first unused color
+        for (const colorPair of colorPalette) {
+            if (!usedColors.has(colorPair.color)) {
+                return colorPair;
+            }
+        }
+
+        // If all colors are used, return a random one
+        return colorPalette[Math.floor(Math.random() * colorPalette.length)];
     }
 
     /**

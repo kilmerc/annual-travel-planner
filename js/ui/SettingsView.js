@@ -107,24 +107,13 @@ export class SettingsView {
             });
         }
 
-        // Manage Event Types
+        // Manage Event Types (includes both trip and constraint types)
         const manageEventTypesBtn = document.getElementById('btnManageEventTypes');
         if (manageEventTypesBtn) {
             manageEventTypesBtn.addEventListener('click', () => {
                 this.close(); // Close settings first
                 setTimeout(() => {
-                    EventBus.emit('manage-types:open', { kind: 'event' });
-                }, 300);
-            });
-        }
-
-        // Manage Constraint Types
-        const manageConstraintTypesBtn = document.getElementById('btnManageConstraintTypes');
-        if (manageConstraintTypesBtn) {
-            manageConstraintTypesBtn.addEventListener('click', () => {
-                this.close(); // Close settings first
-                setTimeout(() => {
-                    EventBus.emit('manage-types:open', { kind: 'constraint' });
+                    EventBus.emit('manage-types:open');
                 }, 300);
             });
         }
