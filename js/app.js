@@ -6,6 +6,7 @@
  */
 
 import StateManager from './services/StateManager.js';
+import TutorialService from './services/TutorialService.js';
 import ViewManager from './ui/ViewManager.js';
 import MetricsBar from './ui/MetricsBar.js';
 import ModalManager from './ui/ModalManager.js';
@@ -50,6 +51,9 @@ class TravelPlannerApp {
         // Update display
         this.updateHeader();
 
+        // Check if this is first time and show tutorial
+        TutorialService.checkFirstTime();
+
         console.log('Travel Planner initialized successfully');
     }
 
@@ -84,6 +88,14 @@ class TravelPlannerApp {
                 this.modalManager.openAddModal();
             }
         });
+
+        // Help button
+        const btnHelp = document.getElementById('btnHelp');
+        if (btnHelp) {
+            btnHelp.addEventListener('click', () => {
+                TutorialService.start();
+            });
+        }
 
         // Settings button
         const btnSettings = document.getElementById('btnSettings');

@@ -11,6 +11,7 @@
 
 import StateManager from '../services/StateManager.js';
 import DataService from '../services/DataService.js';
+import TutorialService from '../services/TutorialService.js';
 
 export class SettingsView {
     #modalId = 'settingsModal';
@@ -90,6 +91,17 @@ export class SettingsView {
         const clearBtn = document.getElementById('btnClearSettings');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => this.#clearAllData());
+        }
+
+        // Restart tutorial
+        const restartTutorialBtn = document.getElementById('btnRestartTutorial');
+        if (restartTutorialBtn) {
+            restartTutorialBtn.addEventListener('click', () => {
+                this.close(); // Close settings first
+                setTimeout(() => {
+                    TutorialService.reset();
+                }, 300); // Wait for modal to close
+            });
         }
 
         // Close button
