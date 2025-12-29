@@ -255,22 +255,11 @@ export class ModalManager {
 
         // Pre-fill form with event data
         document.getElementById('tripTitle').value = event.title || '';
-        document.getElementById('tripType').value = event.type || 'division';
+        this.#tripTypeComboBox.setValue(event.type || 'division');
         document.getElementById('tripMode').value = event.isFixed ? 'fixed' : 'flexible';
 
-        // Handle location - check if it's a division code or custom location
-        const divisionCodes = ['DAL', 'VAL', 'VCE', 'VCW', 'VER', 'VIN', 'VNE', 'VNY', 'VSC', 'VTX', 'VUT'];
-        const location = event.location || '';
-
-        if (divisionCodes.includes(location.toUpperCase())) {
-            document.getElementById('tripLocationSelect').value = location.toUpperCase();
-            document.getElementById('tripLocation').value = location.toUpperCase();
-            document.getElementById('tripLocation').classList.add('hidden');
-        } else {
-            document.getElementById('tripLocationSelect').value = 'custom';
-            document.getElementById('tripLocation').value = location;
-            document.getElementById('tripLocation').classList.remove('hidden');
-        }
+        // Set location using ComboBox
+        this.#tripLocationComboBox.setValue(event.location || '');
 
         if (event.isFixed && event.endDate) {
             document.getElementById('tripDate').value = event.startDate;
@@ -318,7 +307,7 @@ export class ModalManager {
 
         // Pre-fill form with constraint data
         document.getElementById('constraintTitle').value = constraint.title || '';
-        document.getElementById('constraintType').value = constraint.type || 'vacation';
+        this.#constraintTypeComboBox.setValue(constraint.type || 'vacation');
         document.getElementById('constraintDate').value = constraint.startDate;
         document.getElementById('constraintEndDate').value = constraint.endDate || constraint.startDate;
 
@@ -390,12 +379,6 @@ export class ModalManager {
         const tripModeSelect = document.getElementById('tripMode');
         if (tripModeSelect) {
             tripModeSelect.addEventListener('change', () => this.#toggleTripMode());
-        }
-
-        // Location dropdown toggle
-        const tripLocationSelect = document.getElementById('tripLocationSelect');
-        if (tripLocationSelect) {
-            tripLocationSelect.addEventListener('change', () => this.#toggleLocationInput());
         }
 
         // Multi-add mode toggle for trips
@@ -551,24 +534,6 @@ export class ModalManager {
     }
 
     /**
-     * Toggle location input (dropdown vs custom text)
-     * @private
-     */
-    #toggleLocationInput() {
-        const selectValue = document.getElementById('tripLocationSelect').value;
-        const customInput = document.getElementById('tripLocation');
-
-        if (selectValue === 'custom') {
-            customInput.classList.remove('hidden');
-            customInput.value = '';
-            customInput.focus();
-        } else {
-            customInput.classList.add('hidden');
-            customInput.value = selectValue;
-        }
-    }
-
-    /**
      * Toggle multi-add mode for trips
      * @private
      */
@@ -680,7 +645,7 @@ export class ModalManager {
      */
     #getSuggestions() {
         const quarterId = parseInt(document.getElementById('tripQuarter').value);
-        const location = document.getElementById('tripLocation').value.toLowerCase().trim();
+        const location = this.#tripLocationComboBox.getValue().trim();
 
         if (!location) {
             alert('Please enter a location for optimization suggestions.');
@@ -753,8 +718,8 @@ export class ModalManager {
      */
     #acceptSuggestion(isoDate) {
         const title = document.getElementById('tripTitle').value || 'Division Visit';
-        const type = document.getElementById('tripType').value;
-        const location = document.getElementById('tripLocation').value;
+        const type = this.#tripTypeComboBox.getValue();
+        const location = this.#tripLocationComboBox.getValue();
 
         StateManager.addEvent({
             id: Date.now().toString(),
@@ -775,8 +740,8 @@ export class ModalManager {
      */
     #saveFixedTrip() {
         const title = document.getElementById('tripTitle').value;
-        const location = document.getElementById('tripLocation').value;
-        const type = document.getElementById('tripType').value;
+        const location = this.#tripLocationComboBox.getValue();
+        const type = this.#tripTypeComboBox.getValue();
         const isMultiAdd = document.getElementById('multiAddMode').checked;
 
         if (!title) {
@@ -881,7 +846,7 @@ export class ModalManager {
      */
     #saveConstraint() {
         const title = document.getElementById('constraintTitle').value;
-        const type = document.getElementById('constraintType').value;
+        const type = this.#constraintTypeComboBox.getValue();
         const isMultiAdd = document.getElementById('multiAddModeConstraint').checked;
 
         if (!title) {

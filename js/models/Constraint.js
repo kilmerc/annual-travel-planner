@@ -2,11 +2,14 @@
  * Constraint - Travel constraint data model
  *
  * Constraints are weeks where travel is blocked or discouraged:
- * - Hard constraints: vacation, holiday, blackout (cannot travel)
- * - Soft constraints: preference (prefer not to travel, but allowed)
+ * - Hard constraints: Cannot travel (isHardStop determined by type config)
+ * - Soft constraints: Prefer not to travel, but allowed
+ *
+ * Note: Hardness is now determined by the constraint type configuration
+ * in StateManager, not by this model. Use StateManager.getConstraintTypeConfig()
+ * to check the isHardStop flag.
  */
 
-import { CONSTRAINT_TYPES, HARD_CONSTRAINT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO } from '../services/DateService.js';
 
 export class Constraint {
@@ -49,13 +52,12 @@ export class Constraint {
             throw new Error('Constraint title is required');
         }
 
-        if (!this.type) {
+        if (!this.type || typeof this.type !== 'string') {
             throw new Error('Constraint type is required');
         }
 
-        if (!Object.values(CONSTRAINT_TYPES).includes(this.type)) {
-            throw new Error(`Invalid constraint type: ${this.type}`);
-        }
+        // Allow any string type - validation against available types
+        // happens at the UI/service layer, not the model layer
 
         if (!this.startDate) {
             throw new Error('Constraint start date is required');
@@ -64,14 +66,20 @@ export class Constraint {
 
     /**
      * Check if this is a hard constraint (cannot travel)
+     * Note: This requires StateManager to be imported, creating circular dependency.
+     * Deprecated: Use StateManager.getConstraintTypeConfig(type).isHardStop instead
+     * @deprecated
      * @returns {boolean} True if hard constraint
      */
     isHard() {
-        return HARD_CONSTRAINT_TYPES.includes(this.type);
+        // For backward compatibility with tests, check against known hard types
+        const knownHardTypes = ['vacation', 'holiday', 'blackout'];
+        return knownHardTypes.includes(this.type);
     }
 
     /**
      * Check if this is a soft constraint (prefer not to travel)
+     * @deprecated
      * @returns {boolean} True if soft constraint
      */
     isSoft() {

@@ -3,17 +3,20 @@
  *
  * Scoring logic:
  * - Base score: 100 points
- * - Hard constraint (vacation/holiday/blackout): -1000 points (disqualified)
- * - Soft constraint (preference): -20 points (discouraged)
+ * - Hard constraint (isHardStop=true): -1000 points (disqualified)
+ * - Soft constraint (isHardStop=false): -20 points (discouraged)
  * - Location consolidation (same city): +500 points
  * - Location conflict (different city): -1000 points
  * - Filter viable: score > -500
  * - Return top 3 weeks sorted by score
+ *
+ * Note: Hard vs Soft constraint determination now uses dynamic type
+ * configurations from StateManager instead of hardcoded type list.
  */
 
 import { QUARTERS } from '../config/calendarConfig.js';
-import { HARD_CONSTRAINT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday, formatDate, overlapsWithWeek } from '../services/DateService.js';
+import StateManager from './StateManager.js';
 
 export class ScoringEngine {
     /**
@@ -77,7 +80,10 @@ export class ScoringEngine {
         );
 
         conflictingConstraints.forEach(constraint => {
-            const isHard = HARD_CONSTRAINT_TYPES.includes(constraint.type);
+            // Check if this constraint type is configured as a hard stop
+            const typeConfig = StateManager.getConstraintTypeConfig(constraint.type);
+            const isHard = typeConfig?.isHardStop ?? false;
+
             if (isHard) {
                 score = -1000; // Disqualified
                 reasons.push(`Blocked: ${constraint.title}`);
@@ -134,9 +140,10 @@ export class ScoringEngine {
             const eventEndDate = event.endDate || event.startDate;
 
             // Check for hard constraint conflicts that overlap with the event
-            const hardConstraints = constraints.filter(c =>
-                HARD_CONSTRAINT_TYPES.includes(c.type)
-            );
+            const hardConstraints = constraints.filter(c => {
+                const typeConfig = StateManager.getConstraintTypeConfig(c.type);
+                return typeConfig?.isHardStop ?? false;
+            });
 
             hardConstraints.forEach(hardConstraint => {
                 // Check if event overlaps with constraint
