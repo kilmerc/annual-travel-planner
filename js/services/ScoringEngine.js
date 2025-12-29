@@ -15,7 +15,7 @@
  */
 
 import { QUARTERS } from '../config/calendarConfig.js';
-import { dateToISO, getMonday, formatDate, overlapsWithWeek } from '../services/DateService.js';
+import { dateToISO, getMonday, formatDate, overlapsWithWeek, getTimeRangeDates, getMondaysInRange } from '../services/DateService.js';
 import StateManager from './StateManager.js';
 
 export class ScoringEngine {
@@ -39,6 +39,44 @@ export class ScoringEngine {
 
         // Generate candidate weeks (all Mondays in the quarter)
         const candidates = this.#generateCandidates(quarter, year);
+
+        // Score each candidate week
+        const scored = candidates.map(date => {
+            const score = this.scoreWeek(date, location, activeEvents, constraints);
+            return {
+                date,
+                iso: dateToISO(date),
+                ...score
+            };
+        });
+
+        // Filter viable (score > -500) and sort by score descending
+        const viable = scored
+            .filter(s => s.score > -500)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+
+        return viable;
+    }
+
+    /**
+     * Get suggestions for flexible trip in a specific time range
+     * @param {string} timeRangeId - Time range ID (current-year, current-quarter, next-3-months, etc.)
+     * @param {number} referenceYear - Reference year for "current-year" option
+     * @param {string} location - Desired location
+     * @param {Array} events - Existing events
+     * @param {Array} constraints - Existing constraints
+     * @returns {Array} Top 3 suggested weeks
+     */
+    getSuggestionsForTimeRange(timeRangeId, referenceYear, location, events, constraints) {
+        // Get date range for the time range ID
+        const { startDate, endDate } = getTimeRangeDates(timeRangeId, referenceYear);
+
+        // Filter out archived events - they should not affect scheduling
+        const activeEvents = events.filter(e => !e.archived);
+
+        // Generate candidate weeks (all Mondays in the time range)
+        const candidates = getMondaysInRange(startDate, endDate);
 
         // Score each candidate week
         const scored = candidates.map(date => {

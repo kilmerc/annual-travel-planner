@@ -644,7 +644,7 @@ export class ModalManager {
      * @private
      */
     #getSuggestions() {
-        const quarterId = parseInt(document.getElementById('tripQuarter').value);
+        const timeRangeId = document.getElementById('tripTimeRange').value;
         const location = this.#tripLocationComboBox.getValue().trim();
 
         if (!location) {
@@ -658,8 +658,8 @@ export class ModalManager {
 
         // Get suggestions from scoring engine
         const state = StateManager.getState();
-        const suggestions = ScoringEngine.getSuggestionsForQuarter(
-            quarterId,
+        const suggestions = ScoringEngine.getSuggestionsForTimeRange(
+            timeRangeId,
             state.year,
             location,
             state.events,
@@ -1066,23 +1066,6 @@ export class ModalManager {
                 </select>
                 <input type="text" class="batch-location-custom w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 hidden" placeholder="Enter city (e.g. London, Singapore, Austin)">
             </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Preferred Seasons</label>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" class="season-winter" value="winter"> Winter (Dec-Feb)
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" class="season-spring" value="spring"> Spring (Mar-May)
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" class="season-summer" value="summer"> Summer (Jun-Aug)
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" class="season-fall" value="fall"> Fall (Sep-Nov)
-                    </label>
-                </div>
-            </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" class="can-consolidate">
                 <label class="text-xs">Can consolidate with other trips</label>
@@ -1120,6 +1103,9 @@ export class ModalManager {
             return;
         }
 
+        // Get the selected time range
+        const timeRangeId = document.getElementById('batchTimeRange').value;
+
         // Collect batch trip data
         const batchTrips = Array.from(container.children).map((row) => {
             const title = row.querySelector('.batch-title').value.trim();
@@ -1128,14 +1114,9 @@ export class ModalManager {
             const location = locationSelect === 'custom'
                 ? row.querySelector('.batch-location-custom').value.trim()
                 : locationSelect;
-            const seasons = [];
-            if (row.querySelector('.season-winter').checked) seasons.push('winter');
-            if (row.querySelector('.season-spring').checked) seasons.push('spring');
-            if (row.querySelector('.season-summer').checked) seasons.push('summer');
-            if (row.querySelector('.season-fall').checked) seasons.push('fall');
             const canConsolidate = row.querySelector('.can-consolidate').checked;
 
-            return { title, type, location, seasons, canConsolidate };
+            return { title, type, location, canConsolidate };
         }).filter(t => t.location);
 
         if (batchTrips.length === 0) {
@@ -1150,49 +1131,23 @@ export class ModalManager {
         const constraints = state.constraints;
 
         const results = batchTrips.map((trip, idx) => {
-            // Find best quarters based on season preferences
-            const quarters = this.#getQuartersForSeasons(trip.seasons);
-
-            // Get suggestions for each quarter and combine
-            const allSuggestions = [];
-            quarters.forEach(qId => {
-                const suggestions = ScoringEngine.getSuggestionsForQuarter(qId, year, trip.location, events, constraints);
-                allSuggestions.push(...suggestions.map(s => ({ ...s, quarter: qId })));
-            });
-
-            // Sort by score and take top 3
-            const top3 = allSuggestions.sort((a, b) => b.score - a.score).slice(0, 3);
+            // Get suggestions for the selected time range
+            const suggestions = ScoringEngine.getSuggestionsForTimeRange(
+                timeRangeId,
+                year,
+                trip.location,
+                events,
+                constraints
+            );
 
             return {
                 trip,
-                suggestions: top3,
+                suggestions,
                 tripIndex: idx
             };
         });
 
         this.#displayBatchResults(results);
-    }
-
-    /**
-     * Get quarters that match season preferences
-     * @private
-     */
-    #getQuartersForSeasons(seasons) {
-        if (!seasons || seasons.length === 0) return [1, 2, 3, 4]; // All quarters if no preference
-
-        const quarterMap = {
-            winter: [4, 1], // Dec-Feb spans Q4 and Q1
-            spring: [2],    // Mar-May is Q2
-            summer: [3],    // Jun-Aug is Q3
-            fall: [4]       // Sep-Nov is Q4
-        };
-
-        const quarters = new Set();
-        seasons.forEach(season => {
-            quarterMap[season]?.forEach(q => quarters.add(q));
-        });
-
-        return Array.from(quarters);
     }
 
     /**

@@ -105,12 +105,13 @@
                     <!-- Flexible Inputs -->
                     <div id="flexibleInputs" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Target Quarter</label>
-                            <select id="tripQuarter" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                                <option value="1">Q1 (Feb - Apr)</option>
-                                <option value="2">Q2 (May - Jul)</option>
-                                <option value="3">Q3 (Aug - Oct)</option>
-                                <option value="4">Q4 (Nov - Jan)</option>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Planning Range</label>
+                            <select id="tripTimeRange" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                                <option value="current-year">Current Year</option>
+                                <option value="current-quarter">Current Quarter</option>
+                                <option value="next-3-months">Next 3 Months</option>
+                                <option value="next-6-months">Next 6 Months</option>
+                                <option value="next-12-months">Next 12 Months</option>
                             </select>
                         </div>
                         <button type="button" id="btnFindBest" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded shadow-sm font-medium transition">
@@ -202,6 +203,18 @@
                 <div id="batchForm" class="space-y-4 tab-content hidden">
                     <div class="text-sm text-slate-600 dark:text-slate-400 mb-4">
                         Add multiple trips to get optimized recommendations based on your constraints and preferences.
+                    </div>
+
+                    <!-- Planning Range -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Planning Range</label>
+                        <select id="batchTimeRange" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                            <option value="current-year">Current Year</option>
+                            <option value="current-quarter">Current Quarter</option>
+                            <option value="next-3-months">Next 3 Months</option>
+                            <option value="next-6-months">Next 6 Months</option>
+                            <option value="next-12-months">Next 12 Months</option>
+                        </select>
                     </div>
 
                     <!-- Batch Trips Container -->
