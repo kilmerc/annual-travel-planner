@@ -178,7 +178,7 @@ export class CalendarView {
         const btn = emptyState.querySelector('#btnEmptyStateAdd');
         if (btn) {
             btn.addEventListener('click', () => {
-                EventBus.emit('modal:open', 'addModal');
+                EventBus.emit('quick-add:clicked', { date: null });
             });
         }
     }

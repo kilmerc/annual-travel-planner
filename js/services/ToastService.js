@@ -148,7 +148,9 @@ class ToastService {
         };
 
         const style = styles[type] || styles.info;
-        toast.classList.add(style.bg, style.color);
+        // Split space-separated classes and add them individually
+        style.bg.split(' ').forEach(cls => toast.classList.add(cls));
+        style.color.split(' ').forEach(cls => toast.classList.add(cls));
 
         toast.innerHTML = `
             <i class="fas ${style.icon} text-xl flex-shrink-0 mt-0.5"></i>
