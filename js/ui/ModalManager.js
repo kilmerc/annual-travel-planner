@@ -765,7 +765,7 @@ export class ModalManager {
      */
     #exportData() {
         const state = StateManager.getState();
-        DataService.downloadJSON(state, `travel_plan_fy${state.fiscalYear}.json`);
+        DataService.downloadJSON(state, `travel_plan_${state.year}.json`);
     }
 
     /**

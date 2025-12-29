@@ -217,8 +217,7 @@ class StateManager {
      * @param {object} data - State data
      */
     importState(data) {
-        // Support both old fiscalYear and new year property
-        this.#state.year = data.year || data.fiscalYear || 2025;
+        this.#state.year = data.year || 2025;
         this.#state.viewMode = data.viewMode || 'calendar';
 
         this.#state.events = (data.events || []).map(e => new Event(e));
@@ -248,8 +247,7 @@ class StateManager {
             const stored = localStorage.getItem(this.#storageKey);
             if (stored) {
                 const data = JSON.parse(stored);
-                // Support both old fiscalYear and new year property
-                this.#state.year = data.year || data.fiscalYear || 2025;
+                this.#state.year = data.year || 2025;
                 this.#state.viewMode = data.viewMode || 'calendar';
 
                 // Convert plain objects to model instances

@@ -6,7 +6,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
-import { QUARTERS, MONTH_NAMES } from '../config/fiscalCalendar.js';
+import { QUARTERS, MONTH_NAMES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday, formatDateWithOrdinal, overlapsWithWeek } from '../services/DateService.js';
 
 export class QuartersView {

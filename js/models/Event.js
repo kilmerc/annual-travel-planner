@@ -2,7 +2,7 @@
  * Event - Travel event data model
  */
 
-import { EVENT_TYPES } from '../config/fiscalCalendar.js';
+import { EVENT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday } from '../services/DateService.js';
 
 export class Event {

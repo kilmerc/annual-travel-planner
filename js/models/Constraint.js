@@ -6,7 +6,7 @@
  * - Soft constraints: preference (prefer not to travel, but allowed)
  */
 
-import { CONSTRAINT_TYPES, HARD_CONSTRAINT_TYPES } from '../config/fiscalCalendar.js';
+import { CONSTRAINT_TYPES, HARD_CONSTRAINT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO } from '../services/DateService.js';
 
 export class Constraint {

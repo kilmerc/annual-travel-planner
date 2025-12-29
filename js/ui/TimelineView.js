@@ -6,7 +6,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
-import { MONTH_NAMES } from '../config/fiscalCalendar.js';
+import { MONTH_NAMES } from '../config/calendarConfig.js';
 import { getWeeksInYear, getMonday, dateToISO, overlapsWithWeek } from '../services/DateService.js';
 
 export class TimelineView {

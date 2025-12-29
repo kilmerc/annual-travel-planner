@@ -6,7 +6,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
-import { MONTH_NAMES_FULL } from '../config/fiscalCalendar.js';
+import { MONTH_NAMES_FULL } from '../config/calendarConfig.js';
 import { getCalendarGrid, dateToISO, getMonday, overlapsWithWeek } from '../services/DateService.js';
 
 export class CalendarView {

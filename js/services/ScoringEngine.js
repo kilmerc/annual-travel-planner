@@ -11,28 +11,28 @@
  * - Return top 3 weeks sorted by score
  */
 
-import { QUARTERS } from '../config/fiscalCalendar.js';
-import { HARD_CONSTRAINT_TYPES } from '../config/fiscalCalendar.js';
+import { QUARTERS } from '../config/calendarConfig.js';
+import { HARD_CONSTRAINT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday, formatDate, overlapsWithWeek } from '../services/DateService.js';
 
 export class ScoringEngine {
     /**
      * Get suggestions for flexible trip in a specific quarter
      * @param {number} quarterId - Quarter ID (1-4)
-     * @param {number} fiscalYear - Fiscal year
+     * @param {number} year - Calendar year
      * @param {string} location - Desired location
      * @param {Array} events - Existing events
      * @param {Array} constraints - Existing constraints
      * @returns {Array} Top 3 suggested weeks
      */
-    getSuggestionsForQuarter(quarterId, fiscalYear, location, events, constraints) {
+    getSuggestionsForQuarter(quarterId, year, location, events, constraints) {
         const quarter = QUARTERS.find(q => q.id === quarterId);
         if (!quarter) {
             throw new Error(`Invalid quarter ID: ${quarterId}`);
         }
 
         // Generate candidate weeks (all Mondays in the quarter)
-        const candidates = this.#generateCandidates(quarter, fiscalYear);
+        const candidates = this.#generateCandidates(quarter, year);
 
         // Score each candidate week
         const scored = candidates.map(date => {
