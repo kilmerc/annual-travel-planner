@@ -87,14 +87,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Type</label>
-                            <select id="tripType" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                                <option value="division">Division Visit</option>
-                                <option value="gts">GTS All-Hands</option>
-                                <option value="pi">PI Planning</option>
-                                <option value="bp">BP Team Meeting</option>
-                                <option value="conference">Conference</option>
-                                <option value="other">Other Business</option>
-                            </select>
+                            <div id="tripTypeContainer"></div>
                         </div>
                     </div>
 
@@ -105,22 +98,7 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
-                        <select id="tripLocationSelect" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                            <option value="">Select Division...</option>
-                            <option value="DAL">DAL</option>
-                            <option value="VAL">VAL</option>
-                            <option value="VCE">VCE</option>
-                            <option value="VCW">VCW</option>
-                            <option value="VER">VER</option>
-                            <option value="VIN">VIN</option>
-                            <option value="VNE">VNE</option>
-                            <option value="VNY">VNY</option>
-                            <option value="VSC">VSC</option>
-                            <option value="VTX">VTX</option>
-                            <option value="VUT">VUT</option>
-                            <option value="custom">Other Location (Custom)...</option>
-                        </select>
-                        <input type="text" id="tripLocation" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 hidden" placeholder="Enter city (e.g. London, Singapore, Austin)">
+                        <div id="tripLocationContainer"></div>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Required for optimization logic.</p>
                     </div>
 
@@ -184,13 +162,7 @@
                 <form id="constraintForm" class="space-y-4 tab-content hidden">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Constraint Type</label>
-                        <select id="constraintType" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                            <option value="vacation">Personal Vacation (Hard Stop)</option>
-                            <option value="holiday">Company Holiday (Hard Stop)</option>
-                            <option value="blackout">Business Blackout (Hard Stop)</option>
-                            <option value="business-soft">Business Soft (Prefer No Travel)</option>
-                            <option value="preference">Prefer No Travel (Soft)</option>
-                        </select>
+                        <div id="constraintTypeContainer"></div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Description</label>
