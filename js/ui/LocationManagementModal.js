@@ -9,6 +9,7 @@
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
 import ToastService from '../services/ToastService.js';
+import ConfirmDialog from '../services/ConfirmDialog.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
 
 export class LocationManagementModal {
@@ -227,8 +228,15 @@ export class LocationManagementModal {
      * Handle location deletion
      * @private
      */
-    #handleDeleteLocation(location) {
-        if (confirm(`Delete location "${location}"? This cannot be undone.`)) {
+    async #handleDeleteLocation(location) {
+        const confirmed = await ConfirmDialog.show({
+            title: 'Delete Location',
+            message: `Are you sure you want to delete "${location}"? This cannot be undone.`,
+            confirmText: 'Delete',
+            isDangerous: true
+        });
+
+        if (confirmed) {
             StateManager.deleteCustomLocation(location);
         }
     }

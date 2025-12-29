@@ -9,6 +9,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
+import ConfirmDialog from '../services/ConfirmDialog.js';
 
 export class TypeManagementModal {
     #modalId = 'typeManagementModal';
@@ -204,7 +205,7 @@ export class TypeManagementModal {
      * Handle type deletion
      * @private
      */
-    #handleDelete(typeId, typeLabel) {
+    async #handleDelete(typeId, typeLabel) {
         // Check if there are events/constraints using this type
         const state = StateManager.getState();
 
@@ -220,7 +221,13 @@ export class TypeManagementModal {
                 });
             } else {
                 // No conflicts, delete directly
-                if (confirm(`Delete type "${typeLabel}"? This cannot be undone.`)) {
+                const confirmed = await ConfirmDialog.show({
+                    title: 'Delete Trip Type',
+                    message: `Are you sure you want to delete "${typeLabel}"? This cannot be undone.`,
+                    confirmText: 'Delete',
+                    isDangerous: true
+                });
+                if (confirmed) {
                     StateManager.deleteEventType(typeId, 'delete');
                 }
             }
@@ -236,7 +243,13 @@ export class TypeManagementModal {
                 });
             } else {
                 // No conflicts, delete directly
-                if (confirm(`Delete type "${typeLabel}"? This cannot be undone.`)) {
+                const confirmed = await ConfirmDialog.show({
+                    title: 'Delete Constraint Type',
+                    message: `Are you sure you want to delete "${typeLabel}"? This cannot be undone.`,
+                    confirmText: 'Delete',
+                    isDangerous: true
+                });
+                if (confirmed) {
                     StateManager.deleteConstraintType(typeId);
                 }
             }

@@ -8,6 +8,8 @@
  * - Delete custom options (built-in options cannot be deleted)
  */
 
+import ConfirmDialog from '../services/ConfirmDialog.js';
+
 export class ComboBox {
     #container = null;
     #input = null;
@@ -288,8 +290,15 @@ export class ComboBox {
      * Handle deleting option
      * @private
      */
-    #handleDelete(value) {
-        if (confirm(`Delete "${value}"? This cannot be undone.`)) {
+    async #handleDelete(value) {
+        const confirmed = await ConfirmDialog.show({
+            title: 'Delete Option',
+            message: `Are you sure you want to delete "${value}"? This cannot be undone.`,
+            confirmText: 'Delete',
+            isDangerous: true
+        });
+
+        if (confirmed) {
             // Remove from options
             this.#options = this.#options.filter(opt => opt.value !== value);
 

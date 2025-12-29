@@ -13,6 +13,7 @@ import StateManager from '../services/StateManager.js';
 import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
 import ToastService from '../services/ToastService.js';
+import ConfirmDialog from '../services/ConfirmDialog.js';
 import EventBus from '../utils/EventBus.js';
 
 export class SettingsView {
@@ -229,7 +230,14 @@ export class SettingsView {
      * @private
      */
     async #loadSampleData() {
-        if (!confirm('This will replace your current data with sample data. Continue?')) {
+        const confirmed = await ConfirmDialog.show({
+            title: 'Load Sample Data',
+            message: 'This will replace your current data with sample data. Continue?',
+            confirmText: 'Load Sample Data',
+            isDangerous: false
+        });
+
+        if (!confirmed) {
             return;
         }
 
@@ -292,8 +300,15 @@ export class SettingsView {
      * Clear all data
      * @private
      */
-    #clearAllData() {
-        if (!confirm('Are you sure? This will delete all events and constraints. This cannot be undone.')) {
+    async #clearAllData() {
+        const confirmed = await ConfirmDialog.show({
+            title: 'Clear All Data',
+            message: 'Are you sure? This will delete all events and constraints. This cannot be undone.',
+            confirmText: 'Clear All Data',
+            isDangerous: true
+        });
+
+        if (!confirmed) {
             return;
         }
 

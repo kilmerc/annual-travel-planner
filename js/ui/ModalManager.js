@@ -13,6 +13,7 @@ import ScoringEngine from '../services/ScoringEngine.js';
 import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
 import ToastService from '../services/ToastService.js';
+import ConfirmDialog from '../services/ConfirmDialog.js';
 import { formatDate } from '../services/DateService.js';
 import ComboBox from './ComboBox.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
@@ -66,7 +67,7 @@ export class ModalManager {
                 // Open type config modal to configure the new type
                 EventBus.emit('type-config:open', { kind: 'event', typeId: value });
             },
-            onDelete: (value) => {
+            onDelete: async (value) => {
                 const config = StateManager.getEventTypeConfig(value);
                 if (config) {
                     // Check for conflicts and handle deletion
@@ -79,7 +80,13 @@ export class ModalManager {
                             eventCount: eventsWithType.length
                         });
                     } else {
-                        if (confirm(`Delete type "${config.label}"?`)) {
+                        const confirmed = await ConfirmDialog.show({
+                            title: 'Delete Trip Type',
+                            message: `Are you sure you want to delete "${config.label}"? This cannot be undone.`,
+                            confirmText: 'Delete',
+                            isDangerous: true
+                        });
+                        if (confirmed) {
                             StateManager.deleteEventType(value, 'delete');
                         }
                     }
@@ -106,8 +113,14 @@ export class ModalManager {
             onAdd: (value, label) => {
                 StateManager.addCustomLocation(value);
             },
-            onDelete: (value) => {
-                if (confirm(`Delete location "${value}"?`)) {
+            onDelete: async (value) => {
+                const confirmed = await ConfirmDialog.show({
+                    title: 'Delete Location',
+                    message: `Are you sure you want to delete "${value}"? This cannot be undone.`,
+                    confirmText: 'Delete',
+                    isDangerous: true
+                });
+                if (confirmed) {
                     StateManager.deleteCustomLocation(value);
                 }
             },
@@ -133,7 +146,7 @@ export class ModalManager {
                 // Open type config modal to configure the new type
                 EventBus.emit('type-config:open', { kind: 'constraint', typeId: value });
             },
-            onDelete: (value) => {
+            onDelete: async (value) => {
                 const config = StateManager.getConstraintTypeConfig(value);
                 if (config) {
                     // Check for conflicts and handle deletion
@@ -146,7 +159,13 @@ export class ModalManager {
                             constraintCount: constraintsWithType.length
                         });
                     } else {
-                        if (confirm(`Delete type "${config.label}"?`)) {
+                        const confirmed = await ConfirmDialog.show({
+                            title: 'Delete Constraint Type',
+                            message: `Are you sure you want to delete "${config.label}"? This cannot be undone.`,
+                            confirmText: 'Delete',
+                            isDangerous: true
+                        });
+                        if (confirmed) {
                             StateManager.deleteConstraintType(value);
                         }
                     }
@@ -981,13 +1000,20 @@ export class ModalManager {
      * Delete event
      * @private
      */
-    #deleteEvent() {
+    async #deleteEvent() {
         if (!this.#editingEventId) {
             console.error('No event being edited');
             return;
         }
 
-        if (!confirm('Are you sure you want to delete this trip? This cannot be undone.')) {
+        const confirmed = await ConfirmDialog.show({
+            title: 'Delete Trip',
+            message: 'Are you sure you want to delete this trip? This cannot be undone.',
+            confirmText: 'Delete',
+            isDangerous: true
+        });
+
+        if (!confirmed) {
             return;
         }
 
@@ -1000,13 +1026,20 @@ export class ModalManager {
      * Delete constraint
      * @private
      */
-    #deleteConstraint() {
+    async #deleteConstraint() {
         if (!this.#editingConstraintId) {
             console.error('No constraint being edited');
             return;
         }
 
-        if (!confirm('Are you sure you want to delete this constraint? This cannot be undone.')) {
+        const confirmed = await ConfirmDialog.show({
+            title: 'Delete Constraint',
+            message: 'Are you sure you want to delete this constraint? This cannot be undone.',
+            confirmText: 'Delete',
+            isDangerous: true
+        });
+
+        if (!confirmed) {
             return;
         }
 
