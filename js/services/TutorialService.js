@@ -130,44 +130,8 @@ class TutorialService {
                 element: '#mainContent',
                 popover: {
                     title: 'Calendar View',
-                    description: 'This is your year-at-a-glance view. Each day shows colored bars for trips and constraints. <strong>Click any weekday to add a new trip for that week.</strong>',
-                    position: 'top',
-                    onNextClick: () => {
-                        // Switch to Quarters view before next step
-                        EventBus.emit('view:switch', { view: 'quarters' });
-                        this.#driver.moveNext();
-                    }
-                }
-            },
-            {
-                element: '#mainContent',
-                popover: {
-                    title: 'Quarters View',
-                    description: 'This view organizes your year into 4 quarters. It shows all trips and constraints in a card layout, making it easy to see what\'s planned for each quarter.',
-                    position: 'top',
-                    onNextClick: () => {
-                        // Switch to Timeline view before next step
-                        EventBus.emit('view:switch', { view: 'timeline' });
-                        this.#driver.moveNext();
-                    },
-                    onPrevClick: () => {
-                        // Switch back to Calendar view
-                        EventBus.emit('view:switch', { view: 'calendar' });
-                        this.#driver.movePrevious();
-                    }
-                }
-            },
-            {
-                element: '#mainContent',
-                popover: {
-                    title: 'Timeline View',
-                    description: 'This horizontal timeline shows the entire year week-by-week. Great for spotting gaps and patterns in your travel schedule.',
-                    position: 'top',
-                    onPrevClick: () => {
-                        // Switch back to Quarters view
-                        EventBus.emit('view:switch', { view: 'quarters' });
-                        this.#driver.movePrevious();
-                    }
+                    description: 'This is your year-at-a-glance calendar view. Each day shows colored bars for trips and constraints. <strong>Click any weekday to add a new trip for that week.</strong> You can see all 12 months at once to plan your entire year.',
+                    position: 'top'
                 }
             },
             {
@@ -175,12 +139,7 @@ class TutorialService {
                 popover: {
                     title: 'Need Help Later?',
                     description: 'Click this help button anytime to restart this tutorial. You can also restart it from Settings.',
-                    position: 'bottom',
-                    onNextClick: () => {
-                        // Switch back to calendar view for the end
-                        EventBus.emit('view:switch', { view: 'calendar' });
-                        this.#driver.moveNext();
-                    }
+                    position: 'bottom'
                 }
             },
             {
