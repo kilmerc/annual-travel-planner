@@ -12,6 +12,7 @@ import StateManager from '../services/StateManager.js';
 import ScoringEngine from '../services/ScoringEngine.js';
 import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
+import ToastService from '../services/ToastService.js';
 import { formatDate } from '../services/DateService.js';
 import ComboBox from './ComboBox.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
@@ -652,7 +653,7 @@ export class ModalManager {
         const location = this.#tripLocationComboBox.getValue().trim();
 
         if (!location) {
-            alert('Please enter a location for optimization suggestions.');
+            ToastService.warning('Please enter a location for optimization suggestions.');
             return;
         }
 
@@ -749,7 +750,7 @@ export class ModalManager {
         const isMultiAdd = document.getElementById('multiAddMode').checked;
 
         if (!title) {
-            alert('Title is required');
+            ToastService.error('Title is required');
             return;
         }
 
@@ -759,7 +760,7 @@ export class ModalManager {
             const endDateVal = document.getElementById('tripEndDate').value;
 
             if (!startDateVal || !endDateVal) {
-                alert('Start Date and End Date are required');
+                ToastService.error('Start Date and End Date are required');
                 return;
             }
 
@@ -779,7 +780,7 @@ export class ModalManager {
             const endDateVal = document.getElementById('tripEndDate').value;
 
             if (!startDateVal || !endDateVal) {
-                alert('Start Date and End Date are required');
+                ToastService.error('Start Date and End Date are required');
                 return;
             }
 
@@ -817,7 +818,7 @@ export class ModalManager {
             });
 
             if (!allValid || dateRanges.length === 0) {
-                alert('Please fill in both Start Date and End Date for all date ranges');
+                ToastService.error('Please fill in both Start Date and End Date for all date ranges');
                 return;
             }
 
@@ -854,7 +855,7 @@ export class ModalManager {
         const isMultiAdd = document.getElementById('multiAddModeConstraint').checked;
 
         if (!title) {
-            alert('Title is required');
+            ToastService.error('Title is required');
             return;
         }
 
@@ -864,7 +865,7 @@ export class ModalManager {
             const endDateVal = document.getElementById('constraintEndDate').value;
 
             if (!startDateVal || !endDateVal) {
-                alert('Start Date and End Date are required');
+                ToastService.error('Start Date and End Date are required');
                 return;
             }
 
@@ -881,7 +882,7 @@ export class ModalManager {
             const endDateVal = document.getElementById('constraintEndDate').value;
 
             if (!startDateVal || !endDateVal) {
-                alert('Start Date and End Date are required');
+                ToastService.error('Start Date and End Date are required');
                 return;
             }
 
@@ -916,7 +917,7 @@ export class ModalManager {
             });
 
             if (!allValid || dateRanges.length === 0) {
-                alert('Please fill in both Start Date and End Date for all date ranges');
+                ToastService.error('Please fill in both Start Date and End Date for all date ranges');
                 return;
             }
 
@@ -967,9 +968,9 @@ export class ModalManager {
                 const data = DataService.importFromJSON(contents);
                 StateManager.importState(data);
                 this.close(this.#exportModalId);
-                alert('Data imported successfully!');
+                ToastService.success('Data imported successfully!');
             } catch (error) {
-                alert(`Import failed: ${error.message}`);
+                ToastService.error(`Import failed: ${error.message}`);
             }
         };
 
@@ -1103,7 +1104,7 @@ export class ModalManager {
     #generateBatchPlan() {
         const container = document.getElementById('batchTripsContainer');
         if (!container || container.children.length === 0) {
-            alert('Please add at least one trip to the batch');
+            ToastService.warning('Please add at least one trip to the batch');
             return;
         }
 
@@ -1124,7 +1125,7 @@ export class ModalManager {
         }).filter(t => t.location);
 
         if (batchTrips.length === 0) {
-            alert('Please enter locations for your trips');
+            ToastService.warning('Please enter locations for your trips');
             return;
         }
 
@@ -1242,7 +1243,7 @@ export class ModalManager {
                 const selectedRadios = resultsContainer.querySelectorAll('.batch-week-radio:checked');
 
                 if (selectedRadios.length === 0) {
-                    alert('Please select at least one trip to add');
+                    ToastService.warning('Please select at least one trip to add');
                     return;
                 }
 

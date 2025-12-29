@@ -9,6 +9,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
+import ToastService from '../services/ToastService.js';
 
 export class TypeConfigModal {
     #modalId = 'typeConfigModal';
@@ -253,17 +254,17 @@ export class TypeConfigModal {
 
         // Validation
         if (!typeId || !label || !color || !colorDark) {
-            alert('Please fill in all required fields');
+            ToastService.error('Please fill in all required fields');
             return;
         }
 
         if (!/^[a-z0-9-]+$/.test(typeId)) {
-            alert('Type ID must be lowercase with hyphens only (no spaces)');
+            ToastService.error('Type ID must be lowercase with hyphens only (no spaces)');
             return;
         }
 
         if (!/^#[0-9A-F]{6}$/i.test(color) || !/^#[0-9A-F]{6}$/i.test(colorDark)) {
-            alert('Please enter valid hex colors (e.g. #3b82f6)');
+            ToastService.error('Please enter valid hex colors (e.g. #3b82f6)');
             return;
         }
 

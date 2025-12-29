@@ -8,6 +8,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
+import ToastService from '../services/ToastService.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
 
 export class LocationManagementModal {
@@ -115,13 +116,13 @@ export class LocationManagementModal {
         const location = input.value.trim();
 
         if (!location) {
-            alert('Please enter a location name');
+            ToastService.warning('Please enter a location name');
             return;
         }
 
         // Check if it's a built-in location
         if (BUILT_IN_LOCATIONS.includes(location.toUpperCase())) {
-            alert('This location is already a built-in division code');
+            ToastService.warning('This location is already a built-in division code');
             input.value = '';
             return;
         }
@@ -129,7 +130,7 @@ export class LocationManagementModal {
         // Check if it already exists in custom locations
         const customLocations = StateManager.getAllLocations();
         if (customLocations.includes(location)) {
-            alert('This location already exists');
+            ToastService.warning('This location already exists');
             input.value = '';
             return;
         }

@@ -12,6 +12,7 @@
 import StateManager from '../services/StateManager.js';
 import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
+import ToastService from '../services/ToastService.js';
 import EventBus from '../utils/EventBus.js';
 
 export class SettingsView {
@@ -242,11 +243,11 @@ export class SettingsView {
             const sampleData = await response.json();
             StateManager.importState(sampleData);
 
-            alert('Sample data loaded successfully!');
+            ToastService.success('Sample data loaded successfully!');
             this.#updateSettingsUI();
         } catch (error) {
             console.error('Error loading sample data:', error);
-            alert(`Failed to load sample data: ${error.message}`);
+            ToastService.error(`Failed to load sample data: ${error.message}`);
         }
     }
 
@@ -257,7 +258,7 @@ export class SettingsView {
     #exportData() {
         const state = StateManager.getState();
         DataService.downloadJSON(state);
-        alert('Data exported successfully!');
+        ToastService.success('Data exported successfully!');
     }
 
     /**
@@ -277,10 +278,10 @@ export class SettingsView {
                 const contents = await DataService.readFile(file);
                 const data = DataService.importFromJSON(contents);
                 StateManager.importState(data);
-                alert('Data imported successfully!');
+                ToastService.success('Data imported successfully!');
                 this.#updateSettingsUI();
             } catch (error) {
-                alert(`Import failed: ${error.message}`);
+                ToastService.error(`Import failed: ${error.message}`);
             }
         };
 
@@ -297,7 +298,7 @@ export class SettingsView {
         }
 
         StateManager.clearAll();
-        alert('All data cleared successfully!');
+        ToastService.success('All data cleared successfully!');
         this.#updateSettingsUI();
     }
 }
