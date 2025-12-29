@@ -107,6 +107,17 @@ export class SettingsView {
             });
         }
 
+        // Learn How It Works
+        const btnLearnHowItWorks = document.getElementById('btnLearnHowItWorks');
+        if (btnLearnHowItWorks) {
+            btnLearnHowItWorks.addEventListener('click', () => {
+                this.close(); // Close settings first
+                setTimeout(() => {
+                    EventBus.emit('help:open');
+                }, 300); // Wait for modal to close
+            });
+        }
+
         // Manage Event Types (includes both trip and constraint types)
         const manageEventTypesBtn = document.getElementById('btnManageEventTypes');
         if (manageEventTypesBtn) {

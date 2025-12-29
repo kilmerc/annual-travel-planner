@@ -39,10 +39,6 @@
 
             <div class="h-8 w-px bg-slate-200 dark:bg-slate-600 mx-2"></div>
 
-            <button id="btnHelp" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" data-tooltip="Restart tutorial">
-                <i class="fas fa-question-circle text-lg"></i>
-            </button>
-
             <button id="btnSettings" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" data-tooltip="Open settings">
                 <i class="fas fa-cog text-lg"></i>
             </button>
@@ -298,7 +294,7 @@
                 <!-- Help & Tutorial Section -->
                 <div class="mb-6">
                     <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Help & Tutorial</h4>
-                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700 space-y-3">
                         <button id="btnRestartTutorial" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-graduation-cap text-blue-600 dark:text-blue-400"></i>
@@ -308,6 +304,17 @@
                                 </div>
                             </div>
                             <i class="fas fa-chevron-right text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"></i>
+                        </button>
+
+                        <button id="btnLearnHowItWorks" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-book-open text-green-600 dark:text-green-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Learn How It Works</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Comprehensive guide to features and algorithms</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-green-600 dark:group-hover:text-green-400"></i>
                         </button>
                     </div>
                 </div>

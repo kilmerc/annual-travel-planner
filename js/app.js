@@ -15,6 +15,7 @@ import TypeConfigModal from './ui/TypeConfigModal.js';
 import TypeDeletionModal from './ui/TypeDeletionModal.js';
 import TypeManagementModal from './ui/TypeManagementModal.js';
 import LocationManagementModal from './ui/LocationManagementModal.js';
+import HelpModal from './ui/HelpModal.js';
 
 class TravelPlannerApp {
     constructor() {
@@ -30,6 +31,7 @@ class TravelPlannerApp {
         this.typeDeletionModal = new TypeDeletionModal();
         this.typeManagementModal = new TypeManagementModal();
         this.locationManagementModal = new LocationManagementModal();
+        this.helpModal = new HelpModal();
     }
 
     /**
@@ -56,6 +58,7 @@ class TravelPlannerApp {
         this.typeDeletionModal.init();
         this.typeManagementModal.init();
         this.locationManagementModal.init();
+        this.helpModal.init();
 
         // Setup header controls
         this.setupHeaderControls();
@@ -100,14 +103,6 @@ class TravelPlannerApp {
                 this.modalManager.openAddModal();
             }
         });
-
-        // Help button
-        const btnHelp = document.getElementById('btnHelp');
-        if (btnHelp) {
-            btnHelp.addEventListener('click', () => {
-                TutorialService.start();
-            });
-        }
 
         // Settings button
         const btnSettings = document.getElementById('btnSettings');
