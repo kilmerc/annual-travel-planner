@@ -109,6 +109,7 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
     * Click again to toggle highlighting off
     * Only Mon-Fri are highlighted (weekends excluded for cleaner visual)
     * Consistent visual treatment across all three metrics
+* **Help Button:** Question mark icon (?) to launch interactive tutorial
 * **Settings Button:** Access to application settings and data management
 * **Add Plan Button:** Opens modal for adding trips or constraints
 
@@ -360,6 +361,21 @@ User Action → UI Component → StateManager → localStorage
     - Single "Add Selected Trips to Calendar" button for batch add
     - Success confirmation after adding trips
   * **Conflicts Highlighting:** Conflicts metric now uses red highlighting instead of modal popup, providing consistent UX with other metrics
+* **Phase 12 (Interactive Tutorial System):** Complete. Features include:
+  * **driver.js Integration:** Lightweight library (v1.3.1) for guided product tours with overlay highlighting
+  * **First-Time Auto-Launch:** Tutorial automatically starts on first app load
+  * **Help Button:** Question mark icon (?) in header to restart tutorial anytime
+  * **Settings Integration:** "Restart Tutorial" button in Settings → Help & Tutorial section
+  * **localStorage Persistence:** Tracks tutorial completion to avoid repeated auto-launches
+  * **Comprehensive Tour Steps:**
+    - Welcome and year selector introduction
+    - Metrics bar explanation with clickable highlighting demo
+    - Add plan button and modal tabs overview
+    - Calendar view interaction (click days to add trips)
+    - Automated view switching to demonstrate Quarters and Timeline views
+    - Help button and Settings panel tour
+  * **Smart View Transitions:** Tutorial programmatically switches between Calendar, Quarters, and Timeline views to demonstrate each
+  * **Skip/Navigate Controls:** Users can skip tutorial, navigate back/forward through steps, or close at any time
 
 ## **6. Key Technical Decisions**
 
