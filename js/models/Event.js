@@ -2,16 +2,17 @@
  * Event - Travel event data model
  */
 
-import { EVENT_TYPES } from '../config/calendarConfig.js';
+import { BUILT_IN_EVENT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday } from '../services/DateService.js';
 
 export class Event {
-    constructor({ id, title, type, location, startDate, endDate = null, duration = 1, isFixed = true }) {
+    constructor({ id, title, type, location, startDate, endDate = null, duration = 1, isFixed = true, archived = false }) {
         this.id = id || Date.now().toString();
         this.title = title;
         this.type = type;
         this.location = location;
         this.isFixed = isFixed;
+        this.archived = archived || false;
 
         // For fixed trips with specific dates, store actual dates
         // For flexible trips, normalize to Monday of the week
@@ -77,9 +78,8 @@ export class Event {
             throw new Error('Event type is required');
         }
 
-        if (!Object.values(EVENT_TYPES).includes(this.type)) {
-            throw new Error(`Invalid event type: ${this.type}`);
-        }
+        // Note: Type validation is relaxed to allow custom types
+        // Type existence is validated at the StateManager level
 
         if (!this.startDate) {
             throw new Error('Event start date is required');
@@ -103,7 +103,8 @@ export class Event {
             startDate: this.startDate,
             endDate: this.endDate,
             duration: this.duration,
-            isFixed: this.isFixed
+            isFixed: this.isFixed,
+            archived: this.archived
         };
     }
 

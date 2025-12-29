@@ -11,6 +11,8 @@ import ViewManager from './ui/ViewManager.js';
 import MetricsBar from './ui/MetricsBar.js';
 import ModalManager from './ui/ModalManager.js';
 import SettingsView from './ui/SettingsView.js';
+import TypeConfigModal from './ui/TypeConfigModal.js';
+import TypeDeletionModal from './ui/TypeDeletionModal.js';
 
 class TravelPlannerApp {
     constructor() {
@@ -22,6 +24,8 @@ class TravelPlannerApp {
         this.metricsBar = new MetricsBar();
         this.modalManager = new ModalManager();
         this.settingsView = new SettingsView();
+        this.typeConfigModal = new TypeConfigModal();
+        this.typeDeletionModal = new TypeDeletionModal();
     }
 
     /**
@@ -44,6 +48,8 @@ class TravelPlannerApp {
         this.metricsBar.init(metricsBarEl);
         this.modalManager.init();
         this.settingsView.init();
+        this.typeConfigModal.init();
+        this.typeDeletionModal.init();
 
         // Setup header controls
         this.setupHeaderControls();
