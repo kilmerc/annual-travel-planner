@@ -25,7 +25,14 @@ class TutorialService {
         }
 
         // Use driver.js from global scope (loaded via CDN)
-        this.#driver = window.driver({
+        // Access via window.driver.js.driver per driver.js CDN API
+        const driverConstructor = window.driver?.js?.driver;
+        if (!driverConstructor) {
+            console.error('driver.js library not loaded');
+            return;
+        }
+
+        this.#driver = driverConstructor({
             animate: true,
             opacity: 0.75,
             padding: 10,
