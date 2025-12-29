@@ -9,10 +9,13 @@ import EventBus from '../utils/EventBus.js';
 class TutorialService {
     #driver = null;
     #hasCompletedTutorial = false;
+    #hasCompletedModalTutorial = false;
+    #shouldShowModalTutorialNext = false;
 
     constructor() {
-        // Check if tutorial has been completed
+        // Check if tutorials have been completed
         this.#hasCompletedTutorial = localStorage.getItem('tutorialCompleted') === 'true';
+        this.#hasCompletedModalTutorial = localStorage.getItem('modalTutorialCompleted') === 'true';
     }
 
     /**
@@ -75,8 +78,37 @@ class TutorialService {
      */
     reset() {
         localStorage.removeItem('tutorialCompleted');
+        localStorage.removeItem('modalTutorialCompleted');
         this.#hasCompletedTutorial = false;
+        this.#hasCompletedModalTutorial = false;
+        this.#shouldShowModalTutorialNext = true; // Flag to show modal tutorial on next modal open
         this.start();
+    }
+
+    /**
+     * Check if modal tutorial should be shown and trigger it
+     * Call this when the modal is opened
+     * @returns {boolean} True if modal tutorial was started
+     */
+    checkAndShowModalTutorial() {
+        if (!this.#hasCompletedModalTutorial || this.#shouldShowModalTutorialNext) {
+            // Small delay to let modal render
+            setTimeout(() => {
+                this.startModalTutorial();
+            }, 300);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Start the modal-specific tutorial
+     */
+    startModalTutorial() {
+        this.#initDriver();
+        this.#driver.setSteps(this.#getModalSteps());
+        this.#driver.drive();
+        this.#shouldShowModalTutorialNext = false;
     }
 
     /**
@@ -86,6 +118,15 @@ class TutorialService {
     #markAsCompleted() {
         localStorage.setItem('tutorialCompleted', 'true');
         this.#hasCompletedTutorial = true;
+    }
+
+    /**
+     * Mark modal tutorial as completed
+     * @private
+     */
+    #markModalTutorialAsCompleted() {
+        localStorage.setItem('modalTutorialCompleted', 'true');
+        this.#hasCompletedModalTutorial = true;
     }
 
     /**
@@ -161,10 +202,85 @@ class TutorialService {
     }
 
     /**
+     * Get modal tutorial steps
+     * @private
+     */
+    #getModalSteps() {
+        return [
+            {
+                element: '.tab-btn[data-tab="trip"]',
+                popover: {
+                    title: 'Plan Trip Tab',
+                    description: 'Use this tab to add business trips. You can plan trips in two ways:<br><strong>Flexible:</strong> Get AI-suggested optimal weeks based on constraints<br><strong>Fixed:</strong> Schedule trips for specific dates you already know',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '#tripTimeRange',
+                popover: {
+                    title: 'Planning Range',
+                    description: 'Choose the timeframe to search for optimal travel weeks. Options include Current Year, Current Quarter, or rolling windows like Next 3/6/12 Months.',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '#tripLocationContainer',
+                popover: {
+                    title: 'Location',
+                    description: 'Enter the trip location. The optimizer uses this to consolidate trips to the same city and avoid conflicting locations on the same week.',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '#tripMode',
+                popover: {
+                    title: 'Trip Mode',
+                    description: '<strong>Flexible mode:</strong> Click "Find Best Weeks" to get AI suggestions<br><strong>Fixed mode:</strong> Pick exact dates when you already know your schedule',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '.tab-btn[data-tab="constraint"]',
+                popover: {
+                    title: 'Add Constraint Tab',
+                    description: 'Use this tab to block out times when you cannot or prefer not to travel:<br>• <strong>Hard constraints:</strong> Vacations, holidays, blackout dates (completely blocks weeks)<br>• <strong>Soft constraints:</strong> Preferences (discourages but allows travel)',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '.tab-btn[data-tab="batch"]',
+                popover: {
+                    title: 'Batch Plan Tab',
+                    description: 'Planning multiple trips at once? Use this tab to:<br>1. Set a Planning Range for all trips<br>2. Add multiple trips with titles, types, and locations<br>3. Get optimized week suggestions for each trip<br>4. Add all selected trips at once with no double-booking!',
+                    position: 'bottom'
+                }
+            },
+            {
+                popover: {
+                    title: 'You\'re Ready to Plan! 🚀',
+                    description: 'Start by adding your first trip or constraint. The calendar will update automatically as you add items.',
+                    position: 'center',
+                    onNextClick: () => {
+                        this.#markModalTutorialAsCompleted();
+                        this.#driver.destroy();
+                    }
+                }
+            }
+        ];
+    }
+
+    /**
      * Check if tutorial has been completed
      */
     hasCompleted() {
         return this.#hasCompletedTutorial;
+    }
+
+    /**
+     * Check if modal tutorial has been completed
+     */
+    hasCompletedModalTutorial() {
+        return this.#hasCompletedModalTutorial;
     }
 }
 

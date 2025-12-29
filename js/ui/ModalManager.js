@@ -11,6 +11,7 @@ import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
 import ScoringEngine from '../services/ScoringEngine.js';
 import DataService from '../services/DataService.js';
+import TutorialService from '../services/TutorialService.js';
 import { formatDate } from '../services/DateService.js';
 import ComboBox from './ComboBox.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
@@ -235,6 +236,9 @@ export class ModalManager {
             suggestionResults.classList.add('hidden');
             suggestionResults.innerHTML = '';
         }
+
+        // Check and show modal tutorial if first time or requested
+        TutorialService.checkAndShowModalTutorial();
     }
 
     /**
