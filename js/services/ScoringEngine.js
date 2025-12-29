@@ -3,17 +3,20 @@
  *
  * Scoring logic:
  * - Base score: 100 points
- * - Hard constraint (vacation/holiday/blackout): -1000 points (disqualified)
- * - Soft constraint (preference): -20 points (discouraged)
+ * - Hard constraint (isHardStop=true): -1000 points (disqualified)
+ * - Soft constraint (isHardStop=false): -20 points (discouraged)
  * - Location consolidation (same city): +500 points
  * - Location conflict (different city): -1000 points
  * - Filter viable: score > -500
  * - Return top 3 weeks sorted by score
+ *
+ * Note: Hard vs Soft constraint determination now uses dynamic type
+ * configurations from StateManager instead of hardcoded type list.
  */
 
 import { QUARTERS } from '../config/calendarConfig.js';
-import { HARD_CONSTRAINT_TYPES } from '../config/calendarConfig.js';
 import { dateToISO, getMonday, formatDate, overlapsWithWeek } from '../services/DateService.js';
+import StateManager from './StateManager.js';
 
 export class ScoringEngine {
     /**
@@ -31,12 +34,15 @@ export class ScoringEngine {
             throw new Error(`Invalid quarter ID: ${quarterId}`);
         }
 
+        // Filter out archived events - they should not affect scheduling
+        const activeEvents = events.filter(e => !e.archived);
+
         // Generate candidate weeks (all Mondays in the quarter)
         const candidates = this.#generateCandidates(quarter, year);
 
         // Score each candidate week
         const scored = candidates.map(date => {
-            const score = this.scoreWeek(date, location, events, constraints);
+            const score = this.scoreWeek(date, location, activeEvents, constraints);
             return {
                 date,
                 iso: dateToISO(date),
@@ -74,7 +80,10 @@ export class ScoringEngine {
         );
 
         conflictingConstraints.forEach(constraint => {
-            const isHard = HARD_CONSTRAINT_TYPES.includes(constraint.type);
+            // Check if this constraint type is configured as a hard stop
+            const typeConfig = StateManager.getConstraintTypeConfig(constraint.type);
+            const isHard = typeConfig?.isHardStop ?? false;
+
             if (isHard) {
                 score = -1000; // Disqualified
                 reasons.push(`Blocked: ${constraint.title}`);
@@ -123,14 +132,18 @@ export class ScoringEngine {
     detectConflicts(events, constraints) {
         const conflicts = [];
 
-        events.forEach(event => {
+        // Filter out archived events - they should not be considered in conflict detection
+        const activeEvents = events.filter(e => !e.archived);
+
+        activeEvents.forEach(event => {
             const eventStartDate = event.startDate;
             const eventEndDate = event.endDate || event.startDate;
 
             // Check for hard constraint conflicts that overlap with the event
-            const hardConstraints = constraints.filter(c =>
-                HARD_CONSTRAINT_TYPES.includes(c.type)
-            );
+            const hardConstraints = constraints.filter(c => {
+                const typeConfig = StateManager.getConstraintTypeConfig(c.type);
+                return typeConfig?.isHardStop ?? false;
+            });
 
             hardConstraints.forEach(hardConstraint => {
                 // Check if event overlaps with constraint
@@ -152,7 +165,7 @@ export class ScoringEngine {
             });
 
             // Check for double-booking (overlapping events in different locations)
-            events.forEach(other => {
+            activeEvents.forEach(other => {
                 if (event.id === other.id) return;
 
                 const otherStartDate = other.startDate;
@@ -197,8 +210,11 @@ export class ScoringEngine {
         const opportunities = [];
         const weekGroups = new Map();
 
+        // Filter out archived events
+        const activeEvents = events.filter(e => !e.archived);
+
         // Group events by week
-        events.forEach(event => {
+        activeEvents.forEach(event => {
             const week = event.startDate;
             if (!weekGroups.has(week)) {
                 weekGroups.set(week, []);

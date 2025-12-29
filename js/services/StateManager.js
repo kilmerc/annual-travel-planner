@@ -8,12 +8,16 @@
 import EventBus from '../utils/EventBus.js';
 import { Event } from '../models/Event.js';
 import { Constraint } from '../models/Constraint.js';
+import { DEFAULT_EVENT_TYPE_CONFIGS, DEFAULT_CONSTRAINT_TYPE_CONFIGS } from '../config/calendarConfig.js';
 
 class StateManager {
     #state = {
         year: 2025,
         events: [],
-        constraints: []
+        constraints: [],
+        eventTypeConfigs: { ...DEFAULT_EVENT_TYPE_CONFIGS },
+        constraintTypeConfigs: { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS },
+        customLocations: [] // Array of custom location strings
     };
 
     #storageKey = 'travelPlannerState';
@@ -30,7 +34,10 @@ class StateManager {
         return {
             year: this.#state.year,
             events: this.#state.events.map(e => e.toJSON ? e.toJSON() : e),
-            constraints: this.#state.constraints.map(c => c.toJSON ? c.toJSON() : c)
+            constraints: this.#state.constraints.map(c => c.toJSON ? c.toJSON() : c),
+            eventTypeConfigs: { ...this.#state.eventTypeConfigs },
+            constraintTypeConfigs: { ...this.#state.constraintTypeConfigs },
+            customLocations: [...this.#state.customLocations]
         };
     }
 
@@ -196,6 +203,9 @@ class StateManager {
 
         this.#state.events = (data.events || []).map(e => new Event(e));
         this.#state.constraints = (data.constraints || []).map(c => new Constraint(c));
+        this.#state.eventTypeConfigs = data.eventTypeConfigs || { ...DEFAULT_EVENT_TYPE_CONFIGS };
+        this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
+        this.#state.customLocations = data.customLocations || [];
 
         this.#persist();
         EventBus.emit('state:imported', this.getState());
@@ -208,6 +218,9 @@ class StateManager {
     clearAll() {
         this.#state.events = [];
         this.#state.constraints = [];
+        this.#state.eventTypeConfigs = { ...DEFAULT_EVENT_TYPE_CONFIGS };
+        this.#state.constraintTypeConfigs = { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
+        this.#state.customLocations = [];
         this.#persist();
         EventBus.emit('state:cleared');
         EventBus.emit('state:changed', this.getState());
@@ -230,11 +243,186 @@ class StateManager {
                 this.#state.constraints = (data.constraints || []).map(c =>
                     c instanceof Constraint ? c : new Constraint(c)
                 );
+
+                // Load type configurations
+                this.#state.eventTypeConfigs = data.eventTypeConfigs || { ...DEFAULT_EVENT_TYPE_CONFIGS };
+                this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
+                this.#state.customLocations = data.customLocations || [];
             }
         } catch (error) {
             console.error('Error loading state from localStorage:', error);
             // Keep default state
         }
+    }
+
+    /**
+     * Get event type configuration
+     * @param {string} typeId - Type ID
+     * @returns {object|null} Type config or null
+     */
+    getEventTypeConfig(typeId) {
+        return this.#state.eventTypeConfigs[typeId] || null;
+    }
+
+    /**
+     * Get all event type configurations
+     * @returns {object} All event type configs
+     */
+    getAllEventTypeConfigs() {
+        return { ...this.#state.eventTypeConfigs };
+    }
+
+    /**
+     * Add or update event type configuration
+     * @param {string} typeId - Type ID
+     * @param {object} config - Type configuration (label, color, colorDark, isHardStop)
+     */
+    setEventTypeConfig(typeId, config) {
+        this.#state.eventTypeConfigs[typeId] = {
+            ...config,
+            isBuiltIn: this.#state.eventTypeConfigs[typeId]?.isBuiltIn || false
+        };
+        this.#persist();
+        EventBus.emit('type:updated', { kind: 'event', typeId, config });
+        EventBus.emit('state:changed', this.getState());
+    }
+
+    /**
+     * Delete event type and handle events with that type
+     * @param {string} typeId - Type ID
+     * @param {string} action - 'archive' or 'delete'
+     */
+    deleteEventType(typeId, action = 'archive') {
+        // Check if this is a built-in type
+        if (this.#state.eventTypeConfigs[typeId]?.isBuiltIn) {
+            throw new Error('Cannot delete built-in event types');
+        }
+
+        // Find all events with this type
+        const eventsWithType = this.#state.events.filter(e => e.type === typeId);
+
+        if (action === 'archive') {
+            // Archive all events with this type
+            eventsWithType.forEach(event => {
+                event.archived = true;
+            });
+        } else if (action === 'delete') {
+            // Delete all events with this type
+            this.#state.events = this.#state.events.filter(e => e.type !== typeId);
+        }
+
+        // Delete the type configuration
+        delete this.#state.eventTypeConfigs[typeId];
+
+        this.#persist();
+        EventBus.emit('type:deleted', { kind: 'event', typeId, action });
+        EventBus.emit('state:changed', this.getState());
+    }
+
+    /**
+     * Get constraint type configuration
+     * @param {string} typeId - Type ID
+     * @returns {object|null} Type config or null
+     */
+    getConstraintTypeConfig(typeId) {
+        return this.#state.constraintTypeConfigs[typeId] || null;
+    }
+
+    /**
+     * Get all constraint type configurations
+     * @returns {object} All constraint type configs
+     */
+    getAllConstraintTypeConfigs() {
+        return { ...this.#state.constraintTypeConfigs };
+    }
+
+    /**
+     * Add or update constraint type configuration
+     * @param {string} typeId - Type ID
+     * @param {object} config - Type configuration (label, color, colorDark, isHardStop)
+     */
+    setConstraintTypeConfig(typeId, config) {
+        this.#state.constraintTypeConfigs[typeId] = {
+            ...config,
+            isBuiltIn: this.#state.constraintTypeConfigs[typeId]?.isBuiltIn || false
+        };
+        this.#persist();
+        EventBus.emit('type:updated', { kind: 'constraint', typeId, config });
+        EventBus.emit('state:changed', this.getState());
+    }
+
+    /**
+     * Delete constraint type
+     * @param {string} typeId - Type ID
+     */
+    deleteConstraintType(typeId) {
+        // Check if this is a built-in type
+        if (this.#state.constraintTypeConfigs[typeId]?.isBuiltIn) {
+            throw new Error('Cannot delete built-in constraint types');
+        }
+
+        // Delete all constraints with this type
+        this.#state.constraints = this.#state.constraints.filter(c => c.type !== typeId);
+
+        // Delete the type configuration
+        delete this.#state.constraintTypeConfigs[typeId];
+
+        this.#persist();
+        EventBus.emit('type:deleted', { kind: 'constraint', typeId });
+        EventBus.emit('state:changed', this.getState());
+    }
+
+    /**
+     * Get all locations (built-in + custom)
+     * @returns {Array} All locations
+     */
+    getAllLocations() {
+        return [...this.#state.customLocations];
+    }
+
+    /**
+     * Add custom location
+     * @param {string} location - Location name
+     */
+    addCustomLocation(location) {
+        const trimmed = location.trim();
+        if (trimmed && !this.#state.customLocations.includes(trimmed)) {
+            this.#state.customLocations.push(trimmed);
+            this.#state.customLocations.sort();
+            this.#persist();
+            EventBus.emit('location:added', trimmed);
+            EventBus.emit('state:changed', this.getState());
+        }
+    }
+
+    /**
+     * Delete custom location
+     * @param {string} location - Location name
+     */
+    deleteCustomLocation(location) {
+        const index = this.#state.customLocations.indexOf(location);
+        if (index > -1) {
+            this.#state.customLocations.splice(index, 1);
+            this.#persist();
+            EventBus.emit('location:deleted', location);
+            EventBus.emit('state:changed', this.getState());
+        }
+    }
+
+    /**
+     * Archive events by ID
+     * @param {Array<string>} eventIds - Array of event IDs to archive
+     */
+    archiveEvents(eventIds) {
+        eventIds.forEach(id => {
+            const event = this.#state.events.find(e => e.id === id);
+            if (event) {
+                event.archived = true;
+            }
+        });
+        this.#persist();
+        EventBus.emit('events:archived', eventIds);
+        EventBus.emit('state:changed', this.getState());
     }
 
     /**

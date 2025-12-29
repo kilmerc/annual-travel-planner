@@ -12,6 +12,8 @@ import StateManager from '../services/StateManager.js';
 import ScoringEngine from '../services/ScoringEngine.js';
 import DataService from '../services/DataService.js';
 import { formatDate } from '../services/DateService.js';
+import ComboBox from './ComboBox.js';
+import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
 
 export class ModalManager {
     #addModalId = 'addModal';
@@ -19,16 +21,178 @@ export class ModalManager {
     #editingEventId = null;
     #editingConstraintId = null;
     #batchTrips = [];
+    #tripTypeComboBox = null;
+    #tripLocationComboBox = null;
+    #constraintTypeComboBox = null;
 
     /**
      * Initialize modal manager
      */
     init() {
+        this.#initializeComboBoxes();
         this.#setupEventListeners();
 
         // Subscribe to events
         EventBus.on('quick-add:clicked', (data) => this.openAddModal(data.date));
         EventBus.on('calendar:day-clicked', (data) => this.openAddModal(data.date));
+
+        // Listen for type configuration changes to refresh ComboBoxes
+        EventBus.on('type:configured', () => this.#refreshComboBoxOptions());
+        EventBus.on('type:deleted', () => this.#refreshComboBoxOptions());
+        EventBus.on('location:added', () => this.#refreshLocationComboBox());
+        EventBus.on('location:deleted', () => this.#refreshLocationComboBox());
+    }
+
+    /**
+     * Initialize ComboBox instances
+     * @private
+     */
+    #initializeComboBoxes() {
+        // Initialize Trip Type ComboBox
+        const eventTypeConfigs = StateManager.getAllEventTypeConfigs();
+        const eventTypeOptions = Object.entries(eventTypeConfigs).map(([id, config]) => ({
+            value: id,
+            label: config.label,
+            isBuiltIn: config.isBuiltIn
+        }));
+
+        this.#tripTypeComboBox = new ComboBox({
+            options: eventTypeOptions,
+            value: 'division', // Default
+            onChange: (value) => {},
+            onAdd: (value, label) => {
+                // Open type config modal to configure the new type
+                EventBus.emit('type-config:open', { kind: 'event', typeId: value });
+            },
+            onDelete: (value) => {
+                const config = StateManager.getEventTypeConfig(value);
+                if (config) {
+                    // Check for conflicts and handle deletion
+                    const state = StateManager.getState();
+                    const eventsWithType = state.events.filter(e => e.type === value);
+                    if (eventsWithType.length > 0) {
+                        EventBus.emit('type-deletion:open-event', {
+                            typeId: value,
+                            typeLabel: config.label,
+                            eventCount: eventsWithType.length
+                        });
+                    } else {
+                        if (confirm(`Delete type "${config.label}"?`)) {
+                            StateManager.deleteEventType(value, 'delete');
+                        }
+                    }
+                }
+            },
+            placeholder: 'Select trip type...',
+            allowCreate: true,
+            allowDelete: true
+        });
+        this.#tripTypeComboBox.render(document.getElementById('tripTypeContainer'));
+
+        // Initialize Location ComboBox
+        const allLocations = [...BUILT_IN_LOCATIONS, ...StateManager.getAllLocations()];
+        const locationOptions = allLocations.map(loc => ({
+            value: loc,
+            label: loc,
+            isBuiltIn: BUILT_IN_LOCATIONS.includes(loc)
+        }));
+
+        this.#tripLocationComboBox = new ComboBox({
+            options: locationOptions,
+            value: '',
+            onChange: (value) => {},
+            onAdd: (value, label) => {
+                StateManager.addCustomLocation(value);
+            },
+            onDelete: (value) => {
+                if (confirm(`Delete location "${value}"?`)) {
+                    StateManager.deleteCustomLocation(value);
+                }
+            },
+            placeholder: 'Select or type location...',
+            allowCreate: true,
+            allowDelete: true
+        });
+        this.#tripLocationComboBox.render(document.getElementById('tripLocationContainer'));
+
+        // Initialize Constraint Type ComboBox
+        const constraintTypeConfigs = StateManager.getAllConstraintTypeConfigs();
+        const constraintTypeOptions = Object.entries(constraintTypeConfigs).map(([id, config]) => ({
+            value: id,
+            label: config.label,
+            isBuiltIn: config.isBuiltIn
+        }));
+
+        this.#constraintTypeComboBox = new ComboBox({
+            options: constraintTypeOptions,
+            value: 'vacation', // Default
+            onChange: (value) => {},
+            onAdd: (value, label) => {
+                // Open type config modal to configure the new type
+                EventBus.emit('type-config:open', { kind: 'constraint', typeId: value });
+            },
+            onDelete: (value) => {
+                const config = StateManager.getConstraintTypeConfig(value);
+                if (config) {
+                    // Check for conflicts and handle deletion
+                    const state = StateManager.getState();
+                    const constraintsWithType = state.constraints.filter(c => c.type === value);
+                    if (constraintsWithType.length > 0) {
+                        EventBus.emit('type-deletion:open-constraint', {
+                            typeId: value,
+                            typeLabel: config.label,
+                            constraintCount: constraintsWithType.length
+                        });
+                    } else {
+                        if (confirm(`Delete type "${config.label}"?`)) {
+                            StateManager.deleteConstraintType(value);
+                        }
+                    }
+                }
+            },
+            placeholder: 'Select constraint type...',
+            allowCreate: true,
+            allowDelete: true
+        });
+        this.#constraintTypeComboBox.render(document.getElementById('constraintTypeContainer'));
+    }
+
+    /**
+     * Refresh ComboBox options after type configuration changes
+     * @private
+     */
+    #refreshComboBoxOptions() {
+        // Refresh event types
+        const eventTypeConfigs = StateManager.getAllEventTypeConfigs();
+        const eventTypeOptions = Object.entries(eventTypeConfigs).map(([id, config]) => ({
+            value: id,
+            label: config.label,
+            isBuiltIn: config.isBuiltIn
+        }));
+        this.#tripTypeComboBox.updateOptions(eventTypeOptions);
+
+        // Refresh constraint types
+        const constraintTypeConfigs = StateManager.getAllConstraintTypeConfigs();
+        const constraintTypeOptions = Object.entries(constraintTypeConfigs).map(([id, config]) => ({
+            value: id,
+            label: config.label,
+            isBuiltIn: config.isBuiltIn
+        }));
+        this.#constraintTypeComboBox.updateOptions(constraintTypeOptions);
+    }
+
+    /**
+     * Refresh location ComboBox options after location changes
+     * @private
+     */
+    #refreshLocationComboBox() {
+        const allLocations = [...BUILT_IN_LOCATIONS, ...StateManager.getAllLocations()];
+        const locationOptions = allLocations.map(loc => ({
+            value: loc,
+            label: loc,
+            isBuiltIn: BUILT_IN_LOCATIONS.includes(loc)
+        }));
+        this.#tripLocationComboBox.updateOptions(locationOptions);
     }
 
     /**
@@ -45,10 +209,10 @@ export class ModalManager {
         document.getElementById('tripForm').reset();
         document.getElementById('constraintForm').reset();
 
-        // Reset location dropdown and hide custom input
-        document.getElementById('tripLocationSelect').value = '';
-        document.getElementById('tripLocation').classList.add('hidden');
-        document.getElementById('tripLocation').value = '';
+        // Reset ComboBoxes to default values
+        this.#tripTypeComboBox.setValue('division');
+        this.#tripLocationComboBox.setValue('');
+        this.#constraintTypeComboBox.setValue('vacation');
 
         if (prefilledDate) {
             document.getElementById('tripDate').value = prefilledDate;
@@ -91,22 +255,11 @@ export class ModalManager {
 
         // Pre-fill form with event data
         document.getElementById('tripTitle').value = event.title || '';
-        document.getElementById('tripType').value = event.type || 'division';
+        this.#tripTypeComboBox.setValue(event.type || 'division');
         document.getElementById('tripMode').value = event.isFixed ? 'fixed' : 'flexible';
 
-        // Handle location - check if it's a division code or custom location
-        const divisionCodes = ['DAL', 'VAL', 'VCE', 'VCW', 'VER', 'VIN', 'VNE', 'VNY', 'VSC', 'VTX', 'VUT'];
-        const location = event.location || '';
-
-        if (divisionCodes.includes(location.toUpperCase())) {
-            document.getElementById('tripLocationSelect').value = location.toUpperCase();
-            document.getElementById('tripLocation').value = location.toUpperCase();
-            document.getElementById('tripLocation').classList.add('hidden');
-        } else {
-            document.getElementById('tripLocationSelect').value = 'custom';
-            document.getElementById('tripLocation').value = location;
-            document.getElementById('tripLocation').classList.remove('hidden');
-        }
+        // Set location using ComboBox
+        this.#tripLocationComboBox.setValue(event.location || '');
 
         if (event.isFixed && event.endDate) {
             document.getElementById('tripDate').value = event.startDate;
@@ -154,7 +307,7 @@ export class ModalManager {
 
         // Pre-fill form with constraint data
         document.getElementById('constraintTitle').value = constraint.title || '';
-        document.getElementById('constraintType').value = constraint.type || 'vacation';
+        this.#constraintTypeComboBox.setValue(constraint.type || 'vacation');
         document.getElementById('constraintDate').value = constraint.startDate;
         document.getElementById('constraintEndDate').value = constraint.endDate || constraint.startDate;
 
@@ -226,12 +379,6 @@ export class ModalManager {
         const tripModeSelect = document.getElementById('tripMode');
         if (tripModeSelect) {
             tripModeSelect.addEventListener('change', () => this.#toggleTripMode());
-        }
-
-        // Location dropdown toggle
-        const tripLocationSelect = document.getElementById('tripLocationSelect');
-        if (tripLocationSelect) {
-            tripLocationSelect.addEventListener('change', () => this.#toggleLocationInput());
         }
 
         // Multi-add mode toggle for trips
@@ -387,24 +534,6 @@ export class ModalManager {
     }
 
     /**
-     * Toggle location input (dropdown vs custom text)
-     * @private
-     */
-    #toggleLocationInput() {
-        const selectValue = document.getElementById('tripLocationSelect').value;
-        const customInput = document.getElementById('tripLocation');
-
-        if (selectValue === 'custom') {
-            customInput.classList.remove('hidden');
-            customInput.value = '';
-            customInput.focus();
-        } else {
-            customInput.classList.add('hidden');
-            customInput.value = selectValue;
-        }
-    }
-
-    /**
      * Toggle multi-add mode for trips
      * @private
      */
@@ -516,7 +645,7 @@ export class ModalManager {
      */
     #getSuggestions() {
         const quarterId = parseInt(document.getElementById('tripQuarter').value);
-        const location = document.getElementById('tripLocation').value.toLowerCase().trim();
+        const location = this.#tripLocationComboBox.getValue().trim();
 
         if (!location) {
             alert('Please enter a location for optimization suggestions.');
@@ -589,8 +718,8 @@ export class ModalManager {
      */
     #acceptSuggestion(isoDate) {
         const title = document.getElementById('tripTitle').value || 'Division Visit';
-        const type = document.getElementById('tripType').value;
-        const location = document.getElementById('tripLocation').value;
+        const type = this.#tripTypeComboBox.getValue();
+        const location = this.#tripLocationComboBox.getValue();
 
         StateManager.addEvent({
             id: Date.now().toString(),
@@ -611,8 +740,8 @@ export class ModalManager {
      */
     #saveFixedTrip() {
         const title = document.getElementById('tripTitle').value;
-        const location = document.getElementById('tripLocation').value;
-        const type = document.getElementById('tripType').value;
+        const location = this.#tripLocationComboBox.getValue();
+        const type = this.#tripTypeComboBox.getValue();
         const isMultiAdd = document.getElementById('multiAddMode').checked;
 
         if (!title) {
@@ -717,7 +846,7 @@ export class ModalManager {
      */
     #saveConstraint() {
         const title = document.getElementById('constraintTitle').value;
-        const type = document.getElementById('constraintType').value;
+        const type = this.#constraintTypeComboBox.getValue();
         const isMultiAdd = document.getElementById('multiAddModeConstraint').checked;
 
         if (!title) {

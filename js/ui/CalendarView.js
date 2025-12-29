@@ -2,6 +2,7 @@
  * CalendarView - Year-at-a-glance calendar view
  *
  * Displays all 12 months in a grid layout with event/constraint indicators
+ * Supports dynamic type colors and archived event rendering
  */
 
 import EventBus from '../utils/EventBus.js';
@@ -139,60 +140,57 @@ export class CalendarView {
     }
 
     /**
-     * Render legend
+     * Render legend with dynamic types
      * @private
      */
     #renderLegend() {
         const legendEl = document.createElement('div');
         legendEl.className = 'bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-3 overflow-x-auto';
 
-        legendEl.innerHTML = `
-            <div class="flex items-center gap-6 flex-wrap text-xs">
-                <div class="font-bold text-slate-700 dark:text-slate-300 mr-2">Legend:</div>
+        const isDarkMode = document.documentElement.classList.contains('dark');
 
-                <!-- Event Types -->
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-blue-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">Division Visit</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-purple-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">GTS All-Hands</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-orange-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">PI Planning</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-green-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">BP Team Meeting</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-slate-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">Other Business</span>
-                </div>
+        let html = '<div class="flex items-center gap-6 flex-wrap text-xs">';
+        html += '<div class="font-bold text-slate-700 dark:text-slate-300 mr-2">Legend:</div>';
 
-                <div class="h-4 w-px bg-slate-300 dark:bg-slate-600"></div>
+        // Event Types
+        const eventTypeConfigs = StateManager.getAllEventTypeConfigs();
+        Object.entries(eventTypeConfigs).forEach(([typeId, config]) => {
+            const color = isDarkMode ? config.colorDark : config.color;
+            html += `
+                <div class="flex items-center gap-1">
+                    <div class="w-4 h-4 rounded" style="background-color: ${color}"></div>
+                    <span class="text-slate-600 dark:text-slate-400">${config.label}</span>
+                </div>
+            `;
+        });
 
-                <!-- Constraint Types -->
+        html += '<div class="h-4 w-px bg-slate-300 dark:bg-slate-600"></div>';
+
+        // Constraint Types
+        const constraintTypeConfigs = StateManager.getAllConstraintTypeConfigs();
+        Object.entries(constraintTypeConfigs).forEach(([typeId, config]) => {
+            const color = isDarkMode ? config.colorDark : config.color;
+            html += `
                 <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-red-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">Vacation</span>
+                    <div class="w-4 h-4 rounded" style="background-color: ${color}"></div>
+                    <span class="text-slate-600 dark:text-slate-400">${config.label}</span>
                 </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-pink-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">Holiday</span>
+            `;
+        });
+
+        // Archived indicator
+        html += '<div class="h-4 w-px bg-slate-300 dark:bg-slate-600"></div>';
+        html += `
+            <div class="flex items-center gap-1">
+                <div class="w-4 h-4 rounded bg-slate-300 dark:bg-slate-600 opacity-60 flex items-center justify-center">
+                    <i class="fas fa-archive text-[8px] text-slate-600 dark:text-slate-400"></i>
                 </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-rose-600"></div>
-                    <span class="text-slate-600 dark:text-slate-400">Blackout</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded bg-yellow-500"></div>
-                    <span class="text-slate-600 dark:text-slate-400">Preference</span>
-                </div>
+                <span class="text-slate-600 dark:text-slate-400">Archived</span>
             </div>
         `;
+
+        html += '</div>';
+        legendEl.innerHTML = html;
 
         return legendEl;
     }
@@ -344,29 +342,43 @@ export class CalendarView {
      */
     #createEventBar(event) {
         const bar = document.createElement('div');
-        bar.className = `text-[9px] px-1 py-0.5 rounded cursor-pointer hover:brightness-110 transition truncate`;
+        bar.className = `text-[9px] px-1 py-0.5 rounded cursor-pointer hover:brightness-110 transition truncate flex items-center gap-1`;
 
-        // Color based on event type
-        switch (event.type) {
-            case 'division':
-                bar.classList.add('bg-blue-500', 'text-white');
-                break;
-            case 'gts':
-                bar.classList.add('bg-purple-500', 'text-white');
-                break;
-            case 'pi':
-                bar.classList.add('bg-orange-500', 'text-white');
-                break;
-            case 'bp':
-                bar.classList.add('bg-green-500', 'text-white');
-                break;
-            case 'other':
+        // Check if archived
+        if (event.archived) {
+            // Archived events: grey with reduced opacity and archive icon
+            bar.classList.add('bg-slate-300', 'dark:bg-slate-600', 'text-slate-600', 'dark:text-slate-400', 'opacity-60');
+
+            // Add archive icon
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-archive text-[8px]';
+            bar.appendChild(icon);
+
+            const text = document.createElement('span');
+            text.className = 'truncate flex-1';
+            text.textContent = event.title;
+            bar.appendChild(text);
+
+            bar.title = `${event.title} - ${event.location} (ARCHIVED - Click to edit)`;
+        } else {
+            // Active events: use dynamic colors from type configuration
+            const typeConfig = StateManager.getEventTypeConfig(event.type);
+
+            if (typeConfig) {
+                // Use dynamic colors from configuration
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                const color = isDarkMode ? typeConfig.colorDark : typeConfig.color;
+                bar.style.backgroundColor = color;
+                bar.style.color = '#ffffff';
+            } else {
+                // Fallback to default grey if type not found
                 bar.classList.add('bg-slate-500', 'text-white');
-                break;
+            }
+
+            bar.textContent = event.title;
+            bar.title = `${event.title} - ${event.location} (Click to edit)`;
         }
 
-        bar.textContent = event.title;
-        bar.title = `${event.title} - ${event.location} (Click to edit)`;
         bar.dataset.action = 'edit-event';
         bar.dataset.id = event.id;
 
@@ -381,20 +393,18 @@ export class CalendarView {
         const bar = document.createElement('div');
         bar.className = `text-[9px] px-1 py-0.5 rounded cursor-pointer hover:brightness-110 transition truncate`;
 
-        // Color based on constraint type
-        switch (constraint.type) {
-            case 'vacation':
-                bar.classList.add('bg-red-500', 'text-white');
-                break;
-            case 'holiday':
-                bar.classList.add('bg-pink-500', 'text-white');
-                break;
-            case 'blackout':
-                bar.classList.add('bg-rose-600', 'text-white');
-                break;
-            case 'preference':
-                bar.classList.add('bg-yellow-400', 'text-slate-800');
-                break;
+        // Use dynamic colors from type configuration
+        const typeConfig = StateManager.getConstraintTypeConfig(constraint.type);
+
+        if (typeConfig) {
+            // Use dynamic colors from configuration
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const color = isDarkMode ? typeConfig.colorDark : typeConfig.color;
+            bar.style.backgroundColor = color;
+            bar.style.color = '#ffffff';
+        } else {
+            // Fallback to default grey if type not found
+            bar.classList.add('bg-slate-500', 'text-white');
         }
 
         bar.textContent = constraint.title;

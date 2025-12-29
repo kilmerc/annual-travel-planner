@@ -87,14 +87,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Type</label>
-                            <select id="tripType" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                                <option value="division">Division Visit</option>
-                                <option value="gts">GTS All-Hands</option>
-                                <option value="pi">PI Planning</option>
-                                <option value="bp">BP Team Meeting</option>
-                                <option value="conference">Conference</option>
-                                <option value="other">Other Business</option>
-                            </select>
+                            <div id="tripTypeContainer"></div>
                         </div>
                     </div>
 
@@ -105,22 +98,7 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
-                        <select id="tripLocationSelect" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                            <option value="">Select Division...</option>
-                            <option value="DAL">DAL</option>
-                            <option value="VAL">VAL</option>
-                            <option value="VCE">VCE</option>
-                            <option value="VCW">VCW</option>
-                            <option value="VER">VER</option>
-                            <option value="VIN">VIN</option>
-                            <option value="VNE">VNE</option>
-                            <option value="VNY">VNY</option>
-                            <option value="VSC">VSC</option>
-                            <option value="VTX">VTX</option>
-                            <option value="VUT">VUT</option>
-                            <option value="custom">Other Location (Custom)...</option>
-                        </select>
-                        <input type="text" id="tripLocation" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 hidden" placeholder="Enter city (e.g. London, Singapore, Austin)">
+                        <div id="tripLocationContainer"></div>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Required for optimization logic.</p>
                     </div>
 
@@ -184,13 +162,7 @@
                 <form id="constraintForm" class="space-y-4 tab-content hidden">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Constraint Type</label>
-                        <select id="constraintType" class="w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                            <option value="vacation">Personal Vacation (Hard Stop)</option>
-                            <option value="holiday">Company Holiday (Hard Stop)</option>
-                            <option value="blackout">Business Blackout (Hard Stop)</option>
-                            <option value="business-soft">Business Soft (Prefer No Travel)</option>
-                            <option value="preference">Prefer No Travel (Soft)</option>
-                        </select>
+                        <div id="constraintTypeContainer"></div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Description</label>
@@ -377,6 +349,48 @@
                                 </div>
                             </div>
                             <i class="fas fa-chevron-right text-slate-400 group-hover:text-red-600 dark:group-hover:text-red-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Type Management Section -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Type Management</h4>
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                        <!-- Manage Event Types -->
+                        <button id="btnManageEventTypes" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-palette text-indigo-600 dark:text-indigo-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Manage Event Types</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Create, edit, and delete custom trip types</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"></i>
+                        </button>
+
+                        <!-- Manage Constraint Types -->
+                        <button id="btnManageConstraintTypes" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-ban text-amber-600 dark:text-amber-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Manage Constraint Types</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Create, edit, and delete custom constraint types</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400"></i>
+                        </button>
+
+                        <!-- Manage Locations -->
+                        <button id="btnManageLocations" class="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-lg border border-slate-200 dark:border-slate-600 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-map-marker-alt text-cyan-600 dark:text-cyan-400"></i>
+                                <div class="text-left">
+                                    <div class="font-medium text-slate-700 dark:text-slate-200">Manage Locations</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Add and remove custom locations</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400"></i>
                         </button>
                     </div>
                 </div>
