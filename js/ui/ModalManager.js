@@ -18,6 +18,7 @@ export class ModalManager {
     #exportModalId = 'exportModal';
     #editingEventId = null;
     #editingConstraintId = null;
+    #batchTrips = [];
 
     /**
      * Initialize modal manager
@@ -288,6 +289,17 @@ export class ModalManager {
         const btnDeleteConstraint = document.getElementById('btnDeleteConstraint');
         if (btnDeleteConstraint) {
             btnDeleteConstraint.addEventListener('click', () => this.#deleteConstraint());
+        }
+
+        // Batch planning buttons
+        const btnAddBatchTrip = document.getElementById('btnAddBatchTrip');
+        if (btnAddBatchTrip) {
+            btnAddBatchTrip.addEventListener('click', () => this.#addBatchTripRow());
+        }
+
+        const btnGenerateBatchPlan = document.getElementById('btnGenerateBatchPlan');
+        if (btnGenerateBatchPlan) {
+            btnGenerateBatchPlan.addEventListener('click', () => this.#generateBatchPlan());
         }
 
         // Export/Import buttons
@@ -867,6 +879,204 @@ export class ModalManager {
         StateManager.deleteConstraint(this.#editingConstraintId);
         this.#editingConstraintId = null;
         this.close(this.#addModalId);
+    }
+
+    /**
+     * Add batch trip row
+     * @private
+     */
+    #addBatchTripRow() {
+        const container = document.getElementById('batchTripsContainer');
+        if (!container) return;
+
+        const index = container.children.length;
+        const tripRow = document.createElement('div');
+        tripRow.className = 'p-4 border dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900/50 space-y-3';
+        tripRow.dataset.index = index;
+
+        tripRow.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <h4 class="font-semibold text-sm">Trip ${index + 1}</h4>
+                <button type="button" class="remove-batch-trip text-red-500 hover:text-red-700" data-index="${index}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
+                <input type="text" class="batch-location w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London, VTX">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Preferred Seasons</label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="season-winter" value="winter"> Winter (Dec-Feb)
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="season-spring" value="spring"> Spring (Mar-May)
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="season-summer" value="summer"> Summer (Jun-Aug)
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="season-fall" value="fall"> Fall (Sep-Nov)
+                    </label>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="can-consolidate">
+                <label class="text-xs">Can consolidate with other trips</label>
+            </div>
+        `;
+
+        container.appendChild(tripRow);
+
+        // Add remove listener
+        tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
+            e.target.closest('[data-index]').remove();
+        });
+    }
+
+    /**
+     * Generate batch plan
+     * @private
+     */
+    #generateBatchPlan() {
+        const container = document.getElementById('batchTripsContainer');
+        if (!container || container.children.length === 0) {
+            alert('Please add at least one trip to the batch');
+            return;
+        }
+
+        // Collect batch trip data
+        const batchTrips = Array.from(container.children).map((row) => {
+            const location = row.querySelector('.batch-location').value.trim();
+            const seasons = [];
+            if (row.querySelector('.season-winter').checked) seasons.push('winter');
+            if (row.querySelector('.season-spring').checked) seasons.push('spring');
+            if (row.querySelector('.season-summer').checked) seasons.push('summer');
+            if (row.querySelector('.season-fall').checked) seasons.push('fall');
+            const canConsolidate = row.querySelector('.can-consolidate').checked;
+
+            return { location, seasons, canConsolidate };
+        }).filter(t => t.location);
+
+        if (batchTrips.length === 0) {
+            alert('Please enter locations for your trips');
+            return;
+        }
+
+        // Get suggestions for each trip
+        const state = StateManager.getState();
+        const year = state.year;
+        const events = state.events;
+        const constraints = state.constraints;
+
+        const results = batchTrips.map((trip, idx) => {
+            // Find best quarters based on season preferences
+            const quarters = this.#getQuartersForSeasons(trip.seasons);
+
+            // Get suggestions for each quarter and combine
+            const allSuggestions = [];
+            quarters.forEach(qId => {
+                const suggestions = ScoringEngine.getSuggestionsForQuarter(qId, year, trip.location, events, constraints);
+                allSuggestions.push(...suggestions.map(s => ({ ...s, quarter: qId })));
+            });
+
+            // Sort by score and take top 3
+            const top3 = allSuggestions.sort((a, b) => b.score - a.score).slice(0, 3);
+
+            return {
+                trip,
+                suggestions: top3,
+                tripIndex: idx
+            };
+        });
+
+        this.#displayBatchResults(results);
+    }
+
+    /**
+     * Get quarters that match season preferences
+     * @private
+     */
+    #getQuartersForSeasons(seasons) {
+        if (!seasons || seasons.length === 0) return [1, 2, 3, 4]; // All quarters if no preference
+
+        const quarterMap = {
+            winter: [4, 1], // Dec-Feb spans Q4 and Q1
+            spring: [2],    // Mar-May is Q2
+            summer: [3],    // Jun-Aug is Q3
+            fall: [4]       // Sep-Nov is Q4
+        };
+
+        const quarters = new Set();
+        seasons.forEach(season => {
+            quarterMap[season]?.forEach(q => quarters.add(q));
+        });
+
+        return Array.from(quarters);
+    }
+
+    /**
+     * Display batch results
+     * @private
+     */
+    #displayBatchResults(results) {
+        const resultsContainer = document.getElementById('batchResults');
+        if (!resultsContainer) return;
+
+        let html = '<div class="border-t dark:border-slate-600 pt-4"><h4 class="font-bold mb-4 text-lg">Batch Plan Results</h4>';
+
+        results.forEach(({ trip, suggestions, tripIndex }) => {
+            html += `
+                <div class="mb-6 p-4 border dark:border-slate-600 rounded bg-white dark:bg-slate-800">
+                    <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${trip.location}</h5>
+                    ${suggestions.length === 0 ? '<p class="text-slate-500 text-sm">No available weeks found</p>' : ''}
+                    <div class="space-y-2">
+                        ${suggestions.map((sug, idx) => `
+                            <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
+                                <div class="text-sm">
+                                    <strong>Option ${idx + 1}:</strong> Week of ${sug.iso}
+                                    <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
+                                </div>
+                                <button class="add-batch-suggestion px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                                        data-location="${trip.location}" data-date="${sug.iso}">
+                                    <i class="fas fa-plus mr-1"></i>Add
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        resultsContainer.innerHTML = html;
+        resultsContainer.classList.remove('hidden');
+
+        // Add event listeners for quick-add buttons
+        resultsContainer.querySelectorAll('.add-batch-suggestion').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const location = e.currentTarget.dataset.location;
+                const date = e.currentTarget.dataset.date;
+
+                StateManager.addEvent({
+                    id: Date.now().toString(),
+                    title: `Visit ${location}`,
+                    type: 'division',
+                    location,
+                    startDate: date,
+                    endDate: null,
+                    duration: 1,
+                    isFixed: false
+                });
+
+                e.currentTarget.textContent = 'Added!';
+                e.currentTarget.disabled = true;
+                e.currentTarget.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                e.currentTarget.classList.add('bg-green-600');
+            });
+        });
     }
 }
 
