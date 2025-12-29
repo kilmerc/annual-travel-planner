@@ -30,7 +30,6 @@ export class DataService {
             // Ensure required fields exist with defaults
             return {
                 year: data.year || new Date().getFullYear(),
-                viewMode: data.viewMode || 'calendar',
                 events: Array.isArray(data.events) ? data.events : [],
                 constraints: Array.isArray(data.constraints) ? data.constraints : []
             };

@@ -12,7 +12,6 @@ import { Constraint } from '../models/Constraint.js';
 class StateManager {
     #state = {
         year: 2025,
-        viewMode: 'calendar', // 'calendar', 'quarters', or 'timeline'
         events: [],
         constraints: []
     };
@@ -30,7 +29,6 @@ class StateManager {
     getState() {
         return {
             year: this.#state.year,
-            viewMode: this.#state.viewMode,
             events: this.#state.events.map(e => e.toJSON ? e.toJSON() : e),
             constraints: this.#state.constraints.map(c => c.toJSON ? c.toJSON() : c)
         };
@@ -53,29 +51,6 @@ class StateManager {
         this.#persist();
         EventBus.emit('state:changed', this.getState());
         EventBus.emit('year:changed', year);
-    }
-
-    /**
-     * Get view mode
-     * @returns {string} View mode
-     */
-    getViewMode() {
-        return this.#state.viewMode;
-    }
-
-    /**
-     * Set view mode
-     * @param {string} mode - View mode ('calendar', 'quarters', or 'timeline')
-     */
-    setViewMode(mode) {
-        if (!['calendar', 'quarters', 'timeline'].includes(mode)) {
-            throw new Error(`Invalid view mode: ${mode}`);
-        }
-
-        this.#state.viewMode = mode;
-        this.#persist();
-        EventBus.emit('state:changed', this.getState());
-        EventBus.emit('view-mode:changed', mode);
     }
 
     /**
@@ -218,7 +193,6 @@ class StateManager {
      */
     importState(data) {
         this.#state.year = data.year || 2025;
-        this.#state.viewMode = data.viewMode || 'calendar';
 
         this.#state.events = (data.events || []).map(e => new Event(e));
         this.#state.constraints = (data.constraints || []).map(c => new Constraint(c));
@@ -248,7 +222,6 @@ class StateManager {
             if (stored) {
                 const data = JSON.parse(stored);
                 this.#state.year = data.year || 2025;
-                this.#state.viewMode = data.viewMode || 'calendar';
 
                 // Convert plain objects to model instances
                 this.#state.events = (data.events || []).map(e =>
