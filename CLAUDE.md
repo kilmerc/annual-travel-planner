@@ -6,7 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Smart Business Travel Planner - A browser-based web application for optimizing annual business travel schedules. Uses vanilla JavaScript ES6 modules with no build tools required.
 
-**Recent Updates (Phase 10, 11 & 12):**
+**Recent Updates (Phase 13 - December 2025):**
+- **Time Range Planning**: Replaced quarter selector with flexible time ranges (Current Year, Current Quarter, Next 3/6/12 Months)
+- **Enhanced Tutorial**: Modal tutorial triggers on first "Plan Travel" click, walks through all three tabs
+- **Toast Notifications**: Custom toast system replaced all alert() calls (success/error/warning/info)
+- **Confirmation Dialogs**: Custom modal replaced all confirm() calls with async/await API
+- **Mobile-First Design**: Fully responsive (375px minimum) with touch-friendly controls
+- **Auto-Save Indicators**: Brief toast notification shows "Saved" after state persistence
+- **Tooltips**: Pure CSS tooltips on buttons and controls (disabled on touch devices)
+- **Empty States**: Helpful message when calendar is empty with call-to-action button
+- **Focus Indicators**: WCAG-compliant focus states for keyboard navigation
+- **Animations**: Smooth transitions, micro-interactions, loading skeletons
+
+**Previous Updates (Phase 10, 11 & 12):**
 - Fiscal year removed - now uses calendar year only (Jan-Dec)
 - Delete functionality added to event/constraint modals
 - Clickable metrics to highlight traveling/home/conflict weeks (Mon-Fri)
@@ -98,11 +110,13 @@ js/
 │   ├── Event.js            # Event data model with toJSON/fromJSON
 │   └── Constraint.js       # Constraint data model
 ├── services/
-│   ├── StateManager.js     # State + localStorage (singleton)
-│   ├── ScoringEngine.js    # Week optimization algorithm + batch planning
-│   ├── DateService.js      # Date utilities (timezone-aware)
+│   ├── StateManager.js     # State + localStorage (singleton) + auto-save indicators
+│   ├── ScoringEngine.js    # Week optimization algorithm + time range support
+│   ├── DateService.js      # Date utilities (timezone-aware) + time range calculations
 │   ├── DataService.js      # JSON import/export
-│   └── TutorialService.js  # Interactive tutorial (driver.js)
+│   ├── TutorialService.js  # Interactive tutorial (driver.js) + modal tutorial
+│   ├── ToastService.js     # Toast notifications (success/error/warning/info)
+│   └── ConfirmDialog.js    # Custom confirmation dialogs (async/await)
 ├── ui/
 │   ├── ViewManager.js      # View orchestration (Calendar view only)
 │   ├── CalendarView.js     # Calendar rendering + week highlighting
