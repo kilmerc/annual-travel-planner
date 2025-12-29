@@ -100,7 +100,10 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
 
 * **Year Control:** Buttons to navigate between calendar years (e.g., 2025, 2026)
 * **Metrics Bar:** Real-time counters for "Weeks Traveling," "Weeks Home," and "Conflicts"
-  * **Clickable Metrics:** Conflicts metric is clickable when conflicts exist
+  * **Clickable Metrics:** All metrics are clickable
+    * **Conflicts:** Opens detailed modal showing conflict information with categorization
+    * **Weeks Traveling:** Highlights all travel weeks in blue on calendar (toggle on/off)
+    * **Weeks Home:** Highlights all non-travel weeks in green on calendar (toggle on/off)
   * **Conflict Details Modal:** Clicking conflicts opens a detailed modal showing:
     * Hard constraint conflicts (event overlapping with vacation/holiday/blackout)
     * Double-booking conflicts (overlapping events in different locations)
@@ -149,7 +152,7 @@ The application uses a single, unified calendar view displaying all 12 months of
 
 ### **3.3. Input Panel (Modal)**
 
-* **Tabbed Interface:** "Plan Trip" vs. "Add Constraint"
+* **Tabbed Interface:** "Plan Trip", "Add Constraint", and "Batch Plan"
 * **Smart Forms:**
   * **Trip Mode Toggle:** "Fixed Date" vs. "Flexible/Suggest"
     * **Flexible Mode:** Shows quarter selector and "Find Best Weeks" button with suggestion results
@@ -173,6 +176,19 @@ The application uses a single, unified calendar view displaying all 12 months of
   * Save updates existing record instead of creating new one
   * All fields are editable including dates, title, type, and location
   * **Cross-Type Editing:** When editing a constraint and switching to the trip tab (or vice versa), the system properly converts the item by deleting the original and creating the new type, preventing duplicate entries
+* **Delete Functionality:**
+  * Delete button appears in modal when editing events or constraints
+  * Separate delete buttons for fixed trips, flexible trips, and constraints
+  * Confirmation dialog before deletion to prevent accidental data loss
+  * Modal closes automatically after successful deletion
+* **Batch Planning Tab:**
+  * Add multiple trips simultaneously with locations and season preferences
+  * Multi-select seasons: Winter (Dec-Feb), Spring (Mar-May), Summer (Jun-Aug), Fall (Sep-Nov)
+  * Per-trip consolidation checkbox option
+  * Generate optimal plan showing top 3 week suggestions for each trip
+  * Quick-add buttons to immediately add suggested trips to calendar
+  * Dynamic trip row management - add/remove trips from batch as needed
+  * Results show score and reasoning for each suggestion
 
 ### **3.4. Settings Panel**
 
@@ -313,6 +329,17 @@ User Action → UI Component → StateManager → localStorage
   * **Business Soft Constraint:** New soft constraint type for virtual/flexible business commitments
   * **Clickable Metrics:** Conflicts metric opens detailed modal showing all conflict information with categorization
   * **Cross-Type Edit Fix:** Proper handling when converting constraints to trips (or vice versa) during edit operations
+* **Phase 10 (Calendar Year Migration & Feature Enhancements):** Complete. Features include:
+  * **Fiscal Year Removal:** Complete removal of fiscal year concept - app now exclusively uses calendar year (Jan-Dec)
+  * **File Renaming:** `fiscalCalendar.js` renamed to `calendarConfig.js` for clarity
+  * **Delete Functionality:** Delete buttons added to event/constraint edit modals with confirmation dialogs
+  * **Clickable Metrics for Highlighting:** Weeks Traveling and Weeks Home metrics now clickable to highlight corresponding weeks in calendar (blue for traveling, green for home)
+  * **Batch Planning Mode:** New tab in modal for planning multiple trips simultaneously with:
+    - Add multiple trips with locations
+    - Multi-select season preferences (Winter: Dec-Feb, Spring: Mar-May, Summer: Jun-Aug, Fall: Sep-Nov)
+    - Per-trip consolidation toggle
+    - Top 3 week suggestions for each trip based on constraints and season preferences
+    - Quick-add buttons to add suggested trips to calendar
 
 ## **6. Key Technical Decisions**
 

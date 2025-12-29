@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Smart Business Travel Planner - A browser-based web application for optimizing annual business travel schedules. Uses vanilla JavaScript ES6 modules with no build tools required.
 
+**Recent Updates:**
+- Fiscal year removed - now uses calendar year only (Jan-Dec)
+- Delete functionality added to event/constraint modals
+- Clickable metrics to highlight traveling/home weeks
+- Batch planning mode for optimizing multiple trips at once
+
 ## Development Commands
 
 **Start Development Server:**
@@ -42,25 +48,25 @@ User Action → UI Component → StateManager → localStorage
 
 ```
 js/
-├── app.js                    # Bootstrap entry point
+├── app.js                   # Bootstrap entry point
 ├── config/
-│   └── fiscalCalendar.js    # Calendar constants, quarters, constraint types
+│   └── calendarConfig.js   # Calendar constants, quarters, constraint types
 ├── models/
-│   ├── Event.js             # Event data model with toJSON/fromJSON
-│   └── Constraint.js        # Constraint data model
+│   ├── Event.js            # Event data model with toJSON/fromJSON
+│   └── Constraint.js       # Constraint data model
 ├── services/
-│   ├── StateManager.js      # State + localStorage (singleton)
-│   ├── ScoringEngine.js     # Week optimization algorithm
-│   ├── DateService.js       # Date utilities (timezone-aware)
-│   └── DataService.js       # JSON import/export
+│   ├── StateManager.js     # State + localStorage (singleton)
+│   ├── ScoringEngine.js    # Week optimization algorithm + batch planning
+│   ├── DateService.js      # Date utilities (timezone-aware)
+│   └── DataService.js      # JSON import/export
 ├── ui/
-│   ├── ViewManager.js       # View orchestration
-│   ├── CalendarView.js      # Calendar rendering (only active view)
-│   ├── MetricsBar.js        # Statistics display + conflict modal
-│   ├── ModalManager.js      # Add/Edit trip/constraint modals
-│   └── SettingsView.js      # Settings panel
+│   ├── ViewManager.js      # View orchestration
+│   ├── CalendarView.js     # Calendar rendering + week highlighting
+│   ├── MetricsBar.js       # Statistics display + clickable metrics
+│   ├── ModalManager.js     # Add/Edit/Delete modals + batch planning
+│   └── SettingsView.js     # Settings panel
 └── utils/
-    └── EventBus.js          # Pub/sub pattern
+    └── EventBus.js         # Pub/sub pattern
 ```
 
 **Deprecated Files:** `QuartersView.js` and `TimelineView.js` exist but are not used (app uses Calendar view only).
@@ -146,10 +152,35 @@ LocalStorage key: `travelPlannerState`
 }
 ```
 
+## Key Features
+
+### Modal Tabs
+The main modal has 3 tabs:
+- **Plan Trip**: Add individual trips (fixed or flexible dates)
+- **Add Constraint**: Add constraints (vacation, holidays, blackouts, preferences)
+- **Batch Plan**: Plan multiple trips at once with season preferences
+
+### Clickable Metrics
+- Click "Weeks Traveling" to highlight all travel weeks in blue
+- Click "Weeks Home" to highlight all non-travel weeks in green
+- Click again to toggle highlighting off
+
+### Batch Planning
+- Add multiple trips with locations and season preferences
+- Multi-select seasons (Winter, Spring, Summer, Fall)
+- Per-trip consolidation toggle
+- Get top 3 week suggestions for each trip
+- Quick-add buttons to add suggested trips
+
+### Delete Functionality
+- Edit any event or constraint by clicking it in the calendar
+- Delete button appears in modal when editing
+- Confirmation dialog before deletion
+
 ## Common Development Tasks
 
 ### Adding New Event/Constraint Type
-1. Add type constant to `js/config/fiscalCalendar.js`
+1. Add type constant to `js/config/calendarConfig.js`
 2. Update color mapping in `CalendarView.js` (`getEventTypeColor()` or `getConstraintTypeColor()`)
 3. Add option to HTML select in `index.html` (trip or constraint form)
 4. If hard constraint: add to `HARD_CONSTRAINT_TYPES` array
