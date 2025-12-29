@@ -115,7 +115,7 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
 
 ### **3.2. Calendar View (Year-at-a-Glance)**
 
-The application uses a single, unified calendar view displaying all 12 months of the year.
+The application uses a single calendar view displaying all 12 months of the year. This is the only view in the application.
 
 * **Layout:** Grid of 12 month calendars (January through December) in a responsive layout
 * **Day Cell Structure:**
@@ -371,10 +371,8 @@ User Action → UI Component → StateManager → localStorage
     - Welcome and year selector introduction
     - Metrics bar explanation with clickable highlighting demo
     - Add plan button and modal tabs overview
-    - Calendar view interaction (click days to add trips)
-    - Automated view switching to demonstrate Quarters and Timeline views
+    - Calendar view interaction (click days to add trips, year-at-a-glance overview)
     - Help button and Settings panel tour
-  * **Smart View Transitions:** Tutorial programmatically switches between Calendar, Quarters, and Timeline views to demonstrate each
   * **Skip/Navigate Controls:** Users can skip tutorial, navigate back/forward through steps, or close at any time
 
 ## **6. Key Technical Decisions**
