@@ -17,7 +17,15 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "WebSearch",
+      "Bash(git rm:*)",
+      "Bash(node --version:*)",
+      "Bash(cat:*)",
+      "Bash(npm install)",
+      "Bash(npm test:*)",
+      "Bash(powershell -Command \"\\(Get-Content tests/unit/models/Event.test.js\\) -replace ''conference'', ''other'' | Set-Content tests/unit/models/Event.test.js\")",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

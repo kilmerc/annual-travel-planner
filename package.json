@@ -1,0 +1,29 @@
+{
+  "name": "annual-travel-planner",
+  "version": "1.0.0",
+  "description": "Smart Business Travel Planner - Browser-based web application for optimizing annual business travel schedules",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "travel",
+    "planner",
+    "calendar",
+    "scheduling"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.1.0",
+    "@vitest/ui": "^1.1.0",
+    "jsdom": "^23.0.0",
+    "vitest": "^1.1.0"
+  }
+}

@@ -25,6 +25,37 @@ Then open `http://localhost:8000` in browser.
 
 **Note:** The application MUST be served via HTTP server (not `file://` protocol) due to ES6 module CORS restrictions.
 
+## Testing
+
+**Run Tests:**
+```bash
+npm test
+```
+
+**Watch Mode (for development):**
+```bash
+npm run test:watch
+```
+
+**Coverage Report:**
+```bash
+npm run test:coverage
+# Open coverage/index.html to view detailed report
+```
+
+**Test Structure:**
+- **Unit tests:** Pure logic modules (DateService, ScoringEngine, Models, StateManager, EventBus)
+- **Integration tests:** Module interactions (StateManager + EventBus + ScoringEngine)
+- **Manual testing:** DOM-heavy UI components (CalendarView, ModalManager)
+
+**Coverage Targets:**
+- Critical modules (DateService, ScoringEngine, Models, StateManager, EventBus): 90%+
+- Overall codebase: 80%+
+
+**Framework:** Vitest with native ES6 module support, jsdom environment, and localStorage mocking
+
+See [README-TESTING.md](README-TESTING.md) for detailed testing guide and examples.
+
 ## Core Architecture
 
 ### Module System

@@ -435,3 +435,143 @@ The application maintains a clear separation between what users SEE and how the 
 3. Load sample data via Settings → Load Sample Data
 
 **Note:** File protocol (`file://`) will not work due to CORS restrictions on ES6 modules.
+
+## **8. Testing Strategy**
+
+### **8.1. Testing Framework**
+- **Framework:** Vitest v1.1.0 with native ES6 module support
+- **Environment:** jsdom for minimal DOM simulation
+- **Coverage:** v8 provider with HTML, JSON, and text reports
+- **Mocking:** Custom mocks for browser APIs (localStorage, FileReader, Blob, URL)
+
+### **8.2. Test Coverage Priorities**
+
+**CRITICAL (90%+ coverage):**
+- `DateService.js` - 12 pure date functions, core date logic
+- `ScoringEngine.js` - Optimization algorithm, conflict detection
+- `Event.js` / `Constraint.js` - Data validation, serialization
+- `StateManager.js` - State management, localStorage persistence
+- `EventBus.js` - Pub/sub communication system
+
+**HIGH (75%+ coverage):**
+- `calendarConfig.js` - Configuration utilities
+- `DataService.js` - JSON import/export
+
+**MANUAL TESTING:**
+- UI Components: CalendarView, ModalManager, ViewManager, SettingsView
+- TutorialService (driver.js wrapper)
+- Visual calendar interactions
+
+**Overall Target:** 80%+ code coverage
+
+### **8.3. Test Structure**
+
+```
+tests/
+├── setup/
+│   ├── globalSetup.js      # Module reset, localStorage clearing
+│   └── browserMocks.js     # Mock localStorage, FileReader, Blob, URL
+├── unit/
+│   ├── config/             # calendarConfig tests
+│   ├── models/             # Event, Constraint tests
+│   ├── services/           # DateService, ScoringEngine, StateManager tests
+│   └── utils/              # EventBus tests
+└── integration/
+    └── full-workflow.test.js  # Complete user journey tests
+```
+
+### **8.4. Mocking Strategy**
+
+**localStorage Mock:**
+```javascript
+// Automatically injected in tests/setup/globalSetup.js
+global.localStorage = new LocalStorageMock();
+
+beforeEach(() => {
+  global.localStorage.clear(); // Reset between tests
+});
+```
+
+**Singleton Reset:**
+```javascript
+// Reset module cache to get fresh singleton instances
+beforeEach(async () => {
+  vi.resetModules();
+  const module = await import('../../js/services/StateManager.js');
+  StateManager = module.default;
+});
+```
+
+**EventBus Testing:**
+```javascript
+// Test through public API with mock functions
+const callback = vi.fn();
+EventBus.on('state:changed', callback);
+StateManager.addEvent({...});
+expect(callback).toHaveBeenCalledTimes(1);
+```
+
+### **8.5. Running Tests**
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode (development)
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+
+# Run specific test type
+npm run test:unit
+npm run test:integration
+
+# Interactive UI
+npm run test:ui
+```
+
+### **8.6. Coverage Thresholds**
+
+Enforced in `vitest.config.js`:
+- Lines: 80%
+- Functions: 80%
+- Branches: 75%
+- Statements: 80%
+
+### **8.7. Key Testing Patterns**
+
+**Pure Function Testing:**
+```javascript
+import { getMonday } from '../../../js/services/DateService.js';
+
+it('should return Monday for any day of week', () => {
+  const wednesday = new Date(2025, 0, 8);
+  const monday = getMonday(wednesday);
+  expect(monday.getDay()).toBe(1);
+});
+```
+
+**Singleton Testing:**
+```javascript
+beforeEach(async () => {
+  vi.resetModules();
+  global.localStorage.clear();
+  const module = await import('../../../js/services/StateManager.js');
+  StateManager = module.default;
+});
+```
+
+**Integration Testing:**
+```javascript
+// Test StateManager + EventBus + ScoringEngine together
+StateManager.addConstraint({...});
+StateManager.addEvent({...});
+const conflicts = ScoringEngine.detectConflicts(
+  StateManager.getEvents(),
+  StateManager.getConstraints()
+);
+expect(conflicts).toHaveLength(1);
+```
+
+See [README-TESTING.md](../README-TESTING.md) for comprehensive testing guide.
