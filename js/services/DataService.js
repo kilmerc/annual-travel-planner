@@ -31,7 +31,11 @@ export class DataService {
             return {
                 year: data.year || new Date().getFullYear(),
                 events: Array.isArray(data.events) ? data.events : [],
-                constraints: Array.isArray(data.constraints) ? data.constraints : []
+                constraints: Array.isArray(data.constraints) ? data.constraints : [],
+                // Include all state fields for proper serialization
+                eventTypeConfigs: data.eventTypeConfigs || {},
+                constraintTypeConfigs: data.constraintTypeConfigs || {},
+                customLocations: Array.isArray(data.customLocations) ? data.customLocations : []
             };
         } catch (error) {
             throw new Error(`Failed to import JSON: ${error.message}`);

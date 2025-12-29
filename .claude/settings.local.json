@@ -26,7 +26,8 @@
       "Bash(npm test:*)",
       "Bash(powershell -Command \"\\(Get-Content tests/unit/models/Event.test.js\\) -replace ''conference'', ''other'' | Set-Content tests/unit/models/Event.test.js\")",
       "Bash(powershell -Command:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(find:*)"
     ]
   }
 }
