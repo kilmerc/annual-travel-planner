@@ -6,11 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Smart Business Travel Planner - A browser-based web application for optimizing annual business travel schedules. Uses vanilla JavaScript ES6 modules with no build tools required.
 
-**Recent Updates:**
+**Recent Updates (Phase 10 & 11):**
 - Fiscal year removed - now uses calendar year only (Jan-Dec)
 - Delete functionality added to event/constraint modals
-- Clickable metrics to highlight traveling/home weeks
-- Batch planning mode for optimizing multiple trips at once
+- Clickable metrics to highlight traveling/home/conflict weeks (Mon-Fri)
+- Batch planning with titles, types, and location dropdowns
+- Radio button selection with real-time double-booking prevention
+- Conflicts now use highlighting instead of modal popup
 
 ## Development Commands
 
@@ -161,16 +163,21 @@ The main modal has 3 tabs:
 - **Batch Plan**: Plan multiple trips at once with season preferences
 
 ### Clickable Metrics
-- Click "Weeks Traveling" to highlight all travel weeks in blue
-- Click "Weeks Home" to highlight all non-travel weeks in green
+- Click "Weeks Traveling" to highlight all travel weeks in blue (Mon-Fri only)
+- Click "Weeks Home" to highlight all non-travel weeks in green (Mon-Fri only)
+- Click "Conflicts" to highlight conflict days in red (Mon-Fri only)
 - Click again to toggle highlighting off
+- All metrics use consistent highlighting behavior
 
 ### Batch Planning
-- Add multiple trips with locations and season preferences
-- Multi-select seasons (Winter, Spring, Summer, Fall)
+- Add multiple trips with titles, types, locations, and season preferences
+- Location dropdown matching main trip form (division codes + custom)
+- Multi-select seasons (Winter: Dec-Feb, Spring: Mar-May, Summer: Jun-Aug, Fall: Sep-Nov)
 - Per-trip consolidation toggle
 - Get top 3 week suggestions for each trip
-- Quick-add buttons to add suggested trips
+- Radio button selection (one week per trip)
+- Real-time validation prevents double-booking across trips
+- Single "Add Selected Trips" button adds all at once
 
 ### Delete Functionality
 - Edit any event or constraint by clicking it in the calendar

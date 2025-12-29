@@ -100,14 +100,15 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
 
 * **Year Control:** Buttons to navigate between calendar years (e.g., 2025, 2026)
 * **Metrics Bar:** Real-time counters for "Weeks Traveling," "Weeks Home," and "Conflicts"
-  * **Clickable Metrics:** All metrics are clickable
-    * **Conflicts:** Opens detailed modal showing conflict information with categorization
-    * **Weeks Traveling:** Highlights all travel weeks in blue on calendar (toggle on/off)
-    * **Weeks Home:** Highlights all non-travel weeks in green on calendar (toggle on/off)
-  * **Conflict Details Modal:** Clicking conflicts opens a detailed modal showing:
-    * Hard constraint conflicts (event overlapping with vacation/holiday/blackout)
-    * Double-booking conflicts (overlapping events in different locations)
-    * Each conflict displays event details, dates, and descriptions
+  * **Clickable Metrics:** All metrics are clickable and use consistent highlighting behavior
+    * **Conflicts:** Highlights conflict days in red on calendar (Mon-Fri only, toggle on/off)
+    * **Weeks Traveling:** Highlights all travel weeks in blue on calendar (Mon-Fri only, toggle on/off)
+    * **Weeks Home:** Highlights all non-travel weeks in green on calendar (Mon-Fri only, toggle on/off)
+  * **Highlighting Behavior:**
+    * Click any metric to highlight corresponding days
+    * Click again to toggle highlighting off
+    * Only Mon-Fri are highlighted (weekends excluded for cleaner visual)
+    * Consistent visual treatment across all three metrics
 * **Settings Button:** Access to application settings and data management
 * **Add Plan Button:** Opens modal for adding trips or constraints
 
@@ -182,13 +183,21 @@ The application uses a single, unified calendar view displaying all 12 months of
   * Confirmation dialog before deletion to prevent accidental data loss
   * Modal closes automatically after successful deletion
 * **Batch Planning Tab:**
-  * Add multiple trips simultaneously with locations and season preferences
-  * Multi-select seasons: Winter (Dec-Feb), Spring (Mar-May), Summer (Jun-Aug), Fall (Sep-Nov)
-  * Per-trip consolidation checkbox option
+  * Add multiple trips with complete trip details:
+    - Title input field
+    - Type dropdown (Division, GTS, PI, BP, Conference, Other)
+    - Location dropdown matching main trip form (division codes + custom location)
+    - Multi-select seasons: Winter (Dec-Feb), Spring (Mar-May), Summer (Jun-Aug), Fall (Sep-Nov)
+    - Per-trip consolidation checkbox
   * Generate optimal plan showing top 3 week suggestions for each trip
-  * Quick-add buttons to immediately add suggested trips to calendar
+  * Radio button selection - choose one week per trip
+  * Real-time double-booking prevention:
+    - When a week is selected for one trip, it's automatically disabled for other trips
+    - Visual feedback (opacity) for disabled/unavailable weeks
+    - Prevents accidental scheduling conflicts
+  * Single "Add Selected Trips to Calendar" button adds all chosen trips at once
   * Dynamic trip row management - add/remove trips from batch as needed
-  * Results show score and reasoning for each suggestion
+  * Success confirmation after adding trips with option to close results
 
 ### **3.4. Settings Panel**
 
@@ -340,6 +349,17 @@ User Action → UI Component → StateManager → localStorage
     - Per-trip consolidation toggle
     - Top 3 week suggestions for each trip based on constraints and season preferences
     - Quick-add buttons to add suggested trips to calendar
+* **Phase 11 (UX Refinements & Highlighting Improvements):** Complete. Features include:
+  * **Weekday-Only Highlighting:** All metric highlighting (Traveling, Home, Conflicts) now applies to Mon-Fri only, excluding weekends
+  * **Batch Planning Enhancements:**
+    - Added title and type fields to batch trip form
+    - Added location dropdown matching main trip form (division codes + custom location)
+    - Radio button selection (one week per trip) replaces individual Add buttons
+    - Real-time validation prevents double-booking across trips
+    - Selected weeks are automatically disabled for other trips in the batch
+    - Single "Add Selected Trips to Calendar" button for batch add
+    - Success confirmation after adding trips
+  * **Conflicts Highlighting:** Conflicts metric now uses red highlighting instead of modal popup, providing consistent UX with other metrics
 
 ## **6. Key Technical Decisions**
 
