@@ -434,10 +434,16 @@ class StateManager {
         try {
             const data = this.getState();
             localStorage.setItem(this.#storageKey, JSON.stringify(data));
-            ToastService.info('Saved', 1000);
+            // Only show save notification in browser environment
+            if (typeof document !== 'undefined' && document.body) {
+                ToastService.info('Saved', 1000);
+            }
         } catch (error) {
             console.error('Error saving state to localStorage:', error);
-            ToastService.error('Failed to save', 2000);
+            // Only show error notification in browser environment
+            if (typeof document !== 'undefined' && document.body) {
+                ToastService.error('Failed to save', 2000);
+            }
         }
     }
 }
