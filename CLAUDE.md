@@ -6,17 +6,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Smart Business Travel Planner - A browser-based web application for optimizing annual business travel schedules. Uses vanilla JavaScript ES6 modules with no build tools required.
 
-**Recent Updates (Phase 13 - December 2025):**
-- **Time Range Planning**: Replaced quarter selector with flexible time ranges (Current Year, Current Quarter, Next 3/6/12 Months)
-- **Enhanced Tutorial**: Modal tutorial triggers on first "Plan Travel" click, walks through all three tabs
-- **Toast Notifications**: Custom toast system replaced all alert() calls (success/error/warning/info)
-- **Confirmation Dialogs**: Custom modal replaced all confirm() calls with async/await API
-- **Mobile-First Design**: Fully responsive (375px minimum) with touch-friendly controls
-- **Auto-Save Indicators**: Brief toast notification shows "Saved" after state persistence
-- **Tooltips**: Pure CSS tooltips on buttons and controls (disabled on touch devices)
-- **Empty States**: Helpful message when calendar is empty with call-to-action button
-- **Focus Indicators**: WCAG-compliant focus states for keyboard navigation
-- **Animations**: Smooth transitions, micro-interactions, loading skeletons
+**Recent Updates (Phase 14 - December 2025):**
+- **User-Defined Types**: Complete customization of event and constraint types
+  - Add, edit, delete custom trip types (beyond built-in division, GTS, PI, BP, conference, other)
+  - Add, edit, delete custom constraint types (beyond built-in vacation, holiday, blackout, etc.)
+  - Configure custom colors, labels, and hard-stop behavior for each type
+  - Built-in types protected from deletion, custom types fully manageable
+- **Multi-Year Support**: Navigate between different calendar years with year navigation controls
+- **Type Management UI**: Comprehensive type management system
+  - TypeManagementModal for browsing and managing all types
+  - TypeConfigModal for creating/editing type configurations
+  - TypeDeletionModal for safe deletion with conflict checking
+  - Visual indicators for built-in vs. custom types
+- **Custom Location Management**: LocationManagementModal for managing custom location list
+- **Enhanced Help System**: HelpModal with comprehensive application guidance and documentation
+- **ComboBox Component**: Reusable combo box UI component for type and location selection
+- **Data Migration**: Automatic migration of legacy data formats on load
+  - Migrates old event/constraint types to new configuration system
+  - Ensures backward compatibility with existing data
+  - Auto-creates type configurations on first load
+
+**Previous Updates (Phase 13 - December 2025):**
+- Time Range Planning: Replaced quarter selector with flexible time ranges
+- Enhanced Tutorial: Modal tutorial triggers on first "Plan Travel" click
+- Toast Notifications: Custom toast system replaced all alert() calls
+- Confirmation Dialogs: Custom modal replaced all confirm() calls
+- Mobile-First Design: Fully responsive (375px minimum) with touch-friendly controls
+- Auto-Save Indicators: Brief toast notification shows "Saved" after state persistence
+- Tooltips: Pure CSS tooltips on buttons and controls
+- Empty States: Helpful message when calendar is empty
+- Focus Indicators: WCAG-compliant focus states for keyboard navigation
+- Animations: Smooth transitions, micro-interactions, loading skeletons
 
 **Previous Updates (Phase 10, 11 & 12):**
 - Fiscal year removed - now uses calendar year only (Jan-Dec)
@@ -103,28 +123,34 @@ User Action → UI Component → StateManager → localStorage
 
 ```
 js/
-├── app.js                   # Bootstrap entry point
+├── app.js                        # Bootstrap entry point
 ├── config/
-│   └── calendarConfig.js   # Calendar constants, quarters, constraint types
+│   └── calendarConfig.js        # Calendar constants, default type configs
 ├── models/
-│   ├── Event.js            # Event data model with toJSON/fromJSON
-│   └── Constraint.js       # Constraint data model
+│   ├── Event.js                 # Event data model with toJSON/fromJSON
+│   └── Constraint.js            # Constraint data model
 ├── services/
-│   ├── StateManager.js     # State + localStorage (singleton) + auto-save indicators
-│   ├── ScoringEngine.js    # Week optimization algorithm + time range support
-│   ├── DateService.js      # Date utilities (timezone-aware) + time range calculations
-│   ├── DataService.js      # JSON import/export
-│   ├── TutorialService.js  # Interactive tutorial (driver.js) + modal tutorial
-│   ├── ToastService.js     # Toast notifications (success/error/warning/info)
-│   └── ConfirmDialog.js    # Custom confirmation dialogs (async/await)
+│   ├── StateManager.js          # State + localStorage (singleton) + auto-save
+│   ├── ScoringEngine.js         # Week optimization algorithm + time range support
+│   ├── DateService.js           # Date utilities (timezone-aware) + time range calc
+│   ├── DataService.js           # JSON import/export + data migration
+│   ├── TutorialService.js       # Interactive tutorial (driver.js) + modal tutorial
+│   ├── ToastService.js          # Toast notifications (success/error/warning/info)
+│   └── ConfirmDialog.js         # Custom confirmation dialogs (async/await)
 ├── ui/
-│   ├── ViewManager.js      # View orchestration (Calendar view only)
-│   ├── CalendarView.js     # Calendar rendering + week highlighting
-│   ├── MetricsBar.js       # Statistics display + clickable metrics
-│   ├── ModalManager.js     # Add/Edit/Delete modals + batch planning
-│   └── SettingsView.js     # Settings panel
+│   ├── ViewManager.js           # View orchestration (Calendar view only)
+│   ├── CalendarView.js          # Calendar rendering + week highlighting
+│   ├── MetricsBar.js            # Statistics display + clickable metrics
+│   ├── ModalManager.js          # Add/Edit/Delete modals + batch planning
+│   ├── SettingsView.js          # Settings panel
+│   ├── TypeManagementModal.js   # Type management dashboard
+│   ├── TypeConfigModal.js       # Create/edit type configurations
+│   ├── TypeDeletionModal.js     # Safe type deletion with conflict checks
+│   ├── LocationManagementModal.js # Custom location management
+│   ├── HelpModal.js             # Application help and documentation
+│   └── ComboBox.js              # Reusable combo box component
 └── utils/
-    └── EventBus.js         # Pub/sub pattern
+    └── EventBus.js              # Pub/sub pattern
 ```
 
 ## Critical Design Concepts
@@ -164,7 +190,14 @@ When suggesting weeks for flexible trips:
 
 ### Event & Constraint Types
 
-**Events (Travel):**
+**User-Defined Type System:**
+All event and constraint types are now fully customizable through the Type Management UI. Users can:
+- Create custom trip types and constraint types
+- Configure colors, labels, and hard-stop behavior
+- Edit existing custom types
+- Delete unused custom types (with conflict checking)
+
+**Built-in Event Types (Protected):**
 - `division` - Division Visits (Blue)
 - `gts` - GTS All-Hands (Purple)
 - `pi` - PI Planning (Orange)
@@ -172,9 +205,22 @@ When suggesting weeks for flexible trips:
 - `conference` - Conference (Teal)
 - `other` - Other Business (Gray)
 
-**Constraints:**
+**Built-in Constraint Types (Protected):**
 - Hard: `vacation` (Red), `holiday` (Pink), `blackout` (Dark Rose)
 - Soft: `business-soft` (Light Orange), `preference` (Yellow)
+
+**Type Configuration Structure:**
+```javascript
+{
+  "typeId": {
+    "label": "Display Name",
+    "color": "#hexcolor",      // Light mode color
+    "colorDark": "#hexcolor",  // Dark mode color
+    "isHardStop": boolean,     // For constraints: blocks scheduling
+    "isBuiltIn": boolean       // Protected from deletion
+  }
+}
+```
 
 ## Data Schema
 
@@ -182,7 +228,7 @@ LocalStorage key: `travelPlannerState`
 
 ```json
 {
-  "year": 2026,
+  "currentYear": 2026,
   "events": [
     {
       "id": "1234567890-0",
@@ -212,6 +258,13 @@ LocalStorage key: `travelPlannerState`
       "colorDark": "#60a5fa",
       "isHardStop": false,
       "isBuiltIn": true
+    },
+    "custom-trip-type": {
+      "label": "Custom Trip",
+      "color": "#8b5cf6",
+      "colorDark": "#a78bfa",
+      "isHardStop": false,
+      "isBuiltIn": false
     }
   },
   "constraintTypeConfigs": {
@@ -221,13 +274,25 @@ LocalStorage key: `travelPlannerState`
       "colorDark": "#f87171",
       "isHardStop": true,
       "isBuiltIn": true
+    },
+    "custom-constraint": {
+      "label": "Custom Constraint",
+      "color": "#f59e0b",
+      "colorDark": "#fbbf24",
+      "isHardStop": false,
+      "isBuiltIn": false
     }
   },
-  "customLocations": ["Custom Location 1"]
+  "customLocations": ["London", "New York", "Custom Location"]
 }
 ```
 
-**Note:** IDs now use format `timestamp-counter` to ensure uniqueness even when created rapidly.
+**Schema Notes:**
+- **Multi-Year Support:** Events/constraints can span multiple years; `currentYear` tracks UI navigation
+- **IDs:** Format `timestamp-counter` ensures uniqueness even when created rapidly
+- **Type Configs:** Stored separately from events/constraints; supports unlimited custom types
+- **Built-in Types:** Protected (`isBuiltIn: true`) from deletion; custom types fully editable
+- **Custom Locations:** User-managed list supplements division code dropdown
 
 ## Key Features
 
@@ -270,10 +335,23 @@ The main modal has 3 tabs:
 ## Common Development Tasks
 
 ### Adding New Event/Constraint Type
-1. Add type constant to `js/config/calendarConfig.js`
-2. Update color mapping in `CalendarView.js` (`getEventTypeColor()` or `getConstraintTypeColor()`)
-3. Add option to HTML select in `index.html` (trip or constraint form)
-4. If hard constraint: add to `HARD_CONSTRAINT_TYPES` array
+**Users can now add types through the UI** - no code changes required:
+1. Open Settings → Manage Trip Types (or Manage Constraint Types)
+2. Click "Create New Type"
+3. Configure label, colors, and hard-stop behavior
+4. Save - type immediately available in all dropdowns
+
+**For developers adding built-in types:**
+1. Add default config to `DEFAULT_EVENT_TYPE_CONFIGS` or `DEFAULT_CONSTRAINT_TYPE_CONFIGS` in `js/config/calendarConfig.js`
+2. Set `isBuiltIn: true` to protect from deletion
+3. Type will auto-populate on first load or data migration
+
+### Managing Custom Locations
+**Users can manage locations through the UI:**
+1. Open Settings → Manage Locations
+2. Add new custom locations to the list
+3. Remove unused custom locations
+4. Custom locations appear in location dropdown alongside division codes
 
 ### Modifying Scoring Logic
 Edit `js/services/ScoringEngine.js` → `scoreWeek()` method
@@ -287,13 +365,25 @@ Edit `js/services/ScoringEngine.js` → `scoreWeek()` method
 ### Testing with Sample Data
 Settings → Load Sample Data (loads `data/SampleData2026.json`)
 
+### Data Migration
+The app automatically migrates legacy data formats on load:
+- Old events/constraints without type configs → configs auto-created
+- Missing built-in type configs → populated from defaults
+- Migration handled by `StateManager.#migrateData()`
+
 ## Key Technical Notes
 
 - **Dark Mode:** Tailwind class-based (`dark:` prefix), preference stored in localStorage
 - **Calendar Year:** Standard Jan 1 - Dec 31 (Q1: Jan-Mar, Q2: Apr-Jun, Q3: Jul-Sep, Q4: Oct-Dec)
-- **Division Codes:** 11 pre-populated options (DAL, VAL, VCE, VCW, VER, VIN, VNE, VNY, VSC, VTX, VUT) + custom
+- **Multi-Year Support:** Users can navigate between years; all events/constraints persist across years
+- **Division Codes:** 11 pre-populated options (DAL, VAL, VCE, VCW, VER, VIN, VNE, VNY, VSC, VTX, VUT) + custom locations
+- **User-Defined Types:** Complete type customization system with UI management
+  - Built-in types protected from deletion
+  - Custom types support full CRUD operations
+  - Type configs stored separately from events/constraints
 - **Multi-Add Mode:** Feature allowing multiple date ranges for same event/constraint in single operation
 - **Conflict Detection:** Clickable metrics bar shows hard constraint conflicts and double-booking conflicts
+- **Data Migration:** Automatic backward-compatible migration of legacy data formats
 
 ## State Flow Example
 

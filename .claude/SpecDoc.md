@@ -29,7 +29,11 @@ The view engine renders grids based on these calendar-year groupings.
 
 The system distinguishes between "Fixed" events (dates set by others) and "Flexible" events (dates to be determined by the optimizer).
 
-**A. Travel Reasons (Categories):**
+**A. User-Defined Type System:**
+
+The application now supports fully customizable event and constraint types. Users can create, edit, and delete custom types through the Type Management UI.
+
+**Built-in Travel Types (Protected from deletion):**
 
 1. **Division Visits:** Usually flexible, specific location required
 2. **GTS All-Hands:** Usually fixed dates
@@ -38,9 +42,15 @@ The system distinguishes between "Fixed" events (dates set by others) and "Flexi
 5. **Conference:** Professional conferences and events
 6. **Other Business:** Ad-hoc
 
+**Custom Types:**
+Users can create unlimited custom trip types with configurable:
+- Label (display name)
+- Colors (light and dark mode)
+- Hard-stop behavior (for constraints)
+
 **B. Event Attributes:**
 
-* `id`: Unique identifier (timestamp-based string)
+* `id`: Unique identifier (timestamp-counter format)
 * `title`: Descriptive name
 * `location`: City/Division Office (Critical for optimization matching)
 * `startDate`: ISO Date string (YYYY-MM-DD)
@@ -49,7 +59,7 @@ The system distinguishes between "Fixed" events (dates set by others) and "Flexi
 * `endDate`: ISO Date string (YYYY-MM-DD), optional
   * Only used for **Fixed trips** with specific date ranges
   * For **Flexible trips**: null (week-based)
-* `type`: One of the categories above
+* `type`: Type ID referencing eventTypeConfigs or constraintTypeConfigs
 * `duration`: Number of weeks (default: 1)
 * `isFixed`: Boolean indicating if date is flexible
 
@@ -68,6 +78,8 @@ Core logic component that scores specific weeks:
 
 **B. Constraint Types:**
 
+**Built-in Constraint Types (Protected from deletion):**
+
 1. **Hard Constraints (Must Not Travel):**
    * **Vacation:** Personal time off
    * **Company Holidays:** Corporate non-working weeks
@@ -78,6 +90,12 @@ Core logic component that scores specific weeks:
    * **Business Soft:** Business commitments that can be attended virtually (e.g., virtual meetings that can be joined from trip location)
    * **Preference:** Date ranges marked as "Low Preference" (e.g., Kids' camps)
    * *Effect:* Optimizer penalizes these weeks but allows them if necessary
+
+**Custom Constraint Types:**
+Users can create custom constraint types through the Type Management UI with configurable:
+- Label (display name)
+- Colors (light and dark mode)
+- Hard-stop behavior (whether it blocks scheduling like hard constraints or just penalizes like soft constraints)
 
 **C. Location Consolidation (The "Optimization" Logic):**
    * *Logic:* If user is attending a "PI Planning" meeting in London in Week 12, system detects this existing presence
@@ -98,7 +116,10 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
 
 ### **3.1. Dashboard Header**
 
-* **Year Control:** Buttons to navigate between calendar years (e.g., 2025, 2026)
+* **Year Control:** Buttons to navigate between calendar years with multi-year support
+  * Events and constraints persist across years
+  * Year navigation updates calendar view
+  * Current year stored in state for UI navigation
 * **Metrics Bar:** Real-time counters for "Weeks Traveling," "Weeks Home," and "Conflicts"
   * **Clickable Metrics:** All metrics are clickable and use consistent highlighting behavior
     * **Conflicts:** Highlights conflict days in red on calendar (Mon-Fri only, toggle on/off)
@@ -109,8 +130,17 @@ When creating a "Flexible Trip" (e.g., "Visit London in Q2"), system scans all w
     * Click again to toggle highlighting off
     * Only Mon-Fri are highlighted (weekends excluded for cleaner visual)
     * Consistent visual treatment across all three metrics
-* **Help Button:** Question mark icon (?) to launch interactive tutorial
-* **Settings Button:** Access to application settings and data management
+* **Help Button:** Question mark icon (?) to open comprehensive help modal
+  * HelpModal provides detailed application guidance
+  * Replaces and supplements the interactive tutorial
+  * Always accessible from header
+* **Settings Button:** Access to application settings, data management, and type management
+  * Manage Trip Types - create, edit, delete custom trip types
+  * Manage Constraint Types - create, edit, delete custom constraint types
+  * Manage Locations - add/remove custom locations
+  * Data import/export
+  * Sample data loading
+  * Tutorial restart
 * **Add Plan Button:** Opens modal for adding trips or constraints
 
 ### **3.2. Calendar View (Year-at-a-Glance)**
@@ -138,19 +168,25 @@ The application uses a single calendar view displaying all 12 months of the year
   * Hover over bars → Shows tooltip with full details
 
 * **Event Type Colors:**
-  * Division Visit: Blue
-  * GTS All-Hands: Purple
-  * PI Planning: Orange
-  * BP Team Meeting: Green
-  * Conference: Teal
-  * Other Business: Gray
+  * **Built-in Types (Default):**
+    * Division Visit: Blue
+    * GTS All-Hands: Purple
+    * PI Planning: Orange
+    * BP Team Meeting: Green
+    * Conference: Teal
+    * Other Business: Gray
+  * **Custom Types:** Colors configured by user during type creation/editing
+  * All types support separate light and dark mode colors
 
 * **Constraint Type Colors:**
-  * Vacation: Red
-  * Holiday: Pink
-  * Blackout: Dark Rose
-  * Business Soft: Light Orange
-  * Preference: Yellow
+  * **Built-in Types (Default):**
+    * Vacation: Red
+    * Holiday: Pink
+    * Blackout: Dark Rose
+    * Business Soft: Light Orange
+    * Preference: Yellow
+  * **Custom Types:** Colors configured by user during type creation/editing
+  * All types support separate light and dark mode colors
 
 ### **3.3. Input Panel (Modal)**
 
@@ -203,12 +239,30 @@ The application uses a single calendar view displaying all 12 months of the year
 ### **3.4. Settings Panel**
 
 * **Appearance:** Dark/Light mode toggle
+* **Type Management:**
+  * **Manage Trip Types:** Access TypeManagementModal for event types
+    * Create new custom trip types
+    * Edit existing custom types (built-in types locked)
+    * Delete unused custom types (with conflict checking via TypeDeletionModal)
+    * Configure labels, colors, and behavior
+  * **Manage Constraint Types:** Access TypeManagementModal for constraint types
+    * Create new custom constraint types
+    * Edit existing custom types (built-in types locked)
+    * Delete unused custom types (with conflict checking)
+    * Configure labels, colors, and hard-stop behavior
+  * **Manage Locations:** Access LocationManagementModal
+    * Add custom locations to dropdown list
+    * Remove unused custom locations
+    * Custom locations supplement division code dropdown
 * **Data Management:**
   * Load sample data for testing
-  * Export data to JSON file
-  * Import data from JSON file
+  * Export data to JSON file (includes type configs and custom locations)
+  * Import data from JSON file (with automatic migration)
   * Clear all data
-* **Statistics:** Current data overview (event count, constraint count)
+* **Help & Tutorial:**
+  * Restart tutorial walkthrough
+  * Access comprehensive help documentation
+* **Statistics:** Current data overview (event count, constraint count, custom types)
 
 ## **4. Technical Architecture**
 
@@ -224,68 +278,116 @@ The application uses a single calendar view displaying all 12 months of the year
 
 ```
 TravelPlanner/
-├── index.html                    # Main HTML entry point
+├── index.html                       # Main HTML entry point
 ├── styles/
-│   └── custom.css               # Custom styles
+│   └── custom.css                  # Custom styles
 ├── js/
-│   ├── app.js                   # Application bootstrap
+│   ├── app.js                      # Application bootstrap
 │   ├── config/
-│   │   └── fiscalCalendar.js   # Calendar configuration
+│   │   └── calendarConfig.js      # Calendar config + default type configs
 │   ├── models/
-│   │   ├── Event.js            # Event data model
-│   │   └── Constraint.js       # Constraint data model
+│   │   ├── Event.js               # Event data model
+│   │   └── Constraint.js          # Constraint data model
 │   ├── services/
-│   │   ├── StateManager.js     # State management + localStorage
-│   │   ├── DateService.js      # Date utilities
-│   │   ├── ScoringEngine.js    # Optimization algorithm
-│   │   └── DataService.js      # JSON import/export
+│   │   ├── StateManager.js        # State management + localStorage + migration
+│   │   ├── DateService.js         # Date utilities
+│   │   ├── ScoringEngine.js       # Optimization algorithm
+│   │   ├── DataService.js         # JSON import/export + migration
+│   │   ├── TutorialService.js     # Interactive tutorial (driver.js)
+│   │   ├── ToastService.js        # Toast notifications
+│   │   └── ConfirmDialog.js       # Confirmation dialogs
 │   ├── ui/
-│   │   ├── ViewManager.js      # View orchestration (Calendar only)
-│   │   ├── CalendarView.js     # Calendar rendering
-│   │   ├── QuartersView.js     # [Deprecated - not in use]
-│   │   ├── TimelineView.js     # [Deprecated - not in use]
-│   │   ├── MetricsBar.js       # Statistics display
-│   │   ├── ModalManager.js     # Modal dialogs
-│   │   └── SettingsView.js     # Settings panel
+│   │   ├── ViewManager.js         # View orchestration (Calendar only)
+│   │   ├── CalendarView.js        # Calendar rendering
+│   │   ├── MetricsBar.js          # Statistics display
+│   │   ├── ModalManager.js        # Add/Edit/Delete modals + batch planning
+│   │   ├── SettingsView.js        # Settings panel
+│   │   ├── TypeManagementModal.js # Type management dashboard
+│   │   ├── TypeConfigModal.js     # Type creation/editing
+│   │   ├── TypeDeletionModal.js   # Type deletion with conflicts
+│   │   ├── LocationManagementModal.js # Custom location management
+│   │   ├── HelpModal.js           # Help documentation
+│   │   └── ComboBox.js            # Reusable combo box component
 │   └── utils/
-│       └── EventBus.js         # Simple pub/sub pattern
+│       └── EventBus.js            # Simple pub/sub pattern
 └── data/
-    └── SampleData2026.json     # Test data
+    └── SampleData2026.json        # Test data
 ```
 
 ### **4.3. Data Persistence & Schema**
 
 * **Primary Storage:** Browser localStorage
 * **Portable Storage:** JSON Export/Import
+* **Data Migration:** Automatic migration of legacy formats on load
 * **Schema Structure:**
 
 ```json
 {
-  "year": 2026,
-  "viewMode": "calendar",
+  "currentYear": 2026,
   "events": [
     {
-      "id": "...",
+      "id": "1234567890-0",
       "title": "...",
-      "type": "division|gts|pi|bp|conference|other",
+      "type": "division",  // References eventTypeConfigs
       "location": "...",
       "startDate": "YYYY-MM-DD",
-      "endDate": "YYYY-MM-DD",  // Only for fixed trips with date ranges, null for flexible
+      "endDate": "YYYY-MM-DD",  // Only for fixed trips, null for flexible
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     }
   ],
   "constraints": [
     {
-      "id": "...",
+      "id": "1234567890-0",
       "title": "...",
-      "type": "vacation|holiday|blackout|business-soft|preference",
-      "startDate": "YYYY-MM-DD",  // Actual start date of constraint
-      "endDate": "YYYY-MM-DD"     // Actual end date of constraint
+      "type": "vacation",  // References constraintTypeConfigs
+      "startDate": "YYYY-MM-DD",  // Actual start date
+      "endDate": "YYYY-MM-DD"     // Actual end date
     }
-  ]
+  ],
+  "eventTypeConfigs": {
+    "division": {
+      "label": "Division Visit",
+      "color": "#3b82f6",
+      "colorDark": "#60a5fa",
+      "isHardStop": false,
+      "isBuiltIn": true
+    },
+    "custom-trip": {
+      "label": "Custom Trip Type",
+      "color": "#8b5cf6",
+      "colorDark": "#a78bfa",
+      "isHardStop": false,
+      "isBuiltIn": false
+    }
+  },
+  "constraintTypeConfigs": {
+    "vacation": {
+      "label": "Personal Vacation",
+      "color": "#ef4444",
+      "colorDark": "#f87171",
+      "isHardStop": true,
+      "isBuiltIn": true
+    },
+    "custom-constraint": {
+      "label": "Custom Constraint",
+      "color": "#f59e0b",
+      "colorDark": "#fbbf24",
+      "isHardStop": false,
+      "isBuiltIn": false
+    }
+  },
+  "customLocations": ["London", "New York", "Custom Location"]
 }
 ```
+
+**Schema Notes:**
+- **Multi-Year Support:** `currentYear` tracks UI navigation; events/constraints can span any year
+- **Type Configs:** Separate configuration objects for all event and constraint types
+- **Built-in Protection:** `isBuiltIn: true` prevents deletion of core types
+- **Custom Locations:** User-managed list supplements division dropdown
+- **ID Format:** `timestamp-counter` ensures uniqueness
 
 ### **4.4. Dark Mode Implementation**
 
@@ -374,6 +476,39 @@ User Action → UI Component → StateManager → localStorage
     - Calendar view interaction (click days to add trips, year-at-a-glance overview)
     - Help button and Settings panel tour
   * **Skip/Navigate Controls:** Users can skip tutorial, navigate back/forward through steps, or close at any time
+* **Phase 13 (Modern UX Enhancements):** Complete. Features include:
+  * **Time Range Planning:** Replaced quarter selector with flexible time ranges (Current Year, Current Quarter, Next 3/6/12 Months)
+  * **Enhanced Tutorial:** Modal tutorial triggers on first "Plan Travel" click, walks through all three tabs
+  * **Toast Notifications:** Custom toast system replaced all alert() calls (success/error/warning/info)
+  * **Confirmation Dialogs:** Custom modal replaced all confirm() calls with async/await API
+  * **Mobile-First Design:** Fully responsive (375px minimum) with touch-friendly controls
+  * **Auto-Save Indicators:** Brief toast notification shows "Saved" after state persistence
+  * **Tooltips:** Pure CSS tooltips on buttons and controls (disabled on touch devices)
+  * **Empty States:** Helpful message when calendar is empty with call-to-action button
+  * **Focus Indicators:** WCAG-compliant focus states for keyboard navigation
+  * **Animations:** Smooth transitions, micro-interactions, loading skeletons
+* **Phase 14 (User-Defined Types & Multi-Year Support):** Complete. Features include:
+  * **User-Defined Type System:** Complete customization of event and constraint types
+    - Create, edit, delete custom trip types and constraint types
+    - Configure labels, colors (light/dark mode), and hard-stop behavior
+    - Built-in types protected from deletion
+    - Type configs stored separately from events/constraints
+  * **Multi-Year Support:** Navigate between different calendar years
+    - Year navigation controls in header
+    - Events/constraints persist across all years
+    - `currentYear` tracks UI navigation state
+  * **Type Management UI:**
+    - TypeManagementModal for browsing and managing all types
+    - TypeConfigModal for creating/editing type configurations
+    - TypeDeletionModal for safe deletion with conflict checking
+    - Visual indicators for built-in vs. custom types
+  * **Custom Location Management:** LocationManagementModal for managing custom location list
+  * **Enhanced Help System:** HelpModal with comprehensive application guidance and documentation
+  * **ComboBox Component:** Reusable combo box UI component for type and location selection
+  * **Data Migration:** Automatic migration of legacy data formats on load
+    - Migrates old event/constraint types to new configuration system
+    - Ensures backward compatibility with existing data
+    - Auto-creates type configurations on first load
 
 ## **6. Key Technical Decisions**
 
