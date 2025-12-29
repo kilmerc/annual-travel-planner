@@ -56,7 +56,12 @@ export class CalendarView {
             const dateStr = cell.dataset.date;
             if (!dateStr) return;
 
-            const monday = getMonday(new Date(dateStr + 'T12:00:00'));
+            // Only highlight Mon-Fri (skip weekends)
+            const date = new Date(dateStr + 'T12:00:00');
+            const dayOfWeek = date.getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) return; // Skip Sunday (0) and Saturday (6)
+
+            const monday = getMonday(date);
             const mondayISO = dateToISO(monday);
 
             if (this.#highlightMode === 'traveling') {
