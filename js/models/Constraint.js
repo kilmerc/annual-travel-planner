@@ -64,11 +64,8 @@ export class Constraint {
             throw new Error('Constraint type is required');
         }
 
-        // Validate type against built-in types only
-        const allConstraintTypes = Object.values(BUILT_IN_CONSTRAINT_TYPES);
-        if (!allConstraintTypes.includes(this.type)) {
-            throw new Error(`Invalid constraint type: ${this.type}`);
-        }
+        // Note: Type validation removed - types are now user-defined
+        // Only validate that a type string is provided
 
         // Validate startDate before processing
         if (!startDate) {

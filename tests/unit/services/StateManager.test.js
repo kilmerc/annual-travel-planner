@@ -22,14 +22,13 @@ describe('StateManager', () => {
     it('should have default state', () => {
       const state = StateManager.getState();
 
-      expect(state.year).toBe(2025);
+      // Note: year is not persisted - it's UI navigation state only
       expect(state.events).toEqual([]);
       expect(state.constraints).toEqual([]);
     });
 
     it('should load from localStorage if exists', async () => {
       const savedState = {
-        year: 2026,
         events: [{
           id: 'test-1',
           title: 'Test Event',
@@ -46,7 +45,24 @@ describe('StateManager', () => {
           type: 'vacation',
           startDate: '2026-07-01',
           endDate: '2026-07-05'
-        }]
+        }],
+        eventTypeConfigs: {
+          division: {
+            label: 'Division',
+            color: '#3b82f6',
+            colorDark: '#60a5fa',
+            isHardStop: false
+          }
+        },
+        constraintTypeConfigs: {
+          vacation: {
+            label: 'Vacation',
+            color: '#ef4444',
+            colorDark: '#f87171',
+            isHardStop: true
+          }
+        },
+        customLocations: []
       };
 
       global.localStorage.setItem('travelPlannerState', JSON.stringify(savedState));
@@ -57,7 +73,6 @@ describe('StateManager', () => {
       const SM = module.default;
 
       const state = SM.getState();
-      expect(state.year).toBe(2026);
       expect(state.events).toHaveLength(1);
       expect(state.events[0].title).toBe('Test Event');
       expect(state.constraints).toHaveLength(1);
@@ -73,14 +88,12 @@ describe('StateManager', () => {
       const SM = module.default;
 
       const state = SM.getState();
-      expect(state.year).toBe(2025);
       expect(state.events).toEqual([]);
     });
 
     it('should handle missing localStorage data', () => {
       const state = StateManager.getState();
 
-      expect(state.year).toBe(2025);
       expect(state.events).toEqual([]);
       expect(state.constraints).toEqual([]);
     });
@@ -96,23 +109,24 @@ describe('StateManager', () => {
       expect(StateManager.getYear()).toBe(2026);
     });
 
-    it('should persist year to localStorage', () => {
+    it('should NOT persist year to localStorage (UI state only)', () => {
       StateManager.setYear(2027);
 
-      const stored = JSON.parse(global.localStorage.getItem('travelPlannerState'));
-      expect(stored.year).toBe(2027);
+      const storedData = global.localStorage.getItem('travelPlannerState');
+      if (storedData) {
+        const stored = JSON.parse(storedData);
+        expect(stored.year).toBeUndefined();
+      }
+      // If no data in localStorage yet, that's fine - year doesn't trigger persist
     });
 
-    it('should emit events when year changes', () => {
-      const stateChangedCallback = vi.fn();
+    it('should emit year:changed event when year changes', () => {
       const yearChangedCallback = vi.fn();
 
-      EventBus.on('state:changed', stateChangedCallback);
       EventBus.on('year:changed', yearChangedCallback);
 
       StateManager.setYear(2028);
 
-      expect(stateChangedCallback).toHaveBeenCalledTimes(1);
       expect(yearChangedCallback).toHaveBeenCalledWith(2028);
     });
   });
@@ -534,7 +548,6 @@ describe('StateManager', () => {
   describe('Bulk Operations', () => {
     it('should import state', () => {
       const importData = {
-        year: 2026,
         events: [
           {
             title: 'Imported Event',
@@ -551,13 +564,15 @@ describe('StateManager', () => {
             startDate: '2026-07-01',
             endDate: '2026-07-05'
           }
-        ]
+        ],
+        eventTypeConfigs: {},
+        constraintTypeConfigs: {},
+        customLocations: []
       };
 
       StateManager.importState(importData);
 
       const state = StateManager.getState();
-      expect(state.year).toBe(2026);
       expect(state.events).toHaveLength(1);
       expect(state.events[0].title).toBe('Imported Event');
       expect(state.constraints).toHaveLength(1);
@@ -572,9 +587,11 @@ describe('StateManager', () => {
       EventBus.on('state:changed', stateChangedCallback);
 
       StateManager.importState({
-        year: 2027,
         events: [],
-        constraints: []
+        constraints: [],
+        eventTypeConfigs: {},
+        constraintTypeConfigs: {},
+        customLocations: []
       });
 
       expect(stateImportedCallback).toHaveBeenCalledTimes(1);
@@ -583,12 +600,12 @@ describe('StateManager', () => {
 
     it('should handle partial import data', () => {
       StateManager.importState({
-        year: 2028
-        // events and constraints omitted
+        events: [],
+        constraints: []
+        // type configs and locations omitted - should use defaults
       });
 
       const state = StateManager.getState();
-      expect(state.year).toBe(2028);
       expect(state.events).toEqual([]);
       expect(state.constraints).toEqual([]);
     });

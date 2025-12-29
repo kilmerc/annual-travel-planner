@@ -28,11 +28,10 @@ export class DataService {
             }
 
             // Ensure required fields exist with defaults
+            // Note: year field removed - supports multi-year data
             return {
-                year: data.year || new Date().getFullYear(),
                 events: Array.isArray(data.events) ? data.events : [],
                 constraints: Array.isArray(data.constraints) ? data.constraints : [],
-                // Include all state fields for proper serialization
                 eventTypeConfigs: data.eventTypeConfigs || {},
                 constraintTypeConfigs: data.constraintTypeConfigs || {},
                 customLocations: Array.isArray(data.customLocations) ? data.customLocations : []

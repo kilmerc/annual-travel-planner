@@ -1,179 +1,311 @@
 {
-  "year": 2026,
-  "viewMode": "calendar",
   "events": [
     {
-      "id": "1704067200000",
+      "id": "1704067200000-0",
       "title": "London Division Visit",
       "type": "division",
       "location": "London",
       "startDate": "2026-02-02",
+      "endDate": "2026-02-06",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1706659200000",
+      "id": "1706659200000-0",
       "title": "GTS All-Hands Meeting",
       "type": "gts",
       "location": "Charlotte",
       "startDate": "2026-03-02",
+      "endDate": "2026-03-06",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1709251200000",
+      "id": "1709251200000-0",
       "title": "PI Planning - Spring",
       "type": "pi",
       "location": "London",
       "startDate": "2026-04-06",
+      "endDate": "2026-04-10",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1711843200000",
+      "id": "1711843200000-0",
       "title": "Singapore Operations Review",
       "type": "division",
       "location": "Singapore",
       "startDate": "2026-05-04",
+      "endDate": "2026-05-08",
       "duration": 1,
-      "isFixed": false
+      "isFixed": false,
+      "archived": false
     },
     {
-      "id": "1714435200000",
+      "id": "1714435200000-0",
       "title": "BP Team Offsite",
       "type": "bp",
       "location": "Austin",
       "startDate": "2026-06-01",
+      "endDate": "2026-06-05",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1717027200000",
+      "id": "1717027200000-0",
       "title": "Berlin Tech Conference",
-      "type": "other",
+      "type": "conference",
       "location": "Berlin",
       "startDate": "2026-07-06",
+      "endDate": "2026-07-10",
       "duration": 1,
-      "isFixed": false
+      "isFixed": false,
+      "archived": false
     },
     {
-      "id": "1719619200000",
+      "id": "1719619200000-0",
       "title": "Austin Division Quarterly Review",
       "type": "division",
       "location": "Austin",
       "startDate": "2026-08-03",
+      "endDate": "2026-08-07",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1722211200000",
+      "id": "1722211200000-0",
       "title": "PI Planning - Fall",
       "type": "pi",
       "location": "Charlotte",
       "startDate": "2026-09-07",
+      "endDate": "2026-09-11",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1724803200000",
+      "id": "1724803200000-0",
       "title": "London Strategy Session",
       "type": "division",
       "location": "London",
       "startDate": "2026-10-12",
+      "endDate": "2026-10-16",
       "duration": 1,
-      "isFixed": false
+      "isFixed": false,
+      "archived": false
     },
     {
-      "id": "1727395200000",
+      "id": "1727395200000-0",
       "title": "Year-End GTS All-Hands",
       "type": "gts",
       "location": "Charlotte",
       "startDate": "2026-11-09",
+      "endDate": "2026-11-13",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     },
     {
-      "id": "1729987200000",
+      "id": "1729987200000-0",
       "title": "Holiday Planning Meeting",
       "type": "bp",
       "location": "Virtual",
       "startDate": "2026-12-01",
+      "endDate": "2026-12-05",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     }
   ],
   "constraints": [
     {
-      "id": "1703462400000",
+      "id": "1703462400000-0",
       "title": "Winter Break",
       "type": "vacation",
-      "startDate": "2025-12-22"
+      "startDate": "2025-12-22",
+      "endDate": "2025-12-26"
     },
     {
-      "id": "1705276800000",
+      "id": "1705276800000-0",
       "title": "New Year Holiday",
       "type": "holiday",
-      "startDate": "2025-12-29"
+      "startDate": "2025-12-29",
+      "endDate": "2026-01-02"
     },
     {
-      "id": "1708300800000",
+      "id": "1708300800000-0",
       "title": "Presidents Day",
       "type": "holiday",
-      "startDate": "2026-02-16"
+      "startDate": "2026-02-16",
+      "endDate": "2026-02-16"
     },
     {
-      "id": "1710720000000",
+      "id": "1710720000000-0",
       "title": "Kids Spring Camp",
       "type": "preference",
-      "startDate": "2026-03-23"
+      "startDate": "2026-03-23",
+      "endDate": "2026-03-27"
     },
     {
-      "id": "1713139200000",
+      "id": "1713139200000-0",
       "title": "Memorial Day",
       "type": "holiday",
-      "startDate": "2026-05-25"
+      "startDate": "2026-05-25",
+      "endDate": "2026-05-25"
     },
     {
-      "id": "1715558400000",
+      "id": "1715558400000-0",
       "title": "Summer Vacation - Europe",
       "type": "vacation",
-      "startDate": "2026-06-22"
+      "startDate": "2026-06-22",
+      "endDate": "2026-06-26"
     },
     {
-      "id": "1718841600000",
+      "id": "1718841600000-0",
       "title": "Independence Day",
       "type": "holiday",
-      "startDate": "2026-06-29"
+      "startDate": "2026-06-29",
+      "endDate": "2026-07-03"
     },
     {
-      "id": "1721260800000",
+      "id": "1721260800000-0",
       "title": "Q3 Planning Blackout",
       "type": "blackout",
-      "startDate": "2026-07-27"
+      "startDate": "2026-07-27",
+      "endDate": "2026-07-31"
     },
     {
-      "id": "1723680000000",
+      "id": "1723680000000-0",
       "title": "Labor Day",
       "type": "holiday",
-      "startDate": "2026-08-31"
+      "startDate": "2026-08-31",
+      "endDate": "2026-09-04"
     },
     {
-      "id": "1726099200000",
+      "id": "1726099200000-0",
       "title": "Kids Fall Camp",
       "type": "preference",
-      "startDate": "2026-09-28"
+      "startDate": "2026-09-28",
+      "endDate": "2026-10-02"
     },
     {
-      "id": "1729728000000",
+      "id": "1729728000000-0",
       "title": "Thanksgiving Break",
       "type": "vacation",
-      "startDate": "2026-11-23"
+      "startDate": "2026-11-23",
+      "endDate": "2026-11-27"
     },
     {
-      "id": "1732147200000",
+      "id": "1732147200000-0",
       "title": "Year-End Blackout",
       "type": "blackout",
-      "startDate": "2026-12-21"
+      "startDate": "2026-12-21",
+      "endDate": "2026-12-26"
     }
+  ],
+  "eventTypeConfigs": {
+    "division": {
+      "label": "Division Visit",
+      "color": "#3b82f6",
+      "colorDark": "#60a5fa",
+      "isHardStop": false,
+      "isBuiltIn": false
+    },
+    "gts": {
+      "label": "GTS All-Hands",
+      "color": "#a855f7",
+      "colorDark": "#c084fc",
+      "isHardStop": false,
+      "isBuiltIn": false
+    },
+    "pi": {
+      "label": "PI Planning",
+      "color": "#f97316",
+      "colorDark": "#fb923c",
+      "isHardStop": false,
+      "isBuiltIn": false
+    },
+    "bp": {
+      "label": "BP Team Meeting",
+      "color": "#22c55e",
+      "colorDark": "#4ade80",
+      "isHardStop": false,
+      "isBuiltIn": false
+    },
+    "conference": {
+      "label": "Conference",
+      "color": "#14b8a6",
+      "colorDark": "#2dd4bf",
+      "isHardStop": false,
+      "isBuiltIn": false
+    },
+    "other": {
+      "label": "Other Business",
+      "color": "#6b7280",
+      "colorDark": "#9ca3af",
+      "isHardStop": false,
+      "isBuiltIn": false
+    },
+    "archived": {
+      "label": "Archived",
+      "color": "#9ca3af",
+      "colorDark": "#6b7280",
+      "isHardStop": false,
+      "isBuiltIn": true
+    }
+  },
+  "constraintTypeConfigs": {
+    "vacation": {
+      "label": "Personal Vacation",
+      "color": "#ef4444",
+      "colorDark": "#f87171",
+      "isHardStop": true,
+      "isBuiltIn": false
+    },
+    "holiday": {
+      "label": "Public Holiday",
+      "color": "#ec4899",
+      "colorDark": "#f472b6",
+      "isHardStop": true,
+      "isBuiltIn": false
+    },
+    "blackout": {
+      "label": "Blackout Period",
+      "color": "#be123c",
+      "colorDark": "#e11d48",
+      "isHardStop": true,
+      "isBuiltIn": false
+    },
+    "preference": {
+      "label": "Preference",
+      "color": "#eab308",
+      "colorDark": "#facc15",
+      "isHardStop": false,
+      "isBuiltIn": false
+    }
+  },
+  "customLocations": [
+    "Austin",
+    "Berlin",
+    "Charlotte",
+    "London",
+    "Singapore",
+    "Virtual",
+    "DAL",
+    "VAL",
+    "VCE",
+    "VCW",
+    "VER",
+    "VIN",
+    "VNE",
+    "VNY",
+    "VSC",
+    "VTX",
+    "VUT"
   ]
 }

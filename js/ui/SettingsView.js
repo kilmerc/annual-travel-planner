@@ -171,7 +171,7 @@ export class SettingsView {
                 <div class="text-sm text-slate-600 dark:text-slate-400">
                     <div><strong>${state.events.length}</strong> travel events</div>
                     <div><strong>${state.constraints.length}</strong> constraints</div>
-                    <div>Calendar Year: <strong>${state.year}</strong></div>
+                    <div><strong>${state.customLocations.length}</strong> custom locations</div>
                 </div>
             `;
         }

@@ -25,53 +25,13 @@ export const MONTH_NAMES_FULL = Object.freeze([
     "July", "August", "September", "October", "November", "December"
 ]);
 
-// Built-in event type definitions (cannot be deleted)
+// Built-in event type definitions (only archived is essential for app functionality)
 export const BUILT_IN_EVENT_TYPES = Object.freeze({
-    DIVISION: 'division',
-    GTS: 'gts',
-    PI: 'pi',
-    BP: 'bp',
-    OTHER: 'other',
     ARCHIVED: 'archived'
 });
 
-// Default event type configurations
+// Default event type configurations (only archived - users add their own types)
 export const DEFAULT_EVENT_TYPE_CONFIGS = Object.freeze({
-    division: {
-        label: 'Division Visit',
-        color: '#3b82f6', // blue-500
-        colorDark: '#60a5fa', // blue-400
-        isHardStop: false,
-        isBuiltIn: true
-    },
-    gts: {
-        label: 'GTS All-Hands',
-        color: '#a855f7', // purple-500
-        colorDark: '#c084fc', // purple-400
-        isHardStop: false,
-        isBuiltIn: true
-    },
-    pi: {
-        label: 'PI Planning',
-        color: '#f97316', // orange-500
-        colorDark: '#fb923c', // orange-400
-        isHardStop: false,
-        isBuiltIn: true
-    },
-    bp: {
-        label: 'BP Team Meeting',
-        color: '#22c55e', // green-500
-        colorDark: '#4ade80', // green-400
-        isHardStop: false,
-        isBuiltIn: true
-    },
-    other: {
-        label: 'Other Business',
-        color: '#64748b', // slate-500
-        colorDark: '#94a3b8', // slate-400
-        isHardStop: false,
-        isBuiltIn: true
-    },
     archived: {
         label: 'Archived',
         color: '#9ca3af', // gray-400
@@ -81,73 +41,27 @@ export const DEFAULT_EVENT_TYPE_CONFIGS = Object.freeze({
     }
 });
 
-// Built-in constraint type definitions (cannot be deleted)
-export const BUILT_IN_CONSTRAINT_TYPES = Object.freeze({
-    VACATION: 'vacation',
-    HOLIDAY: 'holiday',
-    BLACKOUT: 'blackout',
-    PREFERENCE: 'preference'
-});
+// Built-in constraint type definitions (none - users add their own)
+export const BUILT_IN_CONSTRAINT_TYPES = Object.freeze({});
 
-// Default constraint type configurations
-export const DEFAULT_CONSTRAINT_TYPE_CONFIGS = Object.freeze({
-    vacation: {
-        label: 'Personal Vacation',
-        color: '#ef4444', // red-500
-        colorDark: '#f87171', // red-400
-        isHardStop: true,
-        isBuiltIn: true
-    },
-    holiday: {
-        label: 'Company Holiday',
-        color: '#ec4899', // pink-500
-        colorDark: '#f472b6', // pink-400
-        isHardStop: true,
-        isBuiltIn: true
-    },
-    blackout: {
-        label: 'Business Blackout',
-        color: '#be123c', // rose-600
-        colorDark: '#fb7185', // rose-400
-        isHardStop: true,
-        isBuiltIn: true
-    },
-    preference: {
-        label: 'Prefer No Travel',
-        color: '#eab308', // yellow-500
-        colorDark: '#facc15', // yellow-400
-        isHardStop: false,
-        isBuiltIn: true
-    }
-});
+// Default constraint type configurations (empty - users add their own types)
+export const DEFAULT_CONSTRAINT_TYPE_CONFIGS = Object.freeze({});
 
-// Built-in division codes (cannot be deleted)
-export const BUILT_IN_LOCATIONS = Object.freeze([
-    'DAL', 'VAL', 'VCE', 'VCW', 'VER', 'VIN', 'VNE', 'VNY', 'VSC', 'VTX', 'VUT'
-]);
+// Built-in locations (empty - users add their own locations)
+export const BUILT_IN_LOCATIONS = Object.freeze([]);
 
 // Backward compatibility exports for tests
 export const EVENT_TYPES = BUILT_IN_EVENT_TYPES;
 
 export const EVENT_TYPE_LABELS = Object.freeze({
-    division: DEFAULT_EVENT_TYPE_CONFIGS.division.label,
-    gts: DEFAULT_EVENT_TYPE_CONFIGS.gts.label,
-    pi: DEFAULT_EVENT_TYPE_CONFIGS.pi.label,
-    bp: DEFAULT_EVENT_TYPE_CONFIGS.bp.label,
-    other: DEFAULT_EVENT_TYPE_CONFIGS.other.label,
     archived: DEFAULT_EVENT_TYPE_CONFIGS.archived.label
 });
 
 export const CONSTRAINT_TYPES = BUILT_IN_CONSTRAINT_TYPES;
 
-export const CONSTRAINT_TYPE_LABELS = Object.freeze({
-    vacation: 'Personal Vacation (Hard Stop)',
-    holiday: 'Company Holiday (Hard Stop)',
-    blackout: 'Business Blackout (Hard Stop)',
-    preference: 'Prefer No Travel (Soft)'
-});
+export const CONSTRAINT_TYPE_LABELS = Object.freeze({});
 
-export const HARD_CONSTRAINT_TYPES = Object.freeze(['vacation', 'holiday', 'blackout']);
+export const HARD_CONSTRAINT_TYPES = Object.freeze([]);
 
 /**
  * Get quarter for a given month index

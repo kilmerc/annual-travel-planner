@@ -49,9 +49,10 @@ describe('Constraint Model', () => {
       expect(() => new Constraint(data)).toThrow('Constraint type is required');
     });
 
-    it('should throw error for invalid type', () => {
-      const data = { ...validConstraintData, type: 'invalid-type' };
-      expect(() => new Constraint(data)).toThrow('Invalid constraint type: invalid-type');
+    it('should accept any type string (types are user-defined)', () => {
+      const data = { ...validConstraintData, type: 'custom-constraint' };
+      const constraint = new Constraint(data);
+      expect(constraint.type).toBe('custom-constraint');
     });
 
     it('should throw error for missing start date', () => {

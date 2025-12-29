@@ -14,6 +14,51 @@ describe('Full Workflow Integration', () => {
     StateManager = smModule.default;
     ScoringEngine = seModule.default;
     EventBus = ebModule.default;
+
+    // Set up type configs for tests
+    StateManager.setConstraintTypeConfig('vacation', {
+      label: 'Vacation',
+      color: '#ef4444',
+      colorDark: '#f87171',
+      isHardStop: true
+    });
+    StateManager.setConstraintTypeConfig('holiday', {
+      label: 'Holiday',
+      color: '#ec4899',
+      colorDark: '#f472b6',
+      isHardStop: true
+    });
+    StateManager.setConstraintTypeConfig('blackout', {
+      label: 'Blackout',
+      color: '#be123c',
+      colorDark: '#e11d48',
+      isHardStop: true
+    });
+    StateManager.setConstraintTypeConfig('preference', {
+      label: 'Preference',
+      color: '#eab308',
+      colorDark: '#facc15',
+      isHardStop: false
+    });
+
+    StateManager.setEventTypeConfig('division', {
+      label: 'Division Visit',
+      color: '#3b82f6',
+      colorDark: '#60a5fa',
+      isHardStop: false
+    });
+    StateManager.setEventTypeConfig('gts', {
+      label: 'GTS',
+      color: '#a855f7',
+      colorDark: '#c084fc',
+      isHardStop: false
+    });
+    StateManager.setEventTypeConfig('other', {
+      label: 'Other',
+      color: '#6b7280',
+      colorDark: '#9ca3af',
+      isHardStop: false
+    });
   });
 
   describe('Complete Planning Workflow', () => {
@@ -323,8 +368,7 @@ describe('Full Workflow Integration', () => {
 
   describe('Persistence Workflow', () => {
     it('should persist and reload state correctly', async () => {
-      // Add some data
-      StateManager.setYear(2026);
+      // Add some data (year is UI-only, not persisted)
       StateManager.addEvent({
         title: 'Persistent Event',
         type: 'gts',
@@ -340,9 +384,8 @@ describe('Full Workflow Integration', () => {
         endDate: '2026-06-05'
       });
 
-      // Verify persistence
+      // Verify persistence (year not included - UI state only)
       const stored = JSON.parse(global.localStorage.getItem('travelPlannerState'));
-      expect(stored.year).toBe(2026);
       expect(stored.events).toHaveLength(1);
       expect(stored.constraints).toHaveLength(1);
 
@@ -352,7 +395,6 @@ describe('Full Workflow Integration', () => {
       const ReloadedStateManager = module.default;
 
       const reloadedState = ReloadedStateManager.getState();
-      expect(reloadedState.year).toBe(2026);
       expect(reloadedState.events).toHaveLength(1);
       expect(reloadedState.events[0].title).toBe('Persistent Event');
       expect(reloadedState.constraints).toHaveLength(1);

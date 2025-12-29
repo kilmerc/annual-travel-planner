@@ -65,9 +65,10 @@ describe('Event Model', () => {
       expect(() => new Event(data)).toThrow('Event type is required');
     });
 
-    it('should throw error for invalid type', () => {
-      const data = { ...validEventData, type: 'invalid-type' };
-      expect(() => new Event(data)).toThrow('Invalid event type: invalid-type');
+    it('should accept any type string (types are user-defined)', () => {
+      const data = { ...validEventData, type: 'custom-type' };
+      const event = new Event(data);
+      expect(event.type).toBe('custom-type');
     });
 
     it('should throw error for missing start date', () => {

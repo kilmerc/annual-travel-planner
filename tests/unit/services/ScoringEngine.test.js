@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Event } from '../../../js/models/Event.js';
 import { Constraint } from '../../../js/models/Constraint.js';
+import StateManager from '../../../js/services/StateManager.js';
 
 describe('ScoringEngine', () => {
   let ScoringEngine;
@@ -9,6 +10,52 @@ describe('ScoringEngine', () => {
     // Import fresh instance for each test
     const module = await import('../../../js/services/ScoringEngine.js');
     ScoringEngine = module.default;
+
+    // Set up constraint type configs for tests
+    StateManager.setConstraintTypeConfig('vacation', {
+      label: 'Vacation',
+      color: '#ef4444',
+      colorDark: '#f87171',
+      isHardStop: true
+    });
+    StateManager.setConstraintTypeConfig('holiday', {
+      label: 'Holiday',
+      color: '#ec4899',
+      colorDark: '#f472b6',
+      isHardStop: true
+    });
+    StateManager.setConstraintTypeConfig('blackout', {
+      label: 'Blackout',
+      color: '#be123c',
+      colorDark: '#e11d48',
+      isHardStop: true
+    });
+    StateManager.setConstraintTypeConfig('preference', {
+      label: 'Preference',
+      color: '#eab308',
+      colorDark: '#facc15',
+      isHardStop: false
+    });
+
+    // Set up event type configs for tests
+    StateManager.setEventTypeConfig('division', {
+      label: 'Division Visit',
+      color: '#3b82f6',
+      colorDark: '#60a5fa',
+      isHardStop: false
+    });
+    StateManager.setEventTypeConfig('gts', {
+      label: 'GTS',
+      color: '#a855f7',
+      colorDark: '#c084fc',
+      isHardStop: false
+    });
+    StateManager.setEventTypeConfig('other', {
+      label: 'Other',
+      color: '#6b7280',
+      colorDark: '#9ca3af',
+      isHardStop: false
+    });
   });
 
   describe('scoreWeek', () => {

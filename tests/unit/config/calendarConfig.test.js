@@ -121,17 +121,13 @@ describe('calendarConfig', () => {
   });
 
   describe('EVENT_TYPES', () => {
-    it('should have all event types', () => {
-      expect(EVENT_TYPES.DIVISION).toBe('division');
-      expect(EVENT_TYPES.GTS).toBe('gts');
-      expect(EVENT_TYPES.PI).toBe('pi');
-      expect(EVENT_TYPES.BP).toBe('bp');
-      expect(EVENT_TYPES.OTHER).toBe('other');
+    it('should only have archived event type (user-defined types are in StateManager)', () => {
+      expect(EVENT_TYPES.ARCHIVED).toBe('archived');
     });
 
-    it('should have 6 event types', () => {
+    it('should have exactly 1 built-in event type', () => {
       const keys = Object.keys(EVENT_TYPES);
-      expect(keys).toHaveLength(6);
+      expect(keys).toHaveLength(1);
     });
 
     it('should be frozen (immutable)', () => {
@@ -140,12 +136,7 @@ describe('calendarConfig', () => {
   });
 
   describe('EVENT_TYPE_LABELS', () => {
-    it('should have labels for all event types', () => {
-      expect(EVENT_TYPE_LABELS.division).toBe('Division Visit');
-      expect(EVENT_TYPE_LABELS.gts).toBe('GTS All-Hands');
-      expect(EVENT_TYPE_LABELS.pi).toBe('PI Planning');
-      expect(EVENT_TYPE_LABELS.bp).toBe('BP Team Meeting');
-      expect(EVENT_TYPE_LABELS.other).toBe('Other Business');
+    it('should only have label for archived (user-defined labels are in StateManager)', () => {
       expect(EVENT_TYPE_LABELS.archived).toBe('Archived');
     });
 
@@ -161,16 +152,9 @@ describe('calendarConfig', () => {
   });
 
   describe('CONSTRAINT_TYPES', () => {
-    it('should have all constraint types', () => {
-      expect(CONSTRAINT_TYPES.VACATION).toBe('vacation');
-      expect(CONSTRAINT_TYPES.HOLIDAY).toBe('holiday');
-      expect(CONSTRAINT_TYPES.BLACKOUT).toBe('blackout');
-      expect(CONSTRAINT_TYPES.PREFERENCE).toBe('preference');
-    });
-
-    it('should have 4 constraint types', () => {
+    it('should have no built-in constraint types (all user-defined in StateManager)', () => {
       const keys = Object.keys(CONSTRAINT_TYPES);
-      expect(keys).toHaveLength(4);
+      expect(keys).toHaveLength(0);
     });
 
     it('should be frozen (immutable)', () => {
@@ -179,11 +163,9 @@ describe('calendarConfig', () => {
   });
 
   describe('CONSTRAINT_TYPE_LABELS', () => {
-    it('should have labels for all constraint types', () => {
-      expect(CONSTRAINT_TYPE_LABELS.vacation).toBe('Personal Vacation (Hard Stop)');
-      expect(CONSTRAINT_TYPE_LABELS.holiday).toBe('Company Holiday (Hard Stop)');
-      expect(CONSTRAINT_TYPE_LABELS.blackout).toBe('Business Blackout (Hard Stop)');
-      expect(CONSTRAINT_TYPE_LABELS.preference).toBe('Prefer No Travel (Soft)');
+    it('should have no built-in labels (all user-defined in StateManager)', () => {
+      const keys = Object.keys(CONSTRAINT_TYPE_LABELS);
+      expect(keys).toHaveLength(0);
     });
 
     it('should have matching keys with CONSTRAINT_TYPES values', () => {
@@ -198,18 +180,8 @@ describe('calendarConfig', () => {
   });
 
   describe('HARD_CONSTRAINT_TYPES', () => {
-    it('should contain vacation, holiday, and blackout', () => {
-      expect(HARD_CONSTRAINT_TYPES).toContain('vacation');
-      expect(HARD_CONSTRAINT_TYPES).toContain('holiday');
-      expect(HARD_CONSTRAINT_TYPES).toContain('blackout');
-    });
-
-    it('should have exactly 3 hard constraint types', () => {
-      expect(HARD_CONSTRAINT_TYPES).toHaveLength(3);
-    });
-
-    it('should not contain preference (soft constraint)', () => {
-      expect(HARD_CONSTRAINT_TYPES).not.toContain('preference');
+    it('should have no built-in hard constraint types (all user-defined in StateManager)', () => {
+      expect(HARD_CONSTRAINT_TYPES).toHaveLength(0);
     });
 
     it('should be frozen (immutable)', () => {
@@ -310,21 +282,16 @@ describe('calendarConfig', () => {
     });
 
     it('should have consistent constraint type constants', () => {
+      // Both should be empty since constraint types are user-defined
       const typeKeys = Object.keys(CONSTRAINT_TYPES);
       const labelKeys = Object.keys(CONSTRAINT_TYPE_LABELS);
 
-      // All CONSTRAINT_TYPES values should have corresponding labels
-      Object.values(CONSTRAINT_TYPES).forEach(typeValue => {
-        expect(labelKeys).toContain(typeValue);
-      });
+      expect(typeKeys).toHaveLength(0);
+      expect(labelKeys).toHaveLength(0);
     });
 
-    it('should have hard constraints as subset of all constraints', () => {
-      const allConstraintTypes = Object.values(CONSTRAINT_TYPES);
-
-      HARD_CONSTRAINT_TYPES.forEach(hardType => {
-        expect(allConstraintTypes).toContain(hardType);
-      });
+    it('should have hard constraints as empty (user-defined in StateManager)', () => {
+      expect(HARD_CONSTRAINT_TYPES).toHaveLength(0);
     });
 
     it('should have matching month names length', () => {

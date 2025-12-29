@@ -13,7 +13,7 @@ import ToastService from './ToastService.js';
 
 class StateManager {
     #state = {
-        year: 2025,
+        currentYear: new Date().getFullYear(), // Current viewing year (for UI navigation)
         events: [],
         constraints: [],
         eventTypeConfigs: { ...DEFAULT_EVENT_TYPE_CONFIGS },
@@ -33,7 +33,6 @@ class StateManager {
      */
     getState() {
         return {
-            year: this.#state.year,
             events: this.#state.events.map(e => e.toJSON ? e.toJSON() : e),
             constraints: this.#state.constraints.map(c => c.toJSON ? c.toJSON() : c),
             eventTypeConfigs: { ...this.#state.eventTypeConfigs },
@@ -43,21 +42,20 @@ class StateManager {
     }
 
     /**
-     * Get year
+     * Get current viewing year (for UI navigation only)
      * @returns {number} Calendar year
      */
     getYear() {
-        return this.#state.year;
+        return this.#state.currentYear;
     }
 
     /**
-     * Set year
+     * Set current viewing year (for UI navigation only)
      * @param {number} year - Calendar year
      */
     setYear(year) {
-        this.#state.year = year;
-        this.#persist();
-        EventBus.emit('state:changed', this.getState());
+        this.#state.currentYear = year;
+        // Don't persist currentYear - it's UI state only
         EventBus.emit('year:changed', year);
     }
 
@@ -200,17 +198,23 @@ class StateManager {
      * @param {object} data - State data
      */
     importState(data) {
-        this.#state.year = data.year || 2025;
-
+        // Data structure supports multiple years - events have full dates
         this.#state.events = (data.events || []).map(e => new Event(e));
         this.#state.constraints = (data.constraints || []).map(c => new Constraint(c));
         this.#state.eventTypeConfigs = data.eventTypeConfigs || { ...DEFAULT_EVENT_TYPE_CONFIGS };
         this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
         this.#state.customLocations = data.customLocations || [];
 
+        // Set current viewing year to current year or first event's year
+        if (this.#state.events.length > 0) {
+            const firstEventDate = new Date(this.#state.events[0].startDate);
+            this.#state.currentYear = firstEventDate.getFullYear();
+        }
+
         this.#persist();
         EventBus.emit('state:imported', this.getState());
         EventBus.emit('state:changed', this.getState());
+        EventBus.emit('year:changed', this.#state.currentYear);
     }
 
     /**
@@ -235,7 +239,6 @@ class StateManager {
             const stored = localStorage.getItem(this.#storageKey);
             if (stored) {
                 const data = JSON.parse(stored);
-                this.#state.year = data.year || 2025;
 
                 // Convert plain objects to model instances
                 this.#state.events = (data.events || []).map(e =>
@@ -249,6 +252,14 @@ class StateManager {
                 this.#state.eventTypeConfigs = data.eventTypeConfigs || { ...DEFAULT_EVENT_TYPE_CONFIGS };
                 this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
                 this.#state.customLocations = data.customLocations || [];
+
+                // Set current viewing year based on existing events or current year
+                if (this.#state.events.length > 0) {
+                    const firstEventDate = new Date(this.#state.events[0].startDate);
+                    this.#state.currentYear = firstEventDate.getFullYear();
+                } else {
+                    this.#state.currentYear = new Date().getFullYear();
+                }
             }
         } catch (error) {
             console.error('Error loading state from localStorage:', error);

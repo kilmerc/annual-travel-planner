@@ -84,11 +84,8 @@ export class Event {
             throw new Error('Event type is required');
         }
 
-        // Validate type against built-in types only
-        const allEventTypes = Object.values(BUILT_IN_EVENT_TYPES);
-        if (!allEventTypes.includes(this.type)) {
-            throw new Error(`Invalid event type: ${this.type}`);
-        }
+        // Note: Type validation removed - types are now user-defined
+        // Only validate that a type string is provided
 
         // Validate startDate before normalization
         if (!startDate) {
