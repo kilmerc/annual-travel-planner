@@ -130,6 +130,9 @@
                         <button type="button" id="btnFindBest" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded shadow-sm font-medium transition">
                             <i class="fas fa-magic mr-2"></i> Find Best Weeks
                         </button>
+                        <button type="button" id="btnDeleteTripFlexible" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition hidden">
+                            <i class="fas fa-trash-alt mr-2"></i>Delete Trip
+                        </button>
                     </div>
 
                     <!-- Fixed Inputs -->
@@ -153,9 +156,14 @@
                         <button type="button" id="btnAddDateRange" class="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded shadow-sm font-medium transition hidden">
                             <i class="fas fa-plus mr-2"></i>Add Another Date Range
                         </button>
-                        <button type="button" id="btnSaveFixedTrip" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded shadow-sm font-medium transition">
-                            Save Trip
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="button" id="btnDeleteTrip" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition hidden">
+                                <i class="fas fa-trash-alt mr-2"></i>Delete
+                            </button>
+                            <button type="button" id="btnSaveFixedTrip" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded shadow-sm font-medium transition">
+                                Save Trip
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Suggestions Result Area -->
@@ -200,9 +208,14 @@
                     <button type="button" id="btnAddConstraintDateRange" class="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded shadow-sm font-medium transition hidden">
                         <i class="fas fa-plus mr-2"></i>Add Another Date Range
                     </button>
-                    <button type="button" id="btnSaveConstraint" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition">
-                        Add Constraint
-                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" id="btnDeleteConstraint" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition hidden">
+                            <i class="fas fa-trash-alt mr-2"></i>Delete
+                        </button>
+                        <button type="button" id="btnSaveConstraint" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow-sm font-medium transition">
+                            Add Constraint
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

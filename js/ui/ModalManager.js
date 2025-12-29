@@ -56,6 +56,11 @@ export class ModalManager {
             document.getElementById('constraintEndDate').value = prefilledDate;
         }
 
+        // Hide delete buttons (we're adding, not editing)
+        document.getElementById('btnDeleteTrip').classList.add('hidden');
+        document.getElementById('btnDeleteTripFlexible').classList.add('hidden');
+        document.getElementById('btnDeleteConstraint').classList.add('hidden');
+
         // Switch to trip tab by default
         this.#switchTab('trip');
 
@@ -112,6 +117,16 @@ export class ModalManager {
         this.#switchTab('trip');
         this.#toggleTripMode();
 
+        // Show delete button for editing trips
+        if (event.isFixed) {
+            document.getElementById('btnDeleteTrip').classList.remove('hidden');
+            document.getElementById('btnDeleteTripFlexible').classList.add('hidden');
+        } else {
+            document.getElementById('btnDeleteTrip').classList.add('hidden');
+            document.getElementById('btnDeleteTripFlexible').classList.remove('hidden');
+        }
+        document.getElementById('btnDeleteConstraint').classList.add('hidden');
+
         // Clear suggestion results
         const suggestionResults = document.getElementById('suggestionResults');
         if (suggestionResults) {
@@ -141,6 +156,11 @@ export class ModalManager {
         document.getElementById('constraintType').value = constraint.type || 'vacation';
         document.getElementById('constraintDate').value = constraint.startDate;
         document.getElementById('constraintEndDate').value = constraint.endDate || constraint.startDate;
+
+        // Show delete button for editing constraints
+        document.getElementById('btnDeleteConstraint').classList.remove('hidden');
+        document.getElementById('btnDeleteTrip').classList.add('hidden');
+        document.getElementById('btnDeleteTripFlexible').classList.add('hidden');
 
         this.#switchTab('constraint');
     }
@@ -252,6 +272,22 @@ export class ModalManager {
         const saveConstraintBtn = document.getElementById('btnSaveConstraint');
         if (saveConstraintBtn) {
             saveConstraintBtn.addEventListener('click', () => this.#saveConstraint());
+        }
+
+        // Delete buttons
+        const btnDeleteTrip = document.getElementById('btnDeleteTrip');
+        if (btnDeleteTrip) {
+            btnDeleteTrip.addEventListener('click', () => this.#deleteEvent());
+        }
+
+        const btnDeleteTripFlexible = document.getElementById('btnDeleteTripFlexible');
+        if (btnDeleteTripFlexible) {
+            btnDeleteTripFlexible.addEventListener('click', () => this.#deleteEvent());
+        }
+
+        const btnDeleteConstraint = document.getElementById('btnDeleteConstraint');
+        if (btnDeleteConstraint) {
+            btnDeleteConstraint.addEventListener('click', () => this.#deleteConstraint());
         }
 
         // Export/Import buttons
@@ -793,6 +829,44 @@ export class ModalManager {
         };
 
         input.click();
+    }
+
+    /**
+     * Delete event
+     * @private
+     */
+    #deleteEvent() {
+        if (!this.#editingEventId) {
+            console.error('No event being edited');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this trip? This cannot be undone.')) {
+            return;
+        }
+
+        StateManager.deleteEvent(this.#editingEventId);
+        this.#editingEventId = null;
+        this.close(this.#addModalId);
+    }
+
+    /**
+     * Delete constraint
+     * @private
+     */
+    #deleteConstraint() {
+        if (!this.#editingConstraintId) {
+            console.error('No constraint being edited');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this constraint? This cannot be undone.')) {
+            return;
+        }
+
+        StateManager.deleteConstraint(this.#editingConstraintId);
+        this.#editingConstraintId = null;
+        this.close(this.#addModalId);
     }
 }
 
