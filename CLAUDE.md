@@ -6,13 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Smart Business Travel Planner - A browser-based web application for optimizing annual business travel schedules. Uses vanilla JavaScript ES6 modules with no build tools required.
 
-**Recent Updates (Phase 10 & 11):**
+**Recent Updates (Phase 10, 11 & 12):**
 - Fiscal year removed - now uses calendar year only (Jan-Dec)
 - Delete functionality added to event/constraint modals
 - Clickable metrics to highlight traveling/home/conflict weeks (Mon-Fri)
 - Batch planning with titles, types, and location dropdowns
 - Radio button selection with real-time double-booking prevention
 - Conflicts now use highlighting instead of modal popup
+- **Interactive tutorial system (Phase 12)** using driver.js for first-time users
 
 ## Development Commands
 
@@ -60,7 +61,8 @@ js/
 │   ├── StateManager.js     # State + localStorage (singleton)
 │   ├── ScoringEngine.js    # Week optimization algorithm + batch planning
 │   ├── DateService.js      # Date utilities (timezone-aware)
-│   └── DataService.js      # JSON import/export
+│   ├── DataService.js      # JSON import/export
+│   └── TutorialService.js  # Interactive tutorial (driver.js)
 ├── ui/
 │   ├── ViewManager.js      # View orchestration
 │   ├── CalendarView.js     # Calendar rendering + week highlighting
@@ -155,6 +157,15 @@ LocalStorage key: `travelPlannerState`
 ```
 
 ## Key Features
+
+### Interactive Tutorial
+- **First-time walkthrough** shown automatically on first app load
+- **Help button** (? icon) in header to restart tutorial anytime
+- **Settings option** to restart tutorial from Settings → Help & Tutorial
+- Uses **driver.js** (v1.3.1) for overlay highlighting and step navigation
+- Tutorial covers: metrics bar, calendar views, adding trips, and all major features
+- localStorage tracks completion (`tutorialCompleted` flag)
+- Tour switches between Calendar, Quarters, and Timeline views to demonstrate each
 
 ### Modal Tabs
 The main modal has 3 tabs:
