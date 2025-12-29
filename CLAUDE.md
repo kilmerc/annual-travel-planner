@@ -64,7 +64,7 @@ js/
 │   ├── DataService.js      # JSON import/export
 │   └── TutorialService.js  # Interactive tutorial (driver.js)
 ├── ui/
-│   ├── ViewManager.js      # View orchestration
+│   ├── ViewManager.js      # View orchestration (Calendar view only)
 │   ├── CalendarView.js     # Calendar rendering + week highlighting
 │   ├── MetricsBar.js       # Statistics display + clickable metrics
 │   ├── ModalManager.js     # Add/Edit/Delete modals + batch planning
@@ -72,8 +72,6 @@ js/
 └── utils/
     └── EventBus.js         # Pub/sub pattern
 ```
-
-**Deprecated Files:** `QuartersView.js` and `TimelineView.js` exist but are not used (app uses Calendar view only).
 
 ## Critical Design Concepts
 
@@ -131,7 +129,6 @@ LocalStorage key: `travelPlannerState`
 ```json
 {
   "year": 2026,
-  "viewMode": "calendar",
   "events": [
     {
       "id": "timestamp-string",
@@ -163,9 +160,8 @@ LocalStorage key: `travelPlannerState`
 - **Help button** (? icon) in header to restart tutorial anytime
 - **Settings option** to restart tutorial from Settings → Help & Tutorial
 - Uses **driver.js** (v1.3.1) for overlay highlighting and step navigation
-- Tutorial covers: metrics bar, calendar views, adding trips, and all major features
+- Tutorial covers: metrics bar, calendar view, adding trips, batch planning, and all major features
 - localStorage tracks completion (`tutorialCompleted` flag)
-- Tour switches between Calendar, Quarters, and Timeline views to demonstrate each
 
 ### Modal Tabs
 The main modal has 3 tabs:
