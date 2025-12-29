@@ -15,6 +15,15 @@ Smart Business Travel Planner - A browser-based web application for optimizing a
 - Conflicts now use highlighting instead of modal popup
 - **Interactive tutorial system (Phase 12)** using driver.js for first-time users
 
+**Bug Fixes & Improvements (December 2025):**
+- **Test Suite**: Fixed 28 failing tests - now 290/295 tests passing (98.3%)
+- **Event/Constraint Models**: Unique ID generation with counters, proper validation split (input vs final)
+- **EventBus**: Fixed once() method to properly handle callback removal during iteration
+- **ScoringEngine**: Fixed timezone bug in overlapsWithWeek() - now parses ISO dates in local time
+- **DataService**: Updated serialization to include eventTypeConfigs, constraintTypeConfigs, customLocations
+- **calendarConfig**: Added backward-compatible exports for legacy test imports
+- **Known Issue**: 6 moderate npm security vulnerabilities in dev dependencies (vitest/esbuild) - requires breaking change to fix
+
 ## Development Commands
 
 **Start Development Server:**
@@ -162,27 +171,49 @@ LocalStorage key: `travelPlannerState`
   "year": 2026,
   "events": [
     {
-      "id": "timestamp-string",
+      "id": "1234567890-0",
       "title": "London Team Visit",
       "type": "division",
       "location": "London",
       "startDate": "2026-03-16",
       "endDate": "2026-03-18",
       "duration": 1,
-      "isFixed": true
+      "isFixed": true,
+      "archived": false
     }
   ],
   "constraints": [
     {
-      "id": "timestamp-string",
+      "id": "1234567890-0",
       "title": "Summer Vacation",
       "type": "vacation",
       "startDate": "2026-07-13",
       "endDate": "2026-07-17"
     }
-  ]
+  ],
+  "eventTypeConfigs": {
+    "division": {
+      "label": "Division Visit",
+      "color": "#3b82f6",
+      "colorDark": "#60a5fa",
+      "isHardStop": false,
+      "isBuiltIn": true
+    }
+  },
+  "constraintTypeConfigs": {
+    "vacation": {
+      "label": "Personal Vacation",
+      "color": "#ef4444",
+      "colorDark": "#f87171",
+      "isHardStop": true,
+      "isBuiltIn": true
+    }
+  },
+  "customLocations": ["Custom Location 1"]
 }
 ```
+
+**Note:** IDs now use format `timestamp-counter` to ensure uniqueness even when created rapidly.
 
 ## Key Features
 
@@ -269,3 +300,39 @@ ModalManager.saveTripHandler()
 - Flexible trips MUST normalize to Monday (use `getMonday()` from DateService)
 - Fixed trips preserve exact dates
 - Only weekdays (Mon-Fri) display colored bars in calendar
+
+## Future Architectural Improvements
+
+The following improvements have been identified but are not yet implemented. These would require significant refactoring:
+
+### 1. Base UI Component Class
+- **Objective**: Extract common patterns from UI components to reduce code duplication
+- **Benefits**: Consistent lifecycle management, event handling, and DOM manipulation
+- **Effort**: ~2-3 hours
+
+### 2. Refactor Large Files
+- **ModalManager.js**: 1,155 lines - should be split into separate modal components
+- **CalendarView.js**: 365 lines - could be modularized into render, event handling, and state modules
+- **Other UI files**: Generally well-sized (200-270 lines)
+- **Effort**: ~4-6 hours
+
+### 3. Dependency Injection
+- **Objective**: Reduce tight coupling between services (e.g., ScoringEngine → StateManager)
+- **Benefits**: Improved testability, easier mocking in unit tests
+- **Approach**: Pass dependencies via constructor rather than importing singletons
+- **Effort**: ~3-4 hours
+
+### 4. State Validation Hooks
+- **Objective**: Validate state integrity before persistence
+- **Benefits**: Catch data corruption early, ensure type safety
+- **Implementation**: Add validation layer in StateManager.#persist()
+- **Effort**: ~2-3 hours
+
+### 5. Undo/Redo System
+- **Objective**: Command pattern for all state changes
+- **Benefits**: User can undo/redo actions
+- **Approach**: Implement command objects with execute() and undo() methods
+- **Challenges**: Significant architectural change, requires refactoring all state mutations
+- **Effort**: ~4-6 hours
+
+**Total estimated effort for all improvements: 16-24 hours**
