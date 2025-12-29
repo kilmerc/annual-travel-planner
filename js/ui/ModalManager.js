@@ -1078,20 +1078,24 @@ export class ModalManager {
 
         results.forEach(({ trip, suggestions, tripIndex }) => {
             html += `
-                <div class="mb-6 p-4 border dark:border-slate-600 rounded bg-white dark:bg-slate-800">
+                <div class="mb-6 p-4 border dark:border-slate-600 rounded bg-white dark:bg-slate-800" data-trip-index="${tripIndex}">
                     <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${trip.title || trip.location}</h5>
                     ${suggestions.length === 0 ? '<p class="text-slate-500 text-sm">No available weeks found</p>' : ''}
                     <div class="space-y-2">
                         ${suggestions.map((sug, idx) => `
                             <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
-                                <div class="text-sm">
-                                    <strong>Option ${idx + 1}:</strong> Week of ${sug.iso}
-                                    <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
-                                </div>
-                                <button class="add-batch-suggestion px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
-                                        data-title="${trip.title || ''}" data-type="${trip.type}" data-location="${trip.location}" data-date="${sug.iso}">
-                                    <i class="fas fa-plus mr-1"></i>Add
-                                </button>
+                                <label class="flex items-center gap-3 text-sm flex-1 cursor-pointer">
+                                    <input type="radio" name="batch-trip-${tripIndex}" class="batch-week-radio"
+                                           data-trip-index="${tripIndex}"
+                                           data-week="${sug.iso}"
+                                           data-title="${trip.title || ''}"
+                                           data-type="${trip.type}"
+                                           data-location="${trip.location}">
+                                    <div>
+                                        <strong>Option ${idx + 1}:</strong> Week of ${sug.iso}
+                                        <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
+                                    </div>
+                                </label>
                             </div>
                         `).join('')}
                     </div>
@@ -1099,35 +1103,94 @@ export class ModalManager {
             `;
         });
 
+        html += `
+            <div class="border-t dark:border-slate-600 pt-4 mt-4">
+                <button id="btnAddSelectedBatchTrips" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded shadow-sm font-medium transition">
+                    <i class="fas fa-check mr-2"></i>Add Selected Trips to Calendar
+                </button>
+            </div>
+        `;
+
         html += '</div>';
         resultsContainer.innerHTML = html;
         resultsContainer.classList.remove('hidden');
 
-        // Add event listeners for quick-add buttons
-        resultsContainer.querySelectorAll('.add-batch-suggestion').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const title = e.currentTarget.dataset.title;
-                const type = e.currentTarget.dataset.type;
-                const location = e.currentTarget.dataset.location;
-                const date = e.currentTarget.dataset.date;
+        // Track selected weeks for real-time validation
+        const selectedWeeks = new Set();
 
-                StateManager.addEvent({
-                    id: Date.now().toString(),
-                    title: title || `Visit ${location}`,
-                    type: type || 'division',
-                    location,
-                    startDate: date,
-                    endDate: null,
-                    duration: 1,
-                    isFixed: false
+        // Add event listeners for radio buttons
+        resultsContainer.querySelectorAll('.batch-week-radio').forEach(radio => {
+            radio.addEventListener('change', () => {
+                // Update selected weeks tracking
+                selectedWeeks.clear();
+                resultsContainer.querySelectorAll('.batch-week-radio:checked').forEach(checkedRadio => {
+                    selectedWeeks.add(checkedRadio.dataset.week);
                 });
 
-                e.currentTarget.textContent = 'Added!';
-                e.currentTarget.disabled = true;
-                e.currentTarget.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                e.currentTarget.classList.add('bg-green-600');
+                // Disable radio buttons for weeks that are selected in other trips
+                resultsContainer.querySelectorAll('.batch-week-radio').forEach(r => {
+                    const week = r.dataset.week;
+                    const tripIndex = r.dataset.tripIndex;
+                    const isThisRadioChecked = r.checked;
+
+                    // Disable if this week is selected by a different trip
+                    const isWeekTakenByOtherTrip = selectedWeeks.has(week) && !isThisRadioChecked;
+                    r.disabled = isWeekTakenByOtherTrip;
+
+                    // Visual feedback for disabled state
+                    if (isWeekTakenByOtherTrip) {
+                        r.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        r.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                });
             });
         });
+
+        // Add event listener for "Add Selected Trips" button
+        const addSelectedBtn = document.getElementById('btnAddSelectedBatchTrips');
+        if (addSelectedBtn) {
+            addSelectedBtn.addEventListener('click', () => {
+                const selectedRadios = resultsContainer.querySelectorAll('.batch-week-radio:checked');
+
+                if (selectedRadios.length === 0) {
+                    alert('Please select at least one trip to add');
+                    return;
+                }
+
+                // Add all selected trips
+                selectedRadios.forEach(radio => {
+                    const title = radio.dataset.title;
+                    const type = radio.dataset.type;
+                    const location = radio.dataset.location;
+                    const date = radio.dataset.week;
+
+                    StateManager.addEvent({
+                        id: Date.now().toString(),
+                        title: title || `Visit ${location}`,
+                        type: type || 'division',
+                        location,
+                        startDate: date,
+                        endDate: null,
+                        duration: 1,
+                        isFixed: false
+                    });
+                });
+
+                // Clear results and show success
+                resultsContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-check-circle text-green-600 text-5xl mb-4"></i>
+                        <p class="text-lg font-semibold text-green-600 dark:text-green-400">
+                            ${selectedRadios.length} trip${selectedRadios.length > 1 ? 's' : ''} added to calendar!
+                        </p>
+                        <button class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="document.getElementById('batchResults').classList.add('hidden')">
+                            Close
+                        </button>
+                    </div>
+                `;
+            });
+        }
     }
 }
 
