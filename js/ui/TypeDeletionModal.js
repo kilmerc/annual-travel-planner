@@ -20,6 +20,15 @@ export class TypeDeletionModal {
     init() {
         this.#createModal();
         this.#setupEventListeners();
+
+        // Listen for type deletion events
+        EventBus.on('type-deletion:open-event', (data) => {
+            this.openForEventType(data.typeId, data.typeLabel, data.eventCount);
+        });
+
+        EventBus.on('type-deletion:open-constraint', (data) => {
+            this.openForConstraintType(data.typeId, data.typeLabel, data.constraintCount);
+        });
     }
 
     /**

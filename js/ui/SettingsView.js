@@ -12,6 +12,7 @@
 import StateManager from '../services/StateManager.js';
 import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
+import EventBus from '../utils/EventBus.js';
 
 export class SettingsView {
     #modalId = 'settingsModal';
@@ -101,6 +102,39 @@ export class SettingsView {
                 setTimeout(() => {
                     TutorialService.reset();
                 }, 300); // Wait for modal to close
+            });
+        }
+
+        // Manage Event Types
+        const manageEventTypesBtn = document.getElementById('btnManageEventTypes');
+        if (manageEventTypesBtn) {
+            manageEventTypesBtn.addEventListener('click', () => {
+                this.close(); // Close settings first
+                setTimeout(() => {
+                    EventBus.emit('manage-types:open', { kind: 'event' });
+                }, 300);
+            });
+        }
+
+        // Manage Constraint Types
+        const manageConstraintTypesBtn = document.getElementById('btnManageConstraintTypes');
+        if (manageConstraintTypesBtn) {
+            manageConstraintTypesBtn.addEventListener('click', () => {
+                this.close(); // Close settings first
+                setTimeout(() => {
+                    EventBus.emit('manage-types:open', { kind: 'constraint' });
+                }, 300);
+            });
+        }
+
+        // Manage Locations
+        const manageLocationsBtn = document.getElementById('btnManageLocations');
+        if (manageLocationsBtn) {
+            manageLocationsBtn.addEventListener('click', () => {
+                this.close(); // Close settings first
+                setTimeout(() => {
+                    EventBus.emit('manage-locations:open');
+                }, 300);
             });
         }
 
