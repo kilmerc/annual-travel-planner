@@ -45,6 +45,10 @@ export class MetricsBar {
         document.addEventListener('click', (e) => {
             if (e.target.closest('#metricConflicts')) {
                 this.#showConflictsModal();
+            } else if (e.target.closest('#metricTraveling')) {
+                this.#highlightTravelingWeeks();
+            } else if (e.target.closest('#metricHome')) {
+                this.#highlightHomeWeeks();
             }
         });
     }
@@ -86,15 +90,17 @@ export class MetricsBar {
         this.#currentMetrics = metrics;
 
         this.#container.innerHTML = `
-            <div class="flex items-center gap-2">
+            <div id="metricTraveling" class="flex items-center gap-2 ${metrics.weeksTraveling > 0 ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded px-2 py-1 -mx-2 transition' : ''}">
                 <i class="fas fa-plane-departure text-blue-500 dark:text-blue-400"></i>
                 <span class="font-semibold text-slate-700 dark:text-slate-300">Weeks Traveling:</span>
                 <span id="statTravelWeeks" class="font-mono font-bold text-blue-600 dark:text-blue-400">${metrics.weeksTraveling}</span>
+                ${metrics.weeksTraveling > 0 ? '<i class="fas fa-chevron-right text-xs text-slate-400 ml-1"></i>' : ''}
             </div>
-            <div class="flex items-center gap-2">
+            <div id="metricHome" class="flex items-center gap-2 ${metrics.weeksHome > 0 ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded px-2 py-1 -mx-2 transition' : ''}">
                 <i class="fas fa-home text-green-500 dark:text-green-400"></i>
                 <span class="font-semibold text-slate-700 dark:text-slate-300">Weeks Home:</span>
                 <span id="statHomeWeeks" class="font-mono font-bold text-green-600 dark:text-green-400">${metrics.weeksHome}</span>
+                ${metrics.weeksHome > 0 ? '<i class="fas fa-chevron-right text-xs text-slate-400 ml-1"></i>' : ''}
             </div>
             <div id="metricConflicts" class="flex items-center gap-2 ${metrics.conflicts > 0 ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded px-2 py-1 -mx-2 transition' : ''}">
                 <i class="fas fa-exclamation-triangle ${metrics.conflicts > 0 ? 'text-red-500 dark:text-red-400' : 'text-slate-300 dark:text-slate-600'}"></i>
@@ -189,6 +195,26 @@ export class MetricsBar {
             modal.classList.remove('opacity-0');
             modal.classList.add('opacity-100', 'pointer-events-auto');
         }, 10);
+    }
+
+    /**
+     * Highlight traveling weeks
+     * @private
+     */
+    #highlightTravelingWeeks() {
+        const state = StateManager.getState();
+        const travelWeeks = state.events.map(e => e.startDate);
+        EventBus.emit('highlight:traveling-weeks', { weeks: travelWeeks });
+    }
+
+    /**
+     * Highlight home weeks
+     * @private
+     */
+    #highlightHomeWeeks() {
+        const state = StateManager.getState();
+        const travelWeeks = state.events.map(e => e.startDate);
+        EventBus.emit('highlight:home-weeks', { travelWeeks });
     }
 
     /**

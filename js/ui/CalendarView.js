@@ -11,6 +11,65 @@ import { getCalendarGrid, dateToISO, getMonday, overlapsWithWeek } from '../serv
 
 export class CalendarView {
     #container = null;
+    #highlightMode = null; // 'traveling', 'home', or null
+    #travelWeeks = [];
+
+    constructor() {
+        // Listen for highlight events
+        EventBus.on('highlight:traveling-weeks', (data) => this.#toggleHighlight('traveling', data.weeks));
+        EventBus.on('highlight:home-weeks', (data) => this.#toggleHighlight('home', data.travelWeeks));
+    }
+
+    /**
+     * Toggle week highlighting
+     * @private
+     */
+    #toggleHighlight(mode, weeks) {
+        if (this.#highlightMode === mode) {
+            // Toggle off
+            this.#highlightMode = null;
+            this.#travelWeeks = [];
+        } else {
+            // Toggle on
+            this.#highlightMode = mode;
+            this.#travelWeeks = weeks || [];
+        }
+        this.#updateHighlighting();
+    }
+
+    /**
+     * Update highlighting on calendar
+     * @private
+     */
+    #updateHighlighting() {
+        if (!this.#container) return;
+
+        // Remove all existing highlights
+        this.#container.querySelectorAll('.day-cell').forEach(cell => {
+            cell.classList.remove('highlight-travel', 'highlight-home');
+        });
+
+        if (this.#highlightMode === null) return;
+
+        // Get all day cells and apply highlighting
+        this.#container.querySelectorAll('.day-cell').forEach(cell => {
+            const dateStr = cell.dataset.date;
+            if (!dateStr) return;
+
+            const monday = getMonday(new Date(dateStr + 'T12:00:00'));
+            const mondayISO = dateToISO(monday);
+
+            if (this.#highlightMode === 'traveling') {
+                if (this.#travelWeeks.includes(mondayISO)) {
+                    cell.classList.add('highlight-travel');
+                }
+            } else if (this.#highlightMode === 'home') {
+                if (!this.#travelWeeks.includes(mondayISO)) {
+                    cell.classList.add('highlight-home');
+                }
+            }
+        });
+    }
 
     /**
      * Render the calendar view
@@ -193,7 +252,7 @@ export class CalendarView {
         const dayNum = date.getDate();
 
         // Base classes - more padding to accommodate event bars
-        dayEl.className = `text-center text-xs relative min-h-[50px] p-1 rounded transition flex flex-col ${
+        dayEl.className = `day-cell text-center text-xs relative min-h-[50px] p-1 rounded transition flex flex-col ${
             isCurrentMonth ? 'text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-900'
         } hover:bg-slate-100 dark:hover:bg-slate-700`;
 
