@@ -901,9 +901,41 @@ export class ModalManager {
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Title</label>
+                    <input type="text" class="batch-title w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London Team Visit">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Type</label>
+                    <select class="batch-type w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        <option value="division">Division Visit</option>
+                        <option value="gts">GTS All-Hands</option>
+                        <option value="pi">PI Planning</option>
+                        <option value="bp">BP Team Meeting</option>
+                        <option value="conference">Conference</option>
+                        <option value="other">Other Business</option>
+                    </select>
+                </div>
+            </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
-                <input type="text" class="batch-location w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London, VTX">
+                <select class="batch-location-select w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                    <option value="">Select Division...</option>
+                    <option value="DAL">DAL</option>
+                    <option value="VAL">VAL</option>
+                    <option value="VCE">VCE</option>
+                    <option value="VCW">VCW</option>
+                    <option value="VER">VER</option>
+                    <option value="VIN">VIN</option>
+                    <option value="VNE">VNE</option>
+                    <option value="VNY">VNY</option>
+                    <option value="VSC">VSC</option>
+                    <option value="VTX">VTX</option>
+                    <option value="VUT">VUT</option>
+                    <option value="custom">Other Location (Custom)...</option>
+                </select>
+                <input type="text" class="batch-location-custom w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 hidden" placeholder="Enter city (e.g. London, Singapore, Austin)">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Preferred Seasons</label>
@@ -934,6 +966,18 @@ export class ModalManager {
         tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
             e.target.closest('[data-index]').remove();
         });
+
+        // Add location dropdown toggle listener
+        const locationSelect = tripRow.querySelector('.batch-location-select');
+        const customInput = tripRow.querySelector('.batch-location-custom');
+        locationSelect.addEventListener('change', () => {
+            if (locationSelect.value === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        });
     }
 
     /**
@@ -949,7 +993,12 @@ export class ModalManager {
 
         // Collect batch trip data
         const batchTrips = Array.from(container.children).map((row) => {
-            const location = row.querySelector('.batch-location').value.trim();
+            const title = row.querySelector('.batch-title').value.trim();
+            const type = row.querySelector('.batch-type').value;
+            const locationSelect = row.querySelector('.batch-location-select').value;
+            const location = locationSelect === 'custom'
+                ? row.querySelector('.batch-location-custom').value.trim()
+                : locationSelect;
             const seasons = [];
             if (row.querySelector('.season-winter').checked) seasons.push('winter');
             if (row.querySelector('.season-spring').checked) seasons.push('spring');
@@ -957,7 +1006,7 @@ export class ModalManager {
             if (row.querySelector('.season-fall').checked) seasons.push('fall');
             const canConsolidate = row.querySelector('.can-consolidate').checked;
 
-            return { location, seasons, canConsolidate };
+            return { title, type, location, seasons, canConsolidate };
         }).filter(t => t.location);
 
         if (batchTrips.length === 0) {
@@ -1030,7 +1079,7 @@ export class ModalManager {
         results.forEach(({ trip, suggestions, tripIndex }) => {
             html += `
                 <div class="mb-6 p-4 border dark:border-slate-600 rounded bg-white dark:bg-slate-800">
-                    <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${trip.location}</h5>
+                    <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${trip.title || trip.location}</h5>
                     ${suggestions.length === 0 ? '<p class="text-slate-500 text-sm">No available weeks found</p>' : ''}
                     <div class="space-y-2">
                         ${suggestions.map((sug, idx) => `
@@ -1040,7 +1089,7 @@ export class ModalManager {
                                     <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
                                 </div>
                                 <button class="add-batch-suggestion px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
-                                        data-location="${trip.location}" data-date="${sug.iso}">
+                                        data-title="${trip.title || ''}" data-type="${trip.type}" data-location="${trip.location}" data-date="${sug.iso}">
                                     <i class="fas fa-plus mr-1"></i>Add
                                 </button>
                             </div>
@@ -1057,13 +1106,15 @@ export class ModalManager {
         // Add event listeners for quick-add buttons
         resultsContainer.querySelectorAll('.add-batch-suggestion').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                const title = e.currentTarget.dataset.title;
+                const type = e.currentTarget.dataset.type;
                 const location = e.currentTarget.dataset.location;
                 const date = e.currentTarget.dataset.date;
 
                 StateManager.addEvent({
                     id: Date.now().toString(),
-                    title: `Visit ${location}`,
-                    type: 'division',
+                    title: title || `Visit ${location}`,
+                    type: type || 'division',
                     location,
                     startDate: date,
                     endDate: null,
