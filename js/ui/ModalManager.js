@@ -61,7 +61,8 @@ export class ModalManager {
 
         this.#tripTypeComboBox = new ComboBox({
             options: eventTypeOptions,
-            value: 'division', // Default
+            value: '', // No default - show all options
+            placeholder: 'Select trip type...',
             onChange: (value) => {},
             onAdd: (value, label) => {
                 // Open type config modal to configure the new type
@@ -140,7 +141,8 @@ export class ModalManager {
 
         this.#constraintTypeComboBox = new ComboBox({
             options: constraintTypeOptions,
-            value: 'vacation', // Default
+            value: '', // No default - show all options
+            placeholder: 'Select constraint type...',
             onChange: (value) => {},
             onAdd: (value, label) => {
                 // Open type config modal to configure the new type
@@ -1075,14 +1077,7 @@ export class ModalManager {
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Type</label>
-                    <select class="batch-type w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                        <option value="division">Division Visit</option>
-                        <option value="gts">GTS All-Hands</option>
-                        <option value="pi">PI Planning</option>
-                        <option value="bp">BP Team Meeting</option>
-                        <option value="conference">Conference</option>
-                        <option value="other">Other Business</option>
-                    </select>
+                    <div class="batch-type-container"></div>
                 </div>
             </div>
             <div>
@@ -1111,6 +1106,53 @@ export class ModalManager {
         `;
 
         container.appendChild(tripRow);
+
+        // Create ComboBox for trip type
+        const eventTypeConfigs = StateManager.getAllEventTypeConfigs();
+        const eventTypeOptions = Object.entries(eventTypeConfigs).map(([id, config]) => ({
+            value: id,
+            label: config.label,
+            isBuiltIn: config.isBuiltIn
+        }));
+
+        const typeContainer = tripRow.querySelector('.batch-type-container');
+        const typeComboBox = new ComboBox({
+            options: eventTypeOptions,
+            value: '', // No default - show all options
+            placeholder: 'Select trip type...',
+            onChange: (value) => {},
+            onAdd: (value, label) => {
+                EventBus.emit('type-config:open', { kind: 'event', typeId: null, suggestedId: value, suggestedLabel: label });
+            },
+            onDelete: async (value) => {
+                const config = StateManager.getEventTypeConfig(value);
+                if (config) {
+                    const state = StateManager.getState();
+                    const eventsWithType = state.events.filter(e => e.type === value);
+                    if (eventsWithType.length > 0) {
+                        EventBus.emit('type-deletion:open-event', {
+                            typeId: value,
+                            typeLabel: config.label,
+                            eventCount: eventsWithType.length
+                        });
+                    } else {
+                        const confirmed = await ConfirmDialog.show({
+                            title: 'Delete Trip Type',
+                            message: `Are you sure you want to delete "${config.label}"?`,
+                            confirmText: 'Delete',
+                            isDangerous: true
+                        });
+                        if (confirmed) {
+                            StateManager.deleteEventType(value, 'delete');
+                        }
+                    }
+                }
+            }
+        });
+        typeComboBox.render(typeContainer);
+
+        // Store the ComboBox instance on the row for later retrieval
+        tripRow.typeComboBox = typeComboBox;
 
         // Add remove listener
         tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
@@ -1147,7 +1189,7 @@ export class ModalManager {
         // Collect batch trip data
         const batchTrips = Array.from(container.children).map((row) => {
             const title = row.querySelector('.batch-title').value.trim();
-            const type = row.querySelector('.batch-type').value;
+            const type = row.typeComboBox ? row.typeComboBox.getValue() : '';
             const locationSelect = row.querySelector('.batch-location-select').value;
             const location = locationSelect === 'custom'
                 ? row.querySelector('.batch-location-custom').value.trim()

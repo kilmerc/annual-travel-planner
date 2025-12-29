@@ -51,7 +51,7 @@ export class TypeManagementModal {
                     <div class="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
                         <!-- Trip Types Section -->
                         <div class="mb-6">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="flex justify-between items-center mb-2">
                                 <h4 class="font-semibold text-md text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                     <i class="fas fa-plane text-blue-600 dark:text-blue-400"></i>
                                     Trip Types
@@ -61,6 +61,7 @@ export class TypeManagementModal {
                                     Add Trip Type
                                 </button>
                             </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Trip types represent business travel events like division visits, conferences, or team meetings. These are what you're trying to schedule.</p>
                             <div id="eventTypesList" class="space-y-2">
                                 <!-- Populated dynamically -->
                             </div>
@@ -68,7 +69,7 @@ export class TypeManagementModal {
 
                         <!-- Constraint Types Section -->
                         <div>
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="flex justify-between items-center mb-2">
                                 <h4 class="font-semibold text-md text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                     <i class="fas fa-ban text-red-600 dark:text-red-400"></i>
                                     Constraint Types
@@ -78,6 +79,7 @@ export class TypeManagementModal {
                                     Add Constraint Type
                                 </button>
                             </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Constraint types represent periods when travel should be avoided like vacations, holidays, or blackout dates. These affect trip scheduling.</p>
                             <div id="constraintTypesList" class="space-y-2">
                                 <!-- Populated dynamically -->
                             </div>
