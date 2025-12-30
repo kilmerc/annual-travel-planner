@@ -18,7 +18,10 @@ class StateManager {
         constraints: [],
         eventTypeConfigs: { ...DEFAULT_EVENT_TYPE_CONFIGS },
         constraintTypeConfigs: { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS },
-        customLocations: [] // Array of custom location strings
+        customLocations: [], // Array of custom location strings
+        // Google Drive sync metadata
+        lastModified: Date.now(), // Timestamp for conflict resolution
+        syncedFileId: null // Drive file ID of last sync
     };
 
     #storageKey = 'travelPlannerState';
@@ -37,7 +40,9 @@ class StateManager {
             constraints: this.#state.constraints.map(c => c.toJSON ? c.toJSON() : c),
             eventTypeConfigs: { ...this.#state.eventTypeConfigs },
             constraintTypeConfigs: { ...this.#state.constraintTypeConfigs },
-            customLocations: [...this.#state.customLocations]
+            customLocations: [...this.#state.customLocations],
+            lastModified: this.#state.lastModified,
+            syncedFileId: this.#state.syncedFileId
         };
     }
 
@@ -205,6 +210,10 @@ class StateManager {
         this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
         this.#state.customLocations = data.customLocations || [];
 
+        // Import sync metadata
+        this.#state.lastModified = data.lastModified || Date.now();
+        this.#state.syncedFileId = data.syncedFileId || null;
+
         // Set current viewing year to current year or first event's year
         if (this.#state.events.length > 0) {
             const firstEventDate = new Date(this.#state.events[0].startDate);
@@ -226,6 +235,8 @@ class StateManager {
         this.#state.eventTypeConfigs = { ...DEFAULT_EVENT_TYPE_CONFIGS };
         this.#state.constraintTypeConfigs = { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
         this.#state.customLocations = [];
+        this.#state.lastModified = Date.now();
+        this.#state.syncedFileId = null;
         this.#persist();
         EventBus.emit('state:cleared');
         EventBus.emit('state:changed', this.getState());
@@ -252,6 +263,10 @@ class StateManager {
                 this.#state.eventTypeConfigs = data.eventTypeConfigs || { ...DEFAULT_EVENT_TYPE_CONFIGS };
                 this.#state.constraintTypeConfigs = data.constraintTypeConfigs || { ...DEFAULT_CONSTRAINT_TYPE_CONFIGS };
                 this.#state.customLocations = data.customLocations || [];
+
+                // Load sync metadata (with defaults for old data)
+                this.#state.lastModified = data.lastModified || Date.now();
+                this.#state.syncedFileId = data.syncedFileId || null;
 
                 // MIGRATION: Auto-create configs for types found in old data
                 const migrated = this.#migrateOldData();
@@ -504,11 +519,24 @@ class StateManager {
     }
 
     /**
+     * Set synced file ID (called by GoogleDriveSyncManager)
+     * @param {string|null} fileId - Google Drive file ID
+     */
+    setSyncedFileId(fileId) {
+        this.#state.syncedFileId = fileId;
+        // Don't call #persist() here - this is set during sync
+        // and we don't want to trigger another state:changed event
+    }
+
+    /**
      * Persist state to localStorage
      * @private
      */
     #persist() {
         try {
+            // Update last modified timestamp
+            this.#state.lastModified = Date.now();
+
             const data = this.getState();
             localStorage.setItem(this.#storageKey, JSON.stringify(data));
             // Only show save notification in browser environment

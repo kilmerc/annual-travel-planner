@@ -7,6 +7,8 @@
 
 import StateManager from './services/StateManager.js';
 import TutorialService from './services/TutorialService.js';
+import GoogleDriveService from './services/GoogleDriveService.js';
+import GoogleDriveSyncManager from './services/GoogleDriveSyncManager.js';
 import ViewManager from './ui/ViewManager.js';
 import HeaderMetrics from './ui/HeaderMetrics.js';
 import ModalManager from './ui/ModalManager.js';
@@ -16,11 +18,14 @@ import TypeDeletionModal from './ui/TypeDeletionModal.js';
 import TypeManagementModal from './ui/TypeManagementModal.js';
 import LocationManagementModal from './ui/LocationManagementModal.js';
 import HelpModal from './ui/HelpModal.js';
+import GoogleDriveModal from './ui/GoogleDriveModal.js';
 
 class TravelPlannerApp {
     constructor() {
         // Services (singletons)
         this.stateManager = StateManager;
+        this.googleDriveService = GoogleDriveService;
+        this.googleDriveSyncManager = GoogleDriveSyncManager;
 
         // UI Components
         this.viewManager = new ViewManager();
@@ -32,6 +37,7 @@ class TravelPlannerApp {
         this.typeManagementModal = new TypeManagementModal();
         this.locationManagementModal = new LocationManagementModal();
         this.helpModal = new HelpModal();
+        this.googleDriveModal = new GoogleDriveModal();
     }
 
     /**
@@ -49,7 +55,7 @@ class TravelPlannerApp {
             return;
         }
 
-        // Initialize UI components
+        // Initialize UI components (including Google Drive UI)
         this.viewManager.init(mainContent);
         this.headerMetrics.init(headerMetricsEl);
         this.modalManager.init();
@@ -59,6 +65,23 @@ class TravelPlannerApp {
         this.typeManagementModal.init();
         this.locationManagementModal.init();
         this.helpModal.init();
+        this.googleDriveModal.init();  // Initialize UI even if service fails
+
+        // Initialize Google Drive services (after UI is ready)
+        try {
+            await this.googleDriveService.init();
+            this.googleDriveSyncManager.init();
+            console.log('Google Drive services initialized');
+
+            // Load from Drive if already signed in
+            if (this.googleDriveService.isSignedIn()) {
+                console.log('User is signed in, performing initial sync...');
+                await this.googleDriveSyncManager.syncNow();
+            }
+        } catch (error) {
+            console.error('Google Drive initialization failed:', error);
+            // UI is still functional - users can see the modal and try to connect
+        }
 
         // Setup header controls
         this.setupHeaderControls();

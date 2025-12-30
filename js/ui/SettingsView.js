@@ -15,6 +15,7 @@ import TutorialService from '../services/TutorialService.js';
 import ToastService from '../services/ToastService.js';
 import ConfirmDialog from '../services/ConfirmDialog.js';
 import EventBus from '../utils/EventBus.js';
+import GoogleDriveService from '../services/GoogleDriveService.js';
 
 export class SettingsView {
     #modalId = 'settingsModal';
@@ -140,6 +141,20 @@ export class SettingsView {
             });
         }
 
+        // Google Drive Settings
+        const btnDriveSettings = document.getElementById('btnDriveSettings');
+        console.log('Google Drive button found:', !!btnDriveSettings);
+        if (btnDriveSettings) {
+            btnDriveSettings.addEventListener('click', () => {
+                console.log('Google Drive button clicked!');
+                this.close(); // Close settings first
+                setTimeout(() => {
+                    console.log('Emitting google-drive:open event');
+                    EventBus.emit('google-drive:open');
+                }, 300);
+            });
+        }
+
         // Close button
         const closeBtn = document.querySelector('[data-modal-close="settingsModal"]');
         if (closeBtn) {
@@ -174,6 +189,15 @@ export class SettingsView {
                     <div><strong>${state.customLocations.length}</strong> custom locations</div>
                 </div>
             `;
+        }
+
+        // Update Google Drive status
+        const driveStatusEl = document.getElementById('driveStatus');
+        if (driveStatusEl) {
+            const isConnected = GoogleDriveService.isSignedIn();
+            driveStatusEl.innerHTML = isConnected
+                ? '<i class="fas fa-check-circle text-green-500"></i> Google Drive Connected'
+                : '<i class="fas fa-times-circle text-slate-400"></i> Not Connected';
         }
     }
 
