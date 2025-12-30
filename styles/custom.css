@@ -235,6 +235,11 @@ textarea:focus-visible {
     outline-color: #60a5fa;
 }
 
+/* Remove focus outline from modal close buttons */
+[data-modal-close]:focus-visible {
+    outline: none;
+}
+
 /* Smooth Animations */
 * {
     transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
