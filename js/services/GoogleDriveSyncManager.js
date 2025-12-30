@@ -37,6 +37,8 @@ class GoogleDriveSyncManager {
         // Listen for Drive connection events
         EventBus.on('drive:connected', () => {
             this.enableAutoSync();
+            // Trigger immediate sync after connection to load data from Drive
+            this.syncNow();
         });
 
         EventBus.on('drive:disconnected', () => {
@@ -232,7 +234,12 @@ class GoogleDriveSyncManager {
                     });
 
                     if (isManual) {
-                        ToastService.success('Synced from Google Drive');
+                        const hasData = (remoteState.events?.length > 0) || (remoteState.constraints?.length > 0);
+                        if (hasData) {
+                            ToastService.success('Connected to Google Drive and loaded your data');
+                        } else {
+                            ToastService.success('Connected to Google Drive');
+                        }
                     }
                     return;
                 }
@@ -248,7 +255,7 @@ class GoogleDriveSyncManager {
             });
 
             if (isManual) {
-                ToastService.success('Synced to Google Drive');
+                ToastService.success('Connected to Google Drive and backed up your data');
             }
 
         } catch (error) {

@@ -300,8 +300,8 @@ export class GoogleDriveModal {
             console.log('Attempting to sign in to Google Drive...');
             const result = await GoogleDriveService.signIn();
             console.log('Sign in result:', result);
-            // Success handled by auth-changed event
-            ToastService.success('Connected to Google Drive');
+            // Success toast will be shown after sync completes
+            // (see sync:completed event handler + drive:connected logic in GoogleDriveSyncManager)
         } catch (error) {
             console.error('Sign in failed:', error);
             console.error('Error details:', {
