@@ -15,7 +15,7 @@
  */
 
 import { QUARTERS } from '../config/calendarConfig.js';
-import { dateToISO, getMonday, formatDate, overlapsWithWeek, getTimeRangeDates, getMondaysInRange } from '../services/DateService.js';
+import { dateToISO, getMonday, getFriday, formatDate, overlapsWithWeek, getTimeRangeDates, getMondaysInRange } from '../services/DateService.js';
 import StateManager from './StateManager.js';
 
 export class ScoringEngine {
@@ -170,12 +170,32 @@ export class ScoringEngine {
     detectConflicts(events, constraints) {
         const conflicts = [];
 
+        // Helper to parse ISO date strings in local time (avoid timezone issues)
+        const parseLocalDate = (dateStr) => {
+            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            }
+            return new Date(dateStr);
+        };
+
         // Filter out archived events - they should not be considered in conflict detection
         const activeEvents = events.filter(e => !e.archived);
 
         activeEvents.forEach(event => {
-            const eventStartDate = event.startDate;
-            const eventEndDate = event.endDate || event.startDate;
+            // For flexible events (no endDate or isFixed=false), use Mon-Fri of the week
+            let eventStartDate = event.startDate;
+            let eventEndDate;
+
+            if (!event.isFixed || !event.endDate) {
+                // Flexible event - startDate is Monday, calculate Friday
+                const monday = parseLocalDate(event.startDate);
+                const friday = getFriday(monday);
+                eventEndDate = dateToISO(friday);
+            } else {
+                // Fixed event - use actual dates
+                eventEndDate = event.endDate;
+            }
 
             // Check for hard constraint conflicts that overlap with the event
             const hardConstraints = constraints.filter(c => {
@@ -185,10 +205,10 @@ export class ScoringEngine {
 
             hardConstraints.forEach(hardConstraint => {
                 // Check if event overlaps with constraint
-                const eventStart = new Date(eventStartDate);
-                const eventEnd = new Date(eventEndDate);
-                const constraintStart = new Date(hardConstraint.startDate);
-                const constraintEnd = new Date(hardConstraint.endDate);
+                const eventStart = parseLocalDate(eventStartDate);
+                const eventEnd = parseLocalDate(eventEndDate);
+                const constraintStart = parseLocalDate(hardConstraint.startDate);
+                const constraintEnd = parseLocalDate(hardConstraint.endDate);
 
                 const overlaps = eventStart <= constraintEnd && eventEnd >= constraintStart;
 
@@ -206,13 +226,24 @@ export class ScoringEngine {
             activeEvents.forEach(other => {
                 if (event.id === other.id) return;
 
-                const otherStartDate = other.startDate;
-                const otherEndDate = other.endDate || other.startDate;
+                // For flexible events (no endDate or isFixed=false), use Mon-Fri of the week
+                let otherStartDate = other.startDate;
+                let otherEndDate;
 
-                const eventStart = new Date(eventStartDate);
-                const eventEnd = new Date(eventEndDate);
-                const otherStart = new Date(otherStartDate);
-                const otherEnd = new Date(otherEndDate);
+                if (!other.isFixed || !other.endDate) {
+                    // Flexible event - startDate is Monday, calculate Friday
+                    const monday = parseLocalDate(other.startDate);
+                    const friday = getFriday(monday);
+                    otherEndDate = dateToISO(friday);
+                } else {
+                    // Fixed event - use actual dates
+                    otherEndDate = other.endDate;
+                }
+
+                const eventStart = parseLocalDate(eventStartDate);
+                const eventEnd = parseLocalDate(eventEndDate);
+                const otherStart = parseLocalDate(otherStartDate);
+                const otherEnd = parseLocalDate(otherEndDate);
 
                 const overlaps = eventStart <= otherEnd && eventEnd >= otherStart;
 

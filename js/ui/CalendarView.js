@@ -56,6 +56,9 @@ export class CalendarView {
 
         if (this.#highlightMode === null) return;
 
+        console.log('CalendarView highlighting mode:', this.#highlightMode);
+        console.log('CalendarView travel weeks:', this.#travelWeeks);
+
         // Get all day cells and apply highlighting
         this.#container.querySelectorAll('.day-cell').forEach(cell => {
             const dateStr = cell.dataset.date;
@@ -279,10 +282,16 @@ export class CalendarView {
         // Check for events that include this specific date
         const dayEvents = eventList.filter(e => {
             if (!e) return false;
-            // For flexible trips (no endDate), check if this date is in the same week
-            if (!e.endDate) {
+
+            // For flexible trips (isFixed=false or no endDate), check if in same week
+            if (!e.isFixed || !e.endDate) {
+                // Skip weekends for flexible events
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Skip Sunday (0) and Saturday (6)
+                // Check if this date is in the same week as the event
                 return e.startDate === mondayISO;
             }
+
             // For fixed trips, check if this specific date falls within the range
             const eventStart = new Date(e.startDate);
             const eventEnd = new Date(e.endDate);

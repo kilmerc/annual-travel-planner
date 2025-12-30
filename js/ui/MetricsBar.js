@@ -10,6 +10,7 @@
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
 import ScoringEngine from '../services/ScoringEngine.js';
+import { getMonday, dateToISO, getFriday } from '../services/DateService.js';
 
 export class MetricsBar {
     #container = null;
@@ -194,12 +195,72 @@ export class MetricsBar {
     }
 
     /**
+     * Calculate all Mon-Fri weeks that have travel
+     * @private
+     * @returns {Array<string>} Array of Monday ISO dates
+     */
+    #calculateTravelWeeks() {
+        // Helper to parse ISO date strings in local time (avoid timezone issues)
+        const parseLocalDate = (dateStr) => {
+            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            }
+            return new Date(dateStr);
+        };
+
+        const state = StateManager.getState();
+        const travelWeeks = new Set();
+
+        state.events.forEach(event => {
+            if (!event.isFixed || !event.endDate) {
+                // Flexible event - startDate is Monday, represents Mon-Fri week
+                travelWeeks.add(event.startDate);
+                console.log('Flexible event:', event.title, 'Week:', event.startDate);
+            } else {
+                // Fixed event - find all Mon-Fri weeks that overlap with this event
+                const eventStart = parseLocalDate(event.startDate);
+                const eventEnd = parseLocalDate(event.endDate);
+
+                console.log('Fixed event:', event.title, 'Start:', event.startDate, 'End:', event.endDate);
+
+                // Get Monday of the week containing the start date
+                let currentMonday = getMonday(eventStart);
+                const lastMonday = getMonday(eventEnd);
+
+                console.log('  Checking weeks from', dateToISO(currentMonday), 'to', dateToISO(lastMonday));
+
+                // Add all weeks that overlap with this event
+                while (currentMonday <= lastMonday) {
+                    const currentFriday = getFriday(currentMonday);
+                    const mondayISO = dateToISO(currentMonday);
+
+                    // Check if this Mon-Fri week overlaps with the event
+                    if (currentFriday >= eventStart && currentMonday <= eventEnd) {
+                        console.log('  Adding week:', mondayISO, '(overlaps)');
+                        travelWeeks.add(mondayISO);
+                    } else {
+                        console.log('  Skipping week:', mondayISO, '(no overlap)');
+                    }
+
+                    // Move to next week
+                    const nextMonday = new Date(currentMonday);
+                    nextMonday.setDate(nextMonday.getDate() + 7);
+                    currentMonday = nextMonday;
+                }
+            }
+        });
+
+        console.log('Total travel weeks:', Array.from(travelWeeks));
+        return Array.from(travelWeeks);
+    }
+
+    /**
      * Highlight traveling weeks
      * @private
      */
     #highlightTravelingWeeks() {
-        const state = StateManager.getState();
-        const travelWeeks = state.events.map(e => e.startDate);
+        const travelWeeks = this.#calculateTravelWeeks();
         EventBus.emit('highlight:traveling-weeks', { weeks: travelWeeks });
     }
 
@@ -208,8 +269,7 @@ export class MetricsBar {
      * @private
      */
     #highlightHomeWeeks() {
-        const state = StateManager.getState();
-        const travelWeeks = state.events.map(e => e.startDate);
+        const travelWeeks = this.#calculateTravelWeeks();
         EventBus.emit('highlight:home-weeks', { travelWeeks });
     }
 

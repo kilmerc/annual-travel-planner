@@ -14,7 +14,7 @@ import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
 import ToastService from '../services/ToastService.js';
 import ConfirmDialog from '../services/ConfirmDialog.js';
-import { formatDate } from '../services/DateService.js';
+import { formatDate, getFriday, dateToISO } from '../services/DateService.js';
 import ComboBox from './ComboBox.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
 
@@ -1362,7 +1362,6 @@ export class ModalManager {
                         type: type || 'division',
                         location,
                         startDate: date,
-                        endDate: null,
                         duration: 1,
                         isFixed: false
                     });
