@@ -423,10 +423,10 @@ export class CalendarView {
             const dayEl = e.target.closest('[data-date]');
             if (!dayEl) return;
 
-            const mondayISO = dayEl.dataset.mondayIso;
+            const dateISO = dayEl.dataset.date;
 
             // Emit event for modal to open with pre-filled date
-            EventBus.emit('calendar:day-clicked', { date: mondayISO });
+            EventBus.emit('calendar:day-clicked', { date: dateISO });
         });
     }
 }
