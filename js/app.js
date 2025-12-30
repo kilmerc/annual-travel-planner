@@ -19,6 +19,7 @@ import TypeManagementModal from './ui/TypeManagementModal.js';
 import LocationManagementModal from './ui/LocationManagementModal.js';
 import HelpModal from './ui/HelpModal.js';
 import GoogleDriveModal from './ui/GoogleDriveModal.js';
+import FirstSyncModal from './ui/FirstSyncModal.js';
 
 class TravelPlannerApp {
     constructor() {
@@ -38,6 +39,7 @@ class TravelPlannerApp {
         this.locationManagementModal = new LocationManagementModal();
         this.helpModal = new HelpModal();
         this.googleDriveModal = new GoogleDriveModal();
+        this.firstSyncModal = new FirstSyncModal();
     }
 
     /**
@@ -66,6 +68,7 @@ class TravelPlannerApp {
         this.locationManagementModal.init();
         this.helpModal.init();
         this.googleDriveModal.init();  // Initialize UI even if service fails
+        this.firstSyncModal.init();  // Initialize first-sync dialog
 
         // Initialize Google Drive services (after UI is ready)
         try {

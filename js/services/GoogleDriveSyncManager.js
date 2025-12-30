@@ -23,6 +23,7 @@ class GoogleDriveSyncManager {
     #lastSyncTime = null;
     #syncEnabled = false;
     #autoSyncEnabled = true; // Can be toggled by user
+    #firstSyncComplete = false; // Track if first sync has been completed
 
     /**
      * Initialize sync manager
@@ -34,11 +35,23 @@ class GoogleDriveSyncManager {
             this.#autoSyncEnabled = autoSyncPref === 'true';
         }
 
+        // Load first sync status
+        const firstSyncStatus = localStorage.getItem('googleDriveFirstSyncComplete');
+        if (firstSyncStatus !== null) {
+            this.#firstSyncComplete = firstSyncStatus === 'true';
+        }
+
         // Listen for Drive connection events
         EventBus.on('drive:connected', () => {
-            this.enableAutoSync();
-            // Trigger immediate sync after connection to load data from Drive
-            this.syncNow();
+            // Check if this is the first-ever sync
+            if (!this.#firstSyncComplete) {
+                // Emit event to show first-sync dialog
+                EventBus.emit('drive:first-sync-required');
+            } else {
+                // Normal flow: enable auto-sync and sync immediately
+                this.enableAutoSync();
+                this.syncNow();
+            }
         });
 
         EventBus.on('drive:disconnected', () => {
@@ -140,6 +153,100 @@ class GoogleDriveSyncManager {
         }
 
         await this.#performSync(true); // true = manual sync
+    }
+
+    /**
+     * Perform first sync with explicit direction
+     * Called when user chooses sync direction in first-sync dialog
+     * @param {string} direction - 'pull' to download from Drive, 'push' to upload to Drive
+     */
+    async performFirstSync(direction) {
+        if (this.#firstSyncComplete) {
+            console.warn('First sync already completed');
+            return;
+        }
+
+        if (direction !== 'pull' && direction !== 'push') {
+            throw new Error('Invalid sync direction. Must be "pull" or "push"');
+        }
+
+        try {
+            this.#isSyncing = true;
+            ToastService.info('Syncing with Google Drive...', 2000);
+            EventBus.emit('sync:started');
+
+            if (direction === 'pull') {
+                // Pull from Drive: download and import
+                await this.#pullFromDrive();
+            } else {
+                // Push to Drive: upload local state
+                await this.#pushToDrive();
+            }
+
+            // Mark first sync as complete
+            this.#firstSyncComplete = true;
+            localStorage.setItem('googleDriveFirstSyncComplete', 'true');
+
+            // Enable auto-sync for future changes
+            this.enableAutoSync();
+
+            this.#lastSyncTime = Date.now();
+            EventBus.emit('sync:completed', {
+                source: direction === 'pull' ? 'remote' : 'local',
+                timestamp: this.#lastSyncTime,
+                isFirstSync: true
+            });
+
+            const message = direction === 'pull'
+                ? 'Loaded your data from Google Drive'
+                : 'Backed up your data to Google Drive';
+            ToastService.success(message);
+
+        } catch (error) {
+            console.error('First sync failed:', error);
+            this.#handleSyncError(error, true);
+            throw error; // Re-throw so modal can handle
+        } finally {
+            this.#isSyncing = false;
+        }
+    }
+
+    /**
+     * Pull data from Google Drive (download and import)
+     * @private
+     */
+    async #pullFromDrive() {
+        const remoteState = await this.#downloadMostRecentFile();
+
+        if (remoteState) {
+            // Import remote state, overwriting local
+            StateManager.importState(remoteState);
+            console.log('Pulled data from Google Drive');
+        } else {
+            // No remote file exists, nothing to pull
+            console.log('No remote file found - nothing to pull');
+            ToastService.info('No data found in Google Drive');
+        }
+    }
+
+    /**
+     * Push data to Google Drive (upload local state)
+     * @private
+     */
+    async #pushToDrive() {
+        const localState = StateManager.getState();
+        const todayFilename = this.#getTodayFilename();
+
+        await this.#uploadToDrive(localState, todayFilename);
+        console.log('Pushed data to Google Drive');
+    }
+
+    /**
+     * Check if first sync is complete
+     * @returns {boolean} True if first sync has been completed
+     */
+    isFirstSyncComplete() {
+        return this.#firstSyncComplete;
     }
 
     /**
