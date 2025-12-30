@@ -23,6 +23,8 @@ class GoogleDriveService {
     #appFolderId = null;
     #tokenClient = null;
     #accessToken = null;
+    #tokenExpiry = null;
+    #STORAGE_KEY = 'googleDriveToken';
 
     /**
      * Initialize Google API client
@@ -75,6 +77,13 @@ class GoogleDriveService {
                     this.#accessToken = response.access_token;
                     this.#isSignedIn = true;
 
+                    // Calculate expiry time (tokens typically expire in 1 hour)
+                    const expiresIn = response.expires_in || 3600; // Default 1 hour
+                    this.#tokenExpiry = Date.now() + (expiresIn * 1000);
+
+                    // Persist token to localStorage
+                    this.#saveToken();
+
                     // Set token for gapi client
                     gapi.client.setToken({
                         access_token: response.access_token
@@ -88,6 +97,9 @@ class GoogleDriveService {
 
             this.#isInitialized = true;
             console.log('GoogleDriveService initialized (using GIS)');
+
+            // Try to restore token from localStorage
+            this.#restoreToken();
 
         } catch (error) {
             console.error('Failed to initialize Google Drive Service:', error);
@@ -182,6 +194,10 @@ class GoogleDriveService {
             this.#isSignedIn = false;
             this.#appFolderId = null;
             this.#accessToken = null;
+            this.#tokenExpiry = null;
+
+            // Clear persisted token
+            this.#clearToken();
 
             EventBus.emit('drive:disconnected');
         } catch (error) {
@@ -458,6 +474,78 @@ class GoogleDriveService {
      */
     #sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Save token to localStorage
+     * @private
+     */
+    #saveToken() {
+        try {
+            const tokenData = {
+                accessToken: this.#accessToken,
+                expiry: this.#tokenExpiry
+            };
+            localStorage.setItem(this.#STORAGE_KEY, JSON.stringify(tokenData));
+            console.log('Token saved to localStorage');
+        } catch (error) {
+            console.error('Failed to save token:', error);
+        }
+    }
+
+    /**
+     * Restore token from localStorage
+     * @private
+     */
+    #restoreToken() {
+        try {
+            const stored = localStorage.getItem(this.#STORAGE_KEY);
+            if (!stored) {
+                console.log('No stored token found');
+                return;
+            }
+
+            const tokenData = JSON.parse(stored);
+            const now = Date.now();
+
+            // Check if token is expired (with 5 minute buffer)
+            if (tokenData.expiry && tokenData.expiry - now < 5 * 60 * 1000) {
+                console.log('Stored token is expired or expiring soon');
+                this.#clearToken();
+                return;
+            }
+
+            // Token is valid - restore it
+            this.#accessToken = tokenData.accessToken;
+            this.#tokenExpiry = tokenData.expiry;
+            this.#isSignedIn = true;
+
+            // Set token for gapi client
+            gapi.client.setToken({
+                access_token: this.#accessToken
+            });
+
+            console.log('Token restored from localStorage');
+            EventBus.emit('drive:auth-changed', { isSignedIn: true });
+            EventBus.emit('drive:connected');
+
+        } catch (error) {
+            console.error('Failed to restore token:', error);
+            this.#clearToken();
+        }
+    }
+
+    /**
+     * Clear token from localStorage
+     * @private
+     */
+    #clearToken() {
+        try {
+            localStorage.removeItem(this.#STORAGE_KEY);
+            console.log('Token cleared from localStorage');
+        } catch (error) {
+            console.error('Failed to clear token:', error);
+        }
     }
 }
 
