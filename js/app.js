@@ -8,7 +8,7 @@
 import StateManager from './services/StateManager.js';
 import TutorialService from './services/TutorialService.js';
 import ViewManager from './ui/ViewManager.js';
-import MetricsBar from './ui/MetricsBar.js';
+import HeaderMetrics from './ui/HeaderMetrics.js';
 import ModalManager from './ui/ModalManager.js';
 import SettingsView from './ui/SettingsView.js';
 import TypeConfigModal from './ui/TypeConfigModal.js';
@@ -24,7 +24,7 @@ class TravelPlannerApp {
 
         // UI Components
         this.viewManager = new ViewManager();
-        this.metricsBar = new MetricsBar();
+        this.headerMetrics = new HeaderMetrics();
         this.modalManager = new ModalManager();
         this.settingsView = new SettingsView();
         this.typeConfigModal = new TypeConfigModal();
@@ -42,16 +42,16 @@ class TravelPlannerApp {
 
         // Get DOM elements
         const mainContent = document.getElementById('mainContent');
-        const metricsBarEl = document.getElementById('metricsBar');
+        const headerMetricsEl = document.getElementById('headerMetrics');
 
-        if (!mainContent || !metricsBarEl) {
+        if (!mainContent || !headerMetricsEl) {
             console.error('Required DOM elements not found');
             return;
         }
 
         // Initialize UI components
         this.viewManager.init(mainContent);
-        this.metricsBar.init(metricsBarEl);
+        this.headerMetrics.init(headerMetricsEl);
         this.modalManager.init();
         this.settingsView.init();
         this.typeConfigModal.init();

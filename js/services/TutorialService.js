@@ -159,10 +159,10 @@ class TutorialService {
                 }
             },
             {
-                element: '#metricsBar',
+                element: '#headerMetrics',
                 popover: {
                     title: 'Your Travel Metrics',
-                    description: 'These metrics show how much you\'re traveling and whether you have any conflicts. <strong>Click any metric to highlight corresponding weeks on the calendar!</strong>',
+                    description: 'These metrics in the header show how much you\'re traveling and whether you have any conflicts. <strong>Click any metric to highlight corresponding weeks on the calendar!</strong>',
                     position: 'bottom'
                 }
             },
