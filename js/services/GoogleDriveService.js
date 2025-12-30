@@ -24,6 +24,7 @@ class GoogleDriveService {
     #tokenClient = null;
     #accessToken = null;
     #tokenExpiry = null;
+    // Use sessionStorage for better security - tokens cleared when browser closes
     #STORAGE_KEY = 'googleDriveToken';
 
     /**
@@ -477,7 +478,7 @@ class GoogleDriveService {
     }
 
     /**
-     * Save token to localStorage
+     * Save token to sessionStorage (cleared on browser close for enhanced security)
      * @private
      */
     #saveToken() {
@@ -486,20 +487,20 @@ class GoogleDriveService {
                 accessToken: this.#accessToken,
                 expiry: this.#tokenExpiry
             };
-            localStorage.setItem(this.#STORAGE_KEY, JSON.stringify(tokenData));
-            console.log('Token saved to localStorage');
+            sessionStorage.setItem(this.#STORAGE_KEY, JSON.stringify(tokenData));
+            console.log('Token saved to sessionStorage');
         } catch (error) {
             console.error('Failed to save token:', error);
         }
     }
 
     /**
-     * Restore token from localStorage
+     * Restore token from sessionStorage (valid only for current browser session)
      * @private
      */
     #restoreToken() {
         try {
-            const stored = localStorage.getItem(this.#STORAGE_KEY);
+            const stored = sessionStorage.getItem(this.#STORAGE_KEY);
             if (!stored) {
                 console.log('No stored token found');
                 return;
@@ -525,7 +526,7 @@ class GoogleDriveService {
                 access_token: this.#accessToken
             });
 
-            console.log('Token restored from localStorage');
+            console.log('Token restored from sessionStorage');
             EventBus.emit('drive:auth-changed', { isSignedIn: true });
             EventBus.emit('drive:connected');
 
@@ -536,13 +537,13 @@ class GoogleDriveService {
     }
 
     /**
-     * Clear token from localStorage
+     * Clear token from sessionStorage
      * @private
      */
     #clearToken() {
         try {
-            localStorage.removeItem(this.#STORAGE_KEY);
-            console.log('Token cleared from localStorage');
+            sessionStorage.removeItem(this.#STORAGE_KEY);
+            console.log('Token cleared from sessionStorage');
         } catch (error) {
             console.error('Failed to clear token:', error);
         }
