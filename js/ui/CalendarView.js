@@ -9,6 +9,7 @@ import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
 import { MONTH_NAMES_FULL } from '../config/calendarConfig.js';
 import { getCalendarGrid, dateToISO, getMonday, overlapsWithWeek } from '../services/DateService.js';
+import { escapeHTML } from '../utils/htmlSanitizer.js';
 
 export class CalendarView {
     #container = null;
@@ -161,8 +162,8 @@ export class CalendarView {
             const color = isDarkMode ? config.colorDark : config.color;
             html += `
                 <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded" style="background-color: ${color}"></div>
-                    <span class="text-slate-600 dark:text-slate-400">${config.label}</span>
+                    <div class="w-4 h-4 rounded" style="background-color: ${escapeHTML(color)}"></div>
+                    <span class="text-slate-600 dark:text-slate-400">${escapeHTML(config.label)}</span>
                 </div>
             `;
         });
@@ -175,8 +176,8 @@ export class CalendarView {
             const color = isDarkMode ? config.colorDark : config.color;
             html += `
                 <div class="flex items-center gap-1">
-                    <div class="w-4 h-4 rounded" style="background-color: ${color}"></div>
-                    <span class="text-slate-600 dark:text-slate-400">${config.label}</span>
+                    <div class="w-4 h-4 rounded" style="background-color: ${escapeHTML(color)}"></div>
+                    <span class="text-slate-600 dark:text-slate-400">${escapeHTML(config.label)}</span>
                 </div>
             `;
         });

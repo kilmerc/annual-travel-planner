@@ -17,6 +17,7 @@ import ConfirmDialog from '../services/ConfirmDialog.js';
 import { formatDate, getFriday, dateToISO } from '../services/DateService.js';
 import ComboBox from './ComboBox.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
+import { escapeHTML } from '../utils/htmlSanitizer.js';
 
 export class ModalManager {
     #addModalId = 'addModal';
@@ -747,10 +748,10 @@ export class ModalManager {
             const niceDate = formatDate(opt.date, { month: 'short', day: 'numeric' });
             el.innerHTML = `
                 <div>
-                    <div class="font-bold text-sm text-slate-700 dark:text-slate-200">Week of ${niceDate}</div>
-                    <div class="text-[10px] text-slate-500 dark:text-slate-400">${opt.reasons.join(', ') || 'Clear schedule'}</div>
+                    <div class="font-bold text-sm text-slate-700 dark:text-slate-200">Week of ${escapeHTML(niceDate)}</div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400">${escapeHTML(opt.reasons.join(', ') || 'Clear schedule')}</div>
                 </div>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded" data-action="accept-suggestion" data-iso="${opt.iso}">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded" data-action="accept-suggestion" data-iso="${escapeHTML(opt.iso)}">
                     ${opt.score > 200 ? 'Add to Trip' : 'Book'}
                 </button>
             `;
@@ -1270,7 +1271,7 @@ export class ModalManager {
         results.forEach(({ trip, suggestions, tripIndex }) => {
             html += `
                 <div class="mb-6 p-4 border dark:border-slate-600 rounded bg-white dark:bg-slate-800" data-trip-index="${tripIndex}">
-                    <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${trip.title || trip.location}</h5>
+                    <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${escapeHTML(trip.title || trip.location)}</h5>
                     ${suggestions.length === 0 ? '<p class="text-slate-500 text-sm">No available weeks found</p>' : ''}
                     <div class="space-y-2">
                         ${suggestions.map((sug, idx) => `
@@ -1278,12 +1279,12 @@ export class ModalManager {
                                 <label class="flex items-center gap-3 text-sm flex-1 cursor-pointer">
                                     <input type="radio" name="batch-trip-${tripIndex}" class="batch-week-radio"
                                            data-trip-index="${tripIndex}"
-                                           data-week="${sug.iso}"
-                                           data-title="${trip.title || ''}"
-                                           data-type="${trip.type}"
-                                           data-location="${trip.location}">
+                                           data-week="${escapeHTML(sug.iso)}"
+                                           data-title="${escapeHTML(trip.title || '')}"
+                                           data-type="${escapeHTML(trip.type)}"
+                                           data-location="${escapeHTML(trip.location)}">
                                     <div>
-                                        <strong>Option ${idx + 1}:</strong> Week of ${sug.iso}
+                                        <strong>Option ${idx + 1}:</strong> Week of ${escapeHTML(sug.iso)}
                                         <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
                                     </div>
                                 </label>

@@ -10,6 +10,7 @@
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
 import ConfirmDialog from '../services/ConfirmDialog.js';
+import { escapeHTML } from '../utils/htmlSanitizer.js';
 
 export class TypeManagementModal {
     #modalId = 'typeManagementModal';
@@ -202,12 +203,12 @@ export class TypeManagementModal {
 
         item.innerHTML = `
             <div class="flex items-center gap-3 flex-1">
-                <div class="w-8 h-8 rounded flex-shrink-0" style="background-color: ${color}"></div>
+                <div class="w-8 h-8 rounded flex-shrink-0" style="background-color: ${escapeHTML(color)}"></div>
                 <div class="flex-1">
-                    <div class="font-medium text-slate-700 dark:text-slate-200">${config.label}</div>
+                    <div class="font-medium text-slate-700 dark:text-slate-200">${escapeHTML(config.label)}</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400">
                         <span class="inline-flex items-center gap-1">
-                            <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">${typeId}</code>
+                            <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">${escapeHTML(typeId)}</code>
                             ${config.isHardStop ? '<span class="text-red-600 dark:text-red-400">• Hard Stop</span>' : '<span class="text-blue-600 dark:text-blue-400">• Soft</span>'}
                             ${config.isBuiltIn ? '<span class="text-amber-600 dark:text-amber-400">• Built-in</span>' : ''}
                             ${isArchived ? '<span class="text-slate-600 dark:text-slate-400">• System</span>' : ''}
@@ -217,12 +218,12 @@ export class TypeManagementModal {
             </div>
             <div class="flex items-center gap-2">
                 ${canEdit ? `
-                    <button class="btn-edit-type p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" data-type-id="${typeId}" data-kind="${kind}" title="Edit">
+                    <button class="btn-edit-type p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" data-type-id="${escapeHTML(typeId)}" data-kind="${escapeHTML(kind)}" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
                 ` : ''}
                 ${canDelete ? `
-                    <button class="btn-delete-type p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-type-id="${typeId}" data-kind="${kind}" title="Delete">
+                    <button class="btn-delete-type p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-type-id="${escapeHTML(typeId)}" data-kind="${escapeHTML(kind)}" title="Delete">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 ` : ''}

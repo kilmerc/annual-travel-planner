@@ -10,6 +10,7 @@
 
 import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
+import { escapeHTML } from '../utils/htmlSanitizer.js';
 
 export class TypeDeletionModal {
     #modalId = 'typeDeletionModal';
@@ -129,7 +130,7 @@ export class TypeDeletionModal {
 
         const messageEl = document.getElementById('deletionMessage');
         messageEl.innerHTML = `
-            <p class="font-semibold mb-2">You are deleting the event type "${typeLabel}".</p>
+            <p class="font-semibold mb-2">You are deleting the event type "${escapeHTML(typeLabel)}".</p>
             <p>There ${eventCount === 1 ? 'is' : 'are'} <strong>${eventCount}</strong> event${eventCount === 1 ? '' : 's'} using this type.</p>
             <p class="mt-2">What would you like to do?</p>
         `;
@@ -149,7 +150,7 @@ export class TypeDeletionModal {
 
         const messageEl = document.getElementById('deletionMessage');
         messageEl.innerHTML = `
-            <p class="font-semibold mb-2">You are deleting the constraint type "${typeLabel}".</p>
+            <p class="font-semibold mb-2">You are deleting the constraint type "${escapeHTML(typeLabel)}".</p>
             <p>There ${constraintCount === 1 ? 'is' : 'are'} <strong>${constraintCount}</strong> constraint${constraintCount === 1 ? '' : 's'} using this type.</p>
             <p class="mt-2">Constraints cannot be archived. Choose to delete all or cancel.</p>
         `;

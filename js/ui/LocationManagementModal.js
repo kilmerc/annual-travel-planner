@@ -11,6 +11,7 @@ import StateManager from '../services/StateManager.js';
 import ToastService from '../services/ToastService.js';
 import ConfirmDialog from '../services/ConfirmDialog.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
+import { escapeHTML } from '../utils/htmlSanitizer.js';
 
 export class LocationManagementModal {
     #modalId = 'locationManagementModal';
@@ -201,12 +202,12 @@ export class LocationManagementModal {
             <div class="flex items-center gap-3">
                 <i class="fas fa-map-marker-alt text-slate-400"></i>
                 <div>
-                    <div class="font-medium text-slate-700 dark:text-slate-200">${location}</div>
+                    <div class="font-medium text-slate-700 dark:text-slate-200">${escapeHTML(location)}</div>
                     ${isBuiltIn ? '<div class="text-xs text-amber-600 dark:text-amber-400">Built-in Division Code</div>' : ''}
                 </div>
             </div>
             ${!isBuiltIn ? `
-                <button class="btn-delete-location p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-location="${location}" title="Delete">
+                <button class="btn-delete-location p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-location="${escapeHTML(location)}" title="Delete">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             ` : ''}

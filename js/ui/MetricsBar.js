@@ -11,6 +11,7 @@ import EventBus from '../utils/EventBus.js';
 import StateManager from '../services/StateManager.js';
 import ScoringEngine from '../services/ScoringEngine.js';
 import { getMonday, dateToISO, getFriday } from '../services/DateService.js';
+import { escapeHTML } from '../utils/htmlSanitizer.js';
 
 export class MetricsBar {
     #container = null;
@@ -153,10 +154,10 @@ export class MetricsBar {
                         <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl mt-1"></i>
                         <div class="flex-1">
                             <div class="font-bold text-red-900 dark:text-red-200 mb-1">Hard Constraint Conflict</div>
-                            <div class="text-sm text-slate-700 dark:text-slate-300">${conflict.message}</div>
+                            <div class="text-sm text-slate-700 dark:text-slate-300">${escapeHTML(conflict.message)}</div>
                             <div class="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                                <div><strong>Event:</strong> ${conflict.event.title} (${conflict.event.startDate} to ${conflict.event.endDate || conflict.event.startDate})</div>
-                                <div><strong>Constraint:</strong> ${conflict.constraint.title} (${conflict.constraint.startDate} to ${conflict.constraint.endDate})</div>
+                                <div><strong>Event:</strong> ${escapeHTML(conflict.event.title)} (${escapeHTML(conflict.event.startDate)} to ${escapeHTML(conflict.event.endDate || conflict.event.startDate)})</div>
+                                <div><strong>Constraint:</strong> ${escapeHTML(conflict.constraint.title)} (${escapeHTML(conflict.constraint.startDate)} to ${escapeHTML(conflict.constraint.endDate)})</div>
                             </div>
                         </div>
                     </div>
@@ -169,10 +170,10 @@ export class MetricsBar {
                         <i class="fas fa-calendar-times text-orange-600 dark:text-orange-400 text-xl mt-1"></i>
                         <div class="flex-1">
                             <div class="font-bold text-orange-900 dark:text-orange-200 mb-1">Double Booking</div>
-                            <div class="text-sm text-slate-700 dark:text-slate-300">${conflict.message}</div>
+                            <div class="text-sm text-slate-700 dark:text-slate-300">${escapeHTML(conflict.message)}</div>
                             <div class="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                                <div><strong>Event 1:</strong> ${conflict.event1.title} (${conflict.event1.startDate} to ${conflict.event1.endDate || conflict.event1.startDate})</div>
-                                <div><strong>Event 2:</strong> ${conflict.event2.title} (${conflict.event2.startDate} to ${conflict.event2.endDate || conflict.event2.startDate})</div>
+                                <div><strong>Event 1:</strong> ${escapeHTML(conflict.event1.title)} (${escapeHTML(conflict.event1.startDate)} to ${escapeHTML(conflict.event1.endDate || conflict.event1.startDate)})</div>
+                                <div><strong>Event 2:</strong> ${escapeHTML(conflict.event2.title)} (${escapeHTML(conflict.event2.startDate)} to ${escapeHTML(conflict.event2.endDate || conflict.event2.startDate)})</div>
                             </div>
                         </div>
                     </div>
