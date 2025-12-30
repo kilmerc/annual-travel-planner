@@ -312,20 +312,17 @@ export class CalendarView {
         const barsContainer = document.createElement('div');
         barsContainer.className = 'flex flex-col gap-0.5 flex-1 overflow-y-auto';
 
-        // Only show bars for weekdays
-        if (isWeekday) {
-            // Render constraint bars
-            dayConstraints.forEach(constraint => {
-                const bar = this.#createConstraintBar(constraint);
-                barsContainer.appendChild(bar);
-            });
+        // Render constraint bars (on ALL days, including weekends)
+        dayConstraints.forEach(constraint => {
+            const bar = this.#createConstraintBar(constraint);
+            barsContainer.appendChild(bar);
+        });
 
-            // Render event bars
-            dayEvents.forEach(event => {
-                const bar = this.#createEventBar(event);
-                barsContainer.appendChild(bar);
-            });
-        }
+        // Render event bars (on ALL days, including weekends)
+        dayEvents.forEach(event => {
+            const bar = this.#createEventBar(event);
+            barsContainer.appendChild(bar);
+        });
 
         dayEl.appendChild(barsContainer);
 
