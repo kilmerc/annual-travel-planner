@@ -211,18 +211,19 @@ class GoogleDriveSyncManager {
             // Get current state
             const localState = StateManager.getState();
 
-            // Get today's filename
-            const filename = this.#getTodayFilename();
+            // Get today's filename for upload
+            const todayFilename = this.#getTodayFilename();
 
-            // Download from Drive to check for conflicts
-            const remoteState = await this.#downloadFromDrive(filename);
+            // CRITICAL: Download most recent file from Drive (not just today's)
+            // This ensures we don't overwrite existing data on first sync from new device
+            const remoteState = await this.#downloadMostRecentFile();
 
             if (remoteState) {
-                // Conflict resolution: compare timestamps
+                // Conflict resolution: compare timestamps and data presence
                 const resolution = await this.#resolveConflict(localState, remoteState);
 
                 if (resolution === 'remote') {
-                    // Remote is newer, import it
+                    // Remote is newer/has data, import it
                     StateManager.importState(remoteState);
                     this.#lastSyncTime = Date.now();
                     EventBus.emit('sync:completed', {
@@ -237,8 +238,8 @@ class GoogleDriveSyncManager {
                 }
             }
 
-            // Upload local state (either no remote file or local is newer)
-            await this.#uploadToDrive(localState, filename);
+            // Upload local state to today's file (either no remote file or local is newer)
+            await this.#uploadToDrive(localState, todayFilename);
 
             this.#lastSyncTime = Date.now();
             EventBus.emit('sync:completed', {
@@ -296,6 +297,51 @@ class GoogleDriveSyncManager {
 
         } catch (error) {
             console.error('Download from Drive failed:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Download most recent file from Google Drive
+     * This is used to ensure we load existing data on first sync from new device
+     * @returns {Promise<object|null>} State object or null if no files found
+     * @private
+     */
+    async #downloadMostRecentFile() {
+        try {
+            // List all travel plan files, sorted by modified time (newest first)
+            const files = await GoogleDriveService.listFiles();
+
+            if (!files || files.length === 0) {
+                console.log('No files found in Google Drive');
+                return null;
+            }
+
+            // listFiles() already sorts by modifiedTime desc, so first file is most recent
+            const mostRecentFile = files[0];
+            console.log(`Found most recent file: ${mostRecentFile.name} (modified: ${mostRecentFile.modifiedTime})`);
+
+            // Download file content
+            const content = await GoogleDriveService.downloadFile(mostRecentFile.id);
+
+            // Parse and validate JSON
+            const data = DataService.importFromJSON(content);
+
+            // Add file ID to state
+            data.syncedFileId = mostRecentFile.id;
+
+            // CRITICAL: If the remote file doesn't have lastModified (old format),
+            // use the Google Drive file's actual modification time
+            if (!data.lastModified && mostRecentFile.modifiedTime) {
+                // Convert Google Drive's RFC 3339 timestamp to Unix timestamp
+                data.lastModified = new Date(mostRecentFile.modifiedTime).getTime();
+                console.log(`Remote file missing lastModified, using Drive modifiedTime: ${data.lastModified}`);
+            }
+
+            return data;
+
+        } catch (error) {
+            console.error('Download most recent file from Drive failed:', error);
             return null;
         }
     }
