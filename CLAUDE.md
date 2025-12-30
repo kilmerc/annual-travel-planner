@@ -6,7 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Smart Business Travel Planner - A browser-based web application for optimizing annual business travel schedules. Uses vanilla JavaScript ES6 modules with no build tools required.
 
-**Recent Updates (Phase 14 - December 2025):**
+**Recent Updates (Phase 15 - December 2025):**
+- **Google Drive Integration**: Full cloud sync with automatic backups
+  - One-click OAuth connection with Google Drive
+  - Auto-sync with 3-second debounce after changes
+  - Manual "Sync Now" button for immediate sync
+  - Daily file versioning (travel-plan-YYYY-MM-DD.json) creates automatic history
+  - Smart conflict resolution prevents data loss (newest timestamp wins, data-aware checks)
+  - Token persistence across page refreshes (tokens valid for 1 hour)
+  - Cross-device sync - access plans from any browser
+  - Files stored in "Travel Optimizer" folder in user's Google Drive
+  - App-only access scope (drive.file) for security
+  - Clear error messaging for unauthorized users (OAuth testing mode)
+
+**Previous Updates (Phase 14 - December 2025):**
 - **User-Defined Types**: Complete customization of event and constraint types
   - Add, edit, delete custom trip types (beyond built-in division, GTS, PI, BP, conference, other)
   - Add, edit, delete custom constraint types (beyond built-in vacation, holiday, blackout, etc.)
@@ -125,15 +138,18 @@ User Action → UI Component → StateManager → localStorage
 js/
 ├── app.js                        # Bootstrap entry point
 ├── config/
-│   └── calendarConfig.js        # Calendar constants, default type configs
+│   ├── calendarConfig.js        # Calendar constants, default type configs
+│   └── driveConfig.js           # Google Drive OAuth configuration (public Client ID)
 ├── models/
 │   ├── Event.js                 # Event data model with toJSON/fromJSON
 │   └── Constraint.js            # Constraint data model
 ├── services/
-│   ├── StateManager.js          # State + localStorage (singleton) + auto-save
+│   ├── StateManager.js          # State + localStorage (singleton) + auto-save + sync metadata
 │   ├── ScoringEngine.js         # Week optimization algorithm + time range support
 │   ├── DateService.js           # Date utilities (timezone-aware) + time range calc
 │   ├── DataService.js           # JSON import/export + data migration
+│   ├── GoogleDriveService.js    # Google Drive API wrapper (OAuth + file operations)
+│   ├── GoogleDriveSyncManager.js # Sync orchestration (auto-sync, conflict resolution)
 │   ├── TutorialService.js       # Interactive tutorial (driver.js) + modal tutorial
 │   ├── ToastService.js          # Toast notifications (success/error/warning/info)
 │   └── ConfirmDialog.js         # Custom confirmation dialogs (async/await)
@@ -142,7 +158,8 @@ js/
 │   ├── CalendarView.js          # Calendar rendering + week highlighting
 │   ├── MetricsBar.js            # Statistics display + clickable metrics
 │   ├── ModalManager.js          # Add/Edit/Delete modals + batch planning
-│   ├── SettingsView.js          # Settings panel
+│   ├── SettingsView.js          # Settings panel + Google Drive button
+│   ├── GoogleDriveModal.js      # Google Drive connection and sync UI
 │   ├── TypeManagementModal.js   # Type management dashboard
 │   ├── TypeConfigModal.js       # Create/edit type configurations
 │   ├── TypeDeletionModal.js     # Safe type deletion with conflict checks
@@ -283,7 +300,9 @@ LocalStorage key: `travelPlannerState`
       "isBuiltIn": false
     }
   },
-  "customLocations": ["London", "New York", "Custom Location"]
+  "customLocations": ["London", "New York", "Custom Location"],
+  "lastModified": 1735579200000,
+  "syncedFileId": "abc123xyz456"
 }
 ```
 
@@ -293,8 +312,24 @@ LocalStorage key: `travelPlannerState`
 - **Type Configs:** Stored separately from events/constraints; supports unlimited custom types
 - **Built-in Types:** Protected (`isBuiltIn: true`) from deletion; custom types fully editable
 - **Custom Locations:** User-managed list supplements division code dropdown
+- **Sync Metadata:** `lastModified` (timestamp) for conflict resolution; `syncedFileId` (Google Drive file ID)
 
 ## Key Features
+
+### Google Drive Integration
+- **One-Click Connection:** OAuth 2.0 authentication via Google Identity Services (GIS)
+- **Auto-Sync:** Debounced sync (3 seconds) after any state change
+- **Manual Sync:** "Sync Now" button in Google Drive modal
+- **Token Persistence:** Access tokens stored in localStorage, valid for 1 hour
+- **Smart Conflict Resolution:**
+  - Downloads most recent file from Drive (not just today's file)
+  - Data-aware checks: empty local state never overwrites Drive data
+  - Timestamp comparison when both states have data
+- **Daily File Versioning:** One file per day (`travel-plan-YYYY-MM-DD.json`) creates automatic history
+- **Cross-Device Sync:** Access plans from any browser after connecting Google Drive
+- **Secure Storage:** Files stored in "Travel Optimizer" folder with app-only access scope (`drive.file`)
+- **Error Handling:** Clear messaging for unauthorized users, rate limits, and quota issues
+- **OAuth Testing Mode:** App requires users to be added as test users in Google Cloud Console
 
 ### Interactive Tutorial
 - **First-time walkthrough** shown automatically on first app load
