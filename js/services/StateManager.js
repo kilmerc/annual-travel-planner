@@ -25,6 +25,7 @@ class StateManager {
     };
 
     #storageKey = 'travelPlannerState';
+    #saveToastTimer = null; // Debounce timer for "Saved" toast
 
     constructor() {
         this.load();
@@ -539,9 +540,20 @@ class StateManager {
 
             const data = this.getState();
             localStorage.setItem(this.#storageKey, JSON.stringify(data));
-            // Only show save notification in browser environment
+
+            // Debounce the "Saved" toast to prevent spam
+            // Only show after 500ms of no more saves
             if (typeof document !== 'undefined' && document.body) {
-                ToastService.info('Saved', 1000);
+                // Clear previous timer if it exists
+                if (this.#saveToastTimer) {
+                    clearTimeout(this.#saveToastTimer);
+                }
+
+                // Set new timer to show toast after 500ms of inactivity
+                this.#saveToastTimer = setTimeout(() => {
+                    ToastService.info('Saved', 1000);
+                    this.#saveToastTimer = null;
+                }, 500);
             }
         } catch (error) {
             console.error('Error saving state to localStorage:', error);

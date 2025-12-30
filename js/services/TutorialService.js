@@ -98,6 +98,7 @@ class TutorialService {
      * @returns {boolean} True if modal tutorial was started
      */
     checkAndShowModalTutorial() {
+        // Show if first time OR explicitly requested via reset
         if (!this.#hasCompletedModalTutorial || this.#shouldShowModalTutorialNext) {
             // Small delay to let modal render
             setTimeout(() => {
@@ -113,8 +114,27 @@ class TutorialService {
      */
     startModalTutorial() {
         this.#initDriver();
-        this.#driver.setSteps(this.#getModalSteps());
-        this.#driver.drive();
+
+        // Create a special driver instance for modal tutorial with its own onDestroyed
+        const modalDriver = window.driver?.js?.driver({
+            animate: true,
+            opacity: 0.75,
+            padding: 10,
+            allowClose: true,
+            overlayClickNext: false,
+            showButtons: ['next', 'previous', 'close'],
+            doneBtnText: 'Done',
+            closeBtnText: 'Skip',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+            onDestroyed: () => {
+                // Mark modal tutorial as completed when closed (whether finished or skipped)
+                this.#markModalTutorialAsCompleted();
+            }
+        });
+
+        modalDriver.setSteps(this.#getModalSteps());
+        modalDriver.drive();
         this.#shouldShowModalTutorialNext = false;
     }
 
@@ -218,7 +238,7 @@ class TutorialService {
                 element: '.tab-btn[data-tab="trip"]',
                 popover: {
                     title: 'Plan Trip Tab',
-                    description: 'Use this tab to add business trips. You can plan trips in two ways:<br><strong>Flexible:</strong> Get AI-suggested optimal weeks based on constraints<br><strong>Fixed:</strong> Schedule trips for specific dates you already know',
+                    description: 'Use this tab to add business trips. You can plan trips in two ways:<br><strong>Flexible:</strong> Get optimizer-suggested optimal weeks based on constraints<br><strong>Fixed:</strong> Schedule trips for specific dates you already know',
                     position: 'bottom'
                 }
             },
@@ -242,7 +262,7 @@ class TutorialService {
                 element: '#tripMode',
                 popover: {
                     title: 'Trip Mode',
-                    description: '<strong>Flexible mode:</strong> Click "Find Best Weeks" to get AI suggestions<br><strong>Fixed mode:</strong> Pick exact dates when you already know your schedule',
+                    description: '<strong>Flexible mode:</strong> Click "Find Best Weeks" to get optimizer suggestions<br><strong>Fixed mode:</strong> Pick exact dates when you already know your schedule',
                     position: 'bottom'
                 }
             },
@@ -266,11 +286,7 @@ class TutorialService {
                 popover: {
                     title: 'You\'re Ready to Plan! 🚀',
                     description: 'Start by adding your first trip or constraint. The calendar will update automatically as you add items.',
-                    position: 'center',
-                    onNextClick: () => {
-                        this.#markModalTutorialAsCompleted();
-                        this.#driver.destroy();
-                    }
+                    position: 'center'
                 }
             }
         ];
