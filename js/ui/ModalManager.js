@@ -1120,22 +1120,7 @@ export class ModalManager {
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
-                <select class="batch-location-select w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                    <option value="">Select Division...</option>
-                    <option value="DAL">DAL</option>
-                    <option value="VAL">VAL</option>
-                    <option value="VCE">VCE</option>
-                    <option value="VCW">VCW</option>
-                    <option value="VER">VER</option>
-                    <option value="VIN">VIN</option>
-                    <option value="VNE">VNE</option>
-                    <option value="VNY">VNY</option>
-                    <option value="VSC">VSC</option>
-                    <option value="VTX">VTX</option>
-                    <option value="VUT">VUT</option>
-                    <option value="custom">Other Location (Custom)...</option>
-                </select>
-                <input type="text" class="batch-location-custom w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 hidden" placeholder="Enter city (e.g. London, Singapore, Austin)">
+                <div class="batch-location-container"></div>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" class="can-consolidate">
@@ -1189,24 +1174,46 @@ export class ModalManager {
         });
         typeComboBox.render(typeContainer);
 
-        // Store the ComboBox instance on the row for later retrieval
+        // Create ComboBox for location
+        const allLocations = [...BUILT_IN_LOCATIONS, ...StateManager.getAllLocations()];
+        const locationOptions = allLocations.map(loc => ({
+            value: loc,
+            label: loc,
+            isBuiltIn: BUILT_IN_LOCATIONS.includes(loc)
+        }));
+
+        const locationContainer = tripRow.querySelector('.batch-location-container');
+        const locationComboBox = new ComboBox({
+            options: locationOptions,
+            value: '',
+            onChange: (value) => {},
+            onAdd: (value, label) => {
+                StateManager.addCustomLocation(value);
+            },
+            onDelete: async (value) => {
+                const confirmed = await ConfirmDialog.show({
+                    title: 'Delete Location',
+                    message: `Are you sure you want to delete "${value}"?`,
+                    confirmText: 'Delete',
+                    isDangerous: true
+                });
+                if (confirmed) {
+                    StateManager.deleteCustomLocation(value);
+                }
+            },
+            placeholder: 'Select or type location...',
+            allowCreate: true,
+            allowDelete: true
+        });
+        locationComboBox.render(locationContainer);
+
+        // Store the ComboBox instances on the row for later retrieval
         tripRow.typeComboBox = typeComboBox;
+        tripRow.locationComboBox = locationComboBox;
 
         // Add remove listener
         tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
             e.target.closest('[data-index]').remove();
-        });
-
-        // Add location dropdown toggle listener
-        const locationSelect = tripRow.querySelector('.batch-location-select');
-        const customInput = tripRow.querySelector('.batch-location-custom');
-        locationSelect.addEventListener('change', () => {
-            if (locationSelect.value === 'custom') {
-                customInput.classList.remove('hidden');
-            } else {
-                customInput.classList.add('hidden');
-                customInput.value = '';
-            }
         });
     }
 
@@ -1615,22 +1622,7 @@ export class ModalManager {
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
-                    <select class="batch-location-select w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
-                        <option value="">Select Division...</option>
-                        <option value="DAL" ${event.location === 'DAL' ? 'selected' : ''}>DAL</option>
-                        <option value="VAL" ${event.location === 'VAL' ? 'selected' : ''}>VAL</option>
-                        <option value="VCE" ${event.location === 'VCE' ? 'selected' : ''}>VCE</option>
-                        <option value="VCW" ${event.location === 'VCW' ? 'selected' : ''}>VCW</option>
-                        <option value="VER" ${event.location === 'VER' ? 'selected' : ''}>VER</option>
-                        <option value="VIN" ${event.location === 'VIN' ? 'selected' : ''}>VIN</option>
-                        <option value="VNE" ${event.location === 'VNE' ? 'selected' : ''}>VNE</option>
-                        <option value="VNY" ${event.location === 'VNY' ? 'selected' : ''}>VNY</option>
-                        <option value="VSC" ${event.location === 'VSC' ? 'selected' : ''}>VSC</option>
-                        <option value="VTX" ${event.location === 'VTX' ? 'selected' : ''}>VTX</option>
-                        <option value="VUT" ${event.location === 'VUT' ? 'selected' : ''}>VUT</option>
-                        <option value="custom" ${!BUILT_IN_LOCATIONS.includes(event.location) ? 'selected' : ''}>Other Location (Custom)...</option>
-                    </select>
-                    <input type="text" class="batch-location-custom w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 ${BUILT_IN_LOCATIONS.includes(event.location) ? 'hidden' : ''}" placeholder="Enter city" value="${!BUILT_IN_LOCATIONS.includes(event.location) ? escapeHTML(event.location) : ''}">
+                    <div class="batch-location-container"></div>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" class="can-consolidate cursor-pointer" ${event.canConsolidate ? 'checked' : ''}>
@@ -1669,7 +1661,43 @@ export class ModalManager {
                 }
             });
             typeComboBox.render(typeContainer);
+
+            // Create ComboBox for location
+            const allLocations = [...BUILT_IN_LOCATIONS, ...StateManager.getAllLocations()];
+            const locationOptions = allLocations.map(loc => ({
+                value: loc,
+                label: loc,
+                isBuiltIn: BUILT_IN_LOCATIONS.includes(loc)
+            }));
+
+            const locationContainer = tripRow.querySelector('.batch-location-container');
+            const locationComboBox = new ComboBox({
+                options: locationOptions,
+                value: event.location || '', // Pre-select current location
+                onChange: (value) => {},
+                onAdd: (value, label) => {
+                    StateManager.addCustomLocation(value);
+                },
+                onDelete: async (value) => {
+                    const confirmed = await ConfirmDialog.show({
+                        title: 'Delete Location',
+                        message: `Are you sure you want to delete "${value}"?`,
+                        confirmText: 'Delete',
+                        isDangerous: true
+                    });
+                    if (confirmed) {
+                        StateManager.deleteCustomLocation(value);
+                    }
+                },
+                placeholder: 'Select or type location...',
+                allowCreate: true,
+                allowDelete: true
+            });
+            locationComboBox.render(locationContainer);
+
+            // Store ComboBox instances on the row for later retrieval
             tripRow.typeComboBox = typeComboBox;
+            tripRow.locationComboBox = locationComboBox;
 
             // Add remove listener
             tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
@@ -1677,19 +1705,6 @@ export class ModalManager {
                 // Update reference date selector when trips removed
                 const updatedTrips = this.#collectBatchTrips(container);
                 this.#updateReferenceDateSelector(updatedTrips);
-            });
-
-            // Add location dropdown toggle listener
-            const locationSelect = tripRow.querySelector('.batch-location-select');
-            const customInput = tripRow.querySelector('.batch-location-custom');
-
-            locationSelect.addEventListener('change', () => {
-                if (locationSelect.value === 'custom') {
-                    customInput.classList.remove('hidden');
-                } else {
-                    customInput.classList.add('hidden');
-                    customInput.value = '';
-                }
             });
         });
     }
@@ -1757,9 +1772,7 @@ export class ModalManager {
         return Array.from(container.children).map((row) => {
             const title = row.querySelector('.batch-title').value.trim();
             const type = row.typeComboBox ? row.typeComboBox.getValue() : '';
-            const locationSelect = row.querySelector('.batch-location-select').value;
-            const customLocation = row.querySelector('.batch-location-custom').value.trim();
-            const location = locationSelect === 'custom' ? customLocation : locationSelect;
+            const location = row.locationComboBox ? row.locationComboBox.getValue().trim() : '';
             const canConsolidate = row.querySelector('.can-consolidate').checked;
             const originalEventId = row.dataset.originalEventId || null;
 
