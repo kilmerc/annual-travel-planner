@@ -1213,7 +1213,7 @@ export class ModalManager {
 
         // Add remove listener
         tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
-            e.target.closest('[data-index]').remove();
+            tripRow.remove();
         });
     }
 
@@ -1701,7 +1701,7 @@ export class ModalManager {
 
             // Add remove listener
             tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
-                e.target.closest('[data-index]').remove();
+                tripRow.remove();
                 // Update reference date selector when trips removed
                 const updatedTrips = this.#collectBatchTrips(container);
                 this.#updateReferenceDateSelector(updatedTrips);
