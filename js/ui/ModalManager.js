@@ -30,6 +30,16 @@ export class ModalManager {
     #constraintTypeComboBox = null;
     #pendingTripTypeSelection = null;
     #pendingConstraintTypeSelection = null;
+    #batchWizardState = {
+        isActive: false,
+        currentStep: 0,        // 0-based: 0 = Trip 1
+        totalSteps: 0,
+        trips: [],             // Original trip configs
+        selections: [],        // User selections: [{ tripIndex, week, location, title, type }, ...]
+        timeRangeId: '',
+        referenceDate: null,
+        excludeEventIds: []
+    };
 
     /**
      * Initialize modal manager
@@ -1247,31 +1257,8 @@ export class ModalManager {
         // Get reference date for time range calculation
         const referenceDate = this.#getBatchReferenceDate(batchTrips);
 
-        // Get suggestions for each trip
-        const state = StateManager.getState();
-        const events = state.events;
-        const constraints = state.constraints;
-
-        const results = batchTrips.map((trip, idx) => {
-            // Get suggestions for the selected time range, EXCLUDING selected trips
-            const suggestions = ScoringEngine.getSuggestionsForTimeRange(
-                timeRangeId,
-                referenceDate,
-                trip.location,
-                events,
-                constraints,
-                excludeEventIds,
-                [] // No batch selections for now (simple approach)
-            );
-
-            return {
-                trip,
-                suggestions,
-                tripIndex: idx
-            };
-        });
-
-        this.#displayBatchResults(results);
+        // Initialize wizard instead of parallel processing
+        this.#initializeBatchWizard(batchTrips, timeRangeId, referenceDate, excludeEventIds);
     }
 
     /**
@@ -1778,6 +1765,296 @@ export class ModalManager {
 
             return { title, type, location, canConsolidate, originalEventId };
         }).filter(t => t.location);
+    }
+
+    /**
+     * Initialize batch wizard
+     * @private
+     */
+    #initializeBatchWizard(trips, timeRangeId, referenceDate, excludeEventIds) {
+        this.#batchWizardState = {
+            isActive: true,
+            currentStep: 0,
+            totalSteps: trips.length,
+            trips: trips,
+            selections: [],
+            timeRangeId: timeRangeId,
+            referenceDate: referenceDate,
+            excludeEventIds: excludeEventIds
+        };
+        this.#showBatchStepScreen();
+    }
+
+    /**
+     * Advance to next wizard step
+     * @private
+     */
+    #advanceWizardStep(selectedWeek) {
+        const currentTrip = this.#batchWizardState.trips[this.#batchWizardState.currentStep];
+        this.#batchWizardState.selections.push({
+            tripIndex: this.#batchWizardState.currentStep,
+            week: selectedWeek,
+            location: currentTrip.location,
+            title: currentTrip.title,
+            type: currentTrip.type,
+            originalEventId: currentTrip.originalEventId
+        });
+
+        this.#batchWizardState.currentStep++;
+
+        if (this.#batchWizardState.currentStep >= this.#batchWizardState.totalSteps) {
+            this.#showBatchReviewScreen();
+        } else {
+            this.#showBatchStepScreen();
+        }
+    }
+
+    /**
+     * Go back to previous wizard step
+     * Public method - called from HTML onclick
+     */
+    goBackWizardStep() {
+        if (this.#batchWizardState.currentStep > 0) {
+            this.#batchWizardState.currentStep--;
+            this.#batchWizardState.selections.pop();
+            this.#showBatchStepScreen();
+        }
+    }
+
+    /**
+     * Edit a specific wizard selection
+     * Public method - called from HTML onclick
+     */
+    editWizardSelection(tripIndex) {
+        ToastService.info('Trips after this one will need to be re-selected');
+        this.#batchWizardState.selections = this.#batchWizardState.selections.slice(0, tripIndex);
+        this.#batchWizardState.currentStep = tripIndex;
+        this.#showBatchStepScreen();
+    }
+
+    /**
+     * Reset wizard state
+     * Public method - called from HTML onclick
+     */
+    resetBatchWizard() {
+        this.#batchWizardState = {
+            isActive: false,
+            currentStep: 0,
+            totalSteps: 0,
+            trips: [],
+            selections: [],
+            timeRangeId: '',
+            referenceDate: null,
+            excludeEventIds: []
+        };
+    }
+
+    /**
+     * Select a week in the wizard (onclick handler)
+     * Public method - called from HTML onclick
+     */
+    selectWizardWeek(week) {
+        this.#advanceWizardStep(week);
+    }
+
+    /**
+     * Show batch step screen for current trip
+     * @private
+     */
+    #showBatchStepScreen() {
+        const { currentStep, totalSteps, trips, selections } = this.#batchWizardState;
+        const currentTrip = trips[currentStep];
+
+        // Get suggestions for current trip
+        const state = StateManager.getState();
+        const events = state.events.filter(e => !this.#batchWizardState.excludeEventIds.includes(e.id));
+
+        const suggestions = ScoringEngine.getSuggestionsForTimeRange(
+            this.#batchWizardState.timeRangeId,
+            this.#batchWizardState.referenceDate,
+            currentTrip.location,
+            events,
+            state.constraints,
+            this.#batchWizardState.excludeEventIds,
+            selections // PASS PREVIOUS SELECTIONS
+        );
+
+        // Build HTML
+        const resultsContainer = document.getElementById('batchResults');
+        resultsContainer.innerHTML = `
+            <div class="p-4 bg-white dark:bg-slate-800 rounded-lg">
+                <!-- Progress indicator -->
+                <div class="mb-4 text-center">
+                    <span class="text-sm font-semibold text-blue-600">Step ${currentStep + 1} of ${totalSteps}</span>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: ${((currentStep + 1) / totalSteps) * 100}%"></div>
+                    </div>
+                </div>
+
+                <!-- Previous selections summary -->
+                ${selections.length > 0 ? `
+                    <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                        <h4 class="text-xs font-bold text-blue-800 dark:text-blue-200 uppercase mb-2">Previously Selected</h4>
+                        ${selections.map(s => `
+                            <div class="text-sm text-blue-700 dark:text-blue-300">
+                                ✓ ${escapeHTML(s.title)} - Week of ${formatDate(s.week)}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Current trip -->
+                <div class="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded border-2 border-indigo-300 dark:border-indigo-600">
+                    <h3 class="font-semibold text-lg mb-2">${escapeHTML(currentTrip.title)}</h3>
+                    <div class="text-sm text-slate-600 dark:text-slate-400">
+                        Type: ${StateManager.getEventTypeConfig(currentTrip.type)?.label || currentTrip.type} |
+                        Location: ${escapeHTML(currentTrip.location)}
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <h4 class="font-semibold mb-3">Select a week for this trip:</h4>
+                ${suggestions.length === 0 ? `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-4xl mb-4"></i>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">No available weeks found for this trip.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-600 mb-4">Try going back and changing previous selections, or select a different time range.</p>
+                    </div>
+                ` : suggestions.map(sugg => `
+                    <div class="mb-3 p-4 border-2 border-slate-300 dark:border-slate-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer transition-all"
+                         onclick="window.modalManager.selectWizardWeek('${sugg.iso}')">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-semibold">Week of ${formatDate(sugg.iso)}</div>
+                            <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
+                                Score: ${sugg.score}
+                            </span>
+                        </div>
+                        <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                            ${sugg.reasons.slice(0, 3).map(r => `<li>• ${escapeHTML(r)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+
+                <!-- Navigation -->
+                <div class="flex justify-between mt-4">
+                    <button class="px-4 py-2 bg-slate-500 text-white rounded hover:bg-slate-600 ${currentStep === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                            onclick="window.modalManager.goBackWizardStep()"
+                            ${currentStep === 0 ? 'disabled' : ''}>
+                        ← Back
+                    </button>
+                    <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            onclick="window.modalManager.resetBatchWizard(); document.getElementById('batchResults').classList.add('hidden');">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+
+        resultsContainer.classList.remove('hidden');
+
+        // Store reference for onclick handlers
+        window.modalManager = this;
+    }
+
+    /**
+     * Show batch review screen
+     * @private
+     */
+    #showBatchReviewScreen() {
+        const { selections } = this.#batchWizardState;
+
+        const resultsContainer = document.getElementById('batchResults');
+        resultsContainer.innerHTML = `
+            <div class="p-4 bg-white dark:bg-slate-800 rounded-lg">
+                <h3 class="text-xl font-semibold mb-4 text-center">Review Your Batch Plan</h3>
+
+                <!-- Simple timeline -->
+                <div class="mb-6 p-4 bg-slate-100 dark:bg-slate-900 rounded">
+                    <div class="text-xs text-center text-slate-500 mb-2">Timeline</div>
+                    <div class="flex justify-between items-center">
+                        ${selections.map((s, i) => `
+                            <div class="flex flex-col items-center">
+                                <div class="w-3 h-3 rounded-full bg-blue-600 mb-1"></div>
+                                <div class="text-xs text-slate-600 dark:text-slate-400">${i + 1}</div>
+                            </div>
+                        `).join('<div class="flex-1 h-0.5 bg-slate-300 dark:bg-slate-600 mx-2"></div>')}
+                    </div>
+                </div>
+
+                <!-- All selections -->
+                ${selections.map((s, i) => `
+                    <div class="mb-3 p-4 border dark:border-slate-600 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-semibold">${escapeHTML(s.title)}</div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400">
+                                    Week of ${formatDate(s.week)} | ${escapeHTML(s.location)}
+                                </div>
+                            </div>
+                            <button class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                                    onclick="window.modalManager.editWizardSelection(${i})">
+                                Change Week
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+
+                <!-- Summary stats -->
+                <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded text-sm">
+                    <strong>Summary:</strong> ${selections.length} trips planned | No conflicts detected
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-between mt-6">
+                    <button class="px-4 py-2 bg-slate-500 text-white rounded hover:bg-slate-600"
+                            onclick="window.modalManager.resetBatchWizard(); document.getElementById('batchResults').classList.add('hidden');">
+                        Start Over
+                    </button>
+                    <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                            onclick="window.modalManager.finalizeBatchWizard()">
+                        Add All Trips to Calendar
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Finalize batch wizard and add all trips to calendar
+     * Public method - called from HTML onclick
+     */
+    finalizeBatchWizard() {
+        const { selections } = this.#batchWizardState;
+
+        // Convert selections to events and add to state
+        selections.forEach(s => {
+            if (s.originalEventId) {
+                // Update existing event
+                StateManager.updateEvent(s.originalEventId, {
+                    startDate: s.week,
+                    endDate: null, // Flexible trip
+                    location: s.location,
+                    title: s.title,
+                    type: s.type
+                });
+            } else {
+                // Add new event
+                StateManager.addEvent({
+                    title: s.title,
+                    type: s.type,
+                    location: s.location,
+                    startDate: s.week,
+                    endDate: null, // Flexible trip
+                    duration: 1,
+                    isFixed: false
+                });
+            }
+        });
+
+        ToastService.success(`${selections.length} trips added to calendar`);
+        this.resetBatchWizard();
+        document.getElementById('batchResults').classList.add('hidden');
+        this.close(this.#addModalId);
     }
 }
 

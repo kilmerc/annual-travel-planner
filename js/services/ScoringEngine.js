@@ -137,6 +137,25 @@ export class ScoringEngine {
             }
         });
 
+        // Check batch selections for same week (BEFORE existing trips check)
+        for (const selection of batchSelections) {
+            if (selection.week === iso) {
+                const isSameLocation = this.#locationsMatch(location, selection.location);
+                if (isSameLocation) {
+                    // Same location + same week = CONSOLIDATE
+                    score += 500;
+                    reasons.push(`Consolidate with ${selection.title || selection.location} trip`);
+                    action = 'consolidate';
+                    return { score, reasons, action }; // Early return, skip -1000 penalty
+                } else {
+                    // Different location + same week = DISQUALIFY
+                    score = -1000;
+                    reasons.push(`Week already selected for ${selection.title || selection.location}`);
+                    return { score, reasons, action };
+                }
+            }
+        }
+
         // Check for existing trips that overlap with this Mon-Fri week
         const existingTrips = events.filter(e => {
             // For flexible trips (no endDate), check exact week match
@@ -165,7 +184,7 @@ export class ScoringEngine {
         events.forEach(event => {
             if (this.#weeksAreAdjacent(iso, event.startDate)) {
                 const isSameLocation = this.#locationsMatch(location, event.location);
-                const penalty = isSameLocation ? -7.5 : -15;
+                const penalty = isSameLocation ? -50 : -100; // Increased from -7.5/-15
                 score += penalty;
                 reasons.push(
                     isSameLocation
@@ -179,7 +198,7 @@ export class ScoringEngine {
         batchSelections.forEach(selection => {
             if (this.#weeksAreAdjacent(iso, selection.week)) {
                 const isSameLocation = this.#locationsMatch(location, selection.location);
-                const penalty = isSameLocation ? -7.5 : -15;
+                const penalty = isSameLocation ? -50 : -100; // Increased from -7.5/-15
                 score += penalty;
                 reasons.push(
                     isSameLocation
@@ -189,11 +208,57 @@ export class ScoringEngine {
             }
         });
 
+        // Travel load balancing: prefer even distribution of trips
+        const loadPenalty = this.#calculateTravelLoadPenalty(iso, batchSelections);
+        score += loadPenalty;
+        if (Math.abs(loadPenalty) > 5) {
+            reasons.push(
+                loadPenalty > 0
+                    ? `Good distribution (balanced spacing)`
+                    : `Uneven distribution (trips clustered)`
+            );
+        }
+
         return {
-            score,
+            score: Math.round(score), // Round to clean integer for display
             reasons,
             action
         };
+    }
+
+    /**
+     * Calculate travel load penalty based on trip distribution
+     * @param {string} candidateWeek - ISO date of candidate week (Monday)
+     * @param {Array} batchSelections - Previously selected weeks
+     * @returns {number} Penalty: +20 (good distribution) to -20 (clustered)
+     * @private
+     */
+    #calculateTravelLoadPenalty(candidateWeek, batchSelections) {
+        if (batchSelections.length === 0) return 0;
+
+        // Get all selected weeks as dates
+        const selectedDates = batchSelections.map(s => new Date(s.week + 'T00:00:00'));
+        const candidateDate = new Date(candidateWeek + 'T00:00:00');
+        const allDates = [...selectedDates, candidateDate].sort((a, b) => a - b);
+
+        if (allDates.length < 2) return 0;
+
+        // Calculate spacings between consecutive trips (in days)
+        const spacings = [];
+        for (let i = 1; i < allDates.length; i++) {
+            const days = (allDates[i] - allDates[i-1]) / (1000 * 60 * 60 * 24);
+            spacings.push(days);
+        }
+
+        // Calculate variance (lower variance = more even distribution)
+        const mean = spacings.reduce((sum, val) => sum + val, 0) / spacings.length;
+        const variance = spacings.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / spacings.length;
+
+        // Normalize: variance 0-500 → penalty +20 to -20
+        const normalizedVariance = Math.min(variance, 500) / 500; // 0 to 1
+        const penalty = (normalizedVariance - 0.5) * 40; // -20 to +20
+
+        return -penalty; // Flip sign: low variance = positive score
     }
 
     /**
