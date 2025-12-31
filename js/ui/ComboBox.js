@@ -113,10 +113,10 @@ export class ComboBox {
      * @private
      */
     #attachEventListeners() {
-        // Input focus - show dropdown
+        // Input focus - show dropdown with all options
         this.#input.addEventListener('focus', () => {
             this.#openDropdown();
-            this.#renderDropdown(this.#input.value);
+            this.#renderDropdown(''); // Show all options on focus, not filtered by current value
         });
 
         // Input typing - filter options

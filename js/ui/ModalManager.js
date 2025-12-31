@@ -260,10 +260,10 @@ export class ModalManager {
         document.getElementById('tripForm').reset();
         document.getElementById('constraintForm').reset();
 
-        // Reset ComboBoxes to default values
-        this.#tripTypeComboBox.setValue('division');
+        // Reset ComboBoxes to empty (no default selection)
+        this.#tripTypeComboBox.setValue('');
         this.#tripLocationComboBox.setValue('');
-        this.#constraintTypeComboBox.setValue('vacation');
+        this.#constraintTypeComboBox.setValue('');
 
         if (prefilledDate) {
             document.getElementById('tripDate').value = prefilledDate;
@@ -309,7 +309,7 @@ export class ModalManager {
 
         // Pre-fill form with event data
         document.getElementById('tripTitle').value = event.title || '';
-        this.#tripTypeComboBox.setValue(event.type || 'division');
+        this.#tripTypeComboBox.setValue(event.type || '');
         document.getElementById('tripMode').value = event.isFixed ? 'fixed' : 'flexible';
 
         // Set location using ComboBox
@@ -361,7 +361,7 @@ export class ModalManager {
 
         // Pre-fill form with constraint data
         document.getElementById('constraintTitle').value = constraint.title || '';
-        this.#constraintTypeComboBox.setValue(constraint.type || 'vacation');
+        this.#constraintTypeComboBox.setValue(constraint.type || '');
         document.getElementById('constraintDate').value = constraint.startDate;
         document.getElementById('constraintEndDate').value = constraint.endDate || constraint.startDate;
 
