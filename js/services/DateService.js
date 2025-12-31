@@ -312,6 +312,41 @@ export function getMondaysInRange(startDate, endDate) {
     return mondays;
 }
 
+/**
+ * Filter weeks (Monday dates) by seasons
+ * @param {Array<Date>} weeks - Array of Monday dates
+ * @param {Array<string>} seasons - Array of season strings: 'winter', 'spring', 'summer', 'fall'
+ * @returns {Array<Date>} Filtered weeks that fall within the specified seasons
+ */
+export function filterWeeksBySeasons(weeks, seasons) {
+    if (!seasons || seasons.length === 0) {
+        return weeks;
+    }
+
+    // Season to month mapping
+    const seasonMonths = {
+        winter: [11, 0, 1],  // December, January, February
+        spring: [2, 3, 4],   // March, April, May
+        summer: [5, 6, 7],   // June, July, August
+        fall: [8, 9, 10]     // September, October, November
+    };
+
+    // Get all months included in selected seasons
+    const allowedMonths = new Set();
+    seasons.forEach(season => {
+        const months = seasonMonths[season.toLowerCase()];
+        if (months) {
+            months.forEach(m => allowedMonths.add(m));
+        }
+    });
+
+    // Filter weeks where the Monday falls in an allowed month
+    return weeks.filter(monday => {
+        const month = monday.getMonth();
+        return allowedMonths.has(month);
+    });
+}
+
 export default {
     getMonday,
     getFriday,
@@ -327,5 +362,6 @@ export default {
     overlapsWithWeek,
     getCurrentQuarter,
     getTimeRangeDates,
-    getMondaysInRange
+    getMondaysInRange,
+    filterWeeksBySeasons
 };

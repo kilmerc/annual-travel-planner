@@ -17,7 +17,7 @@
  */
 
 import { QUARTERS } from '../config/calendarConfig.js';
-import { dateToISO, getMonday, getFriday, formatDate, overlapsWithWeek, getTimeRangeDates, getMondaysInRange } from '../services/DateService.js';
+import { dateToISO, getMonday, getFriday, formatDate, overlapsWithWeek, getTimeRangeDates, getMondaysInRange, filterWeeksBySeasons } from '../services/DateService.js';
 import StateManager from './StateManager.js';
 
 export class ScoringEngine {
@@ -70,9 +70,10 @@ export class ScoringEngine {
      * @param {Array} constraints - Existing constraints
      * @param {Array<string>} excludeEventIds - Event IDs to exclude from scoring
      * @param {Array} batchSelections - Selected weeks from batch (for adjacency penalty)
+     * @param {Array<string>} seasons - Optional array of seasons to filter by: 'winter', 'spring', 'summer', 'fall'
      * @returns {Array} Top 3 suggested weeks
      */
-    getSuggestionsForTimeRange(timeRangeId, referenceYear, location, events, constraints, excludeEventIds = [], batchSelections = []) {
+    getSuggestionsForTimeRange(timeRangeId, referenceYear, location, events, constraints, excludeEventIds = [], batchSelections = [], seasons = []) {
         // Get date range for the time range ID
         // Handle Date object or year number for referenceYear
         const { startDate, endDate } = getTimeRangeDates(timeRangeId, referenceYear);
@@ -81,7 +82,16 @@ export class ScoringEngine {
         const activeEvents = events.filter(e => !e.archived && !excludeEventIds.includes(e.id));
 
         // Generate candidate weeks (all Mondays in the time range)
-        const candidates = getMondaysInRange(startDate, endDate);
+        let candidates = getMondaysInRange(startDate, endDate);
+
+        // Filter by seasons if specified
+        if (seasons && seasons.length > 0) {
+            const seasonalCandidates = filterWeeksBySeasons(candidates, seasons);
+            // If no weeks match, ignore season filter (fallback to all weeks)
+            if (seasonalCandidates.length > 0) {
+                candidates = seasonalCandidates;
+            }
+        }
 
         // Score each candidate week (pass batchSelections for adjacency)
         const scored = candidates.map(date => {

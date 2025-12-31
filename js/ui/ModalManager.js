@@ -1132,9 +1132,26 @@ export class ModalManager {
                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
                 <div class="batch-location-container"></div>
             </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Preferred Seasons (Optional)</label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="season-winter cursor-pointer" value="winter"> Winter (Dec-Feb)
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="season-spring cursor-pointer" value="spring"> Spring (Mar-May)
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="season-summer cursor-pointer" value="summer"> Summer (Jun-Aug)
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="season-fall cursor-pointer" value="fall"> Fall (Sep-Nov)
+                    </label>
+                </div>
+            </div>
             <div class="flex items-center gap-2">
-                <input type="checkbox" class="can-consolidate">
-                <label class="text-xs">Can consolidate with other trips</label>
+                <input type="checkbox" class="can-consolidate cursor-pointer">
+                <label class="text-xs cursor-pointer">Can consolidate with other trips</label>
             </div>
         `;
 
@@ -1611,6 +1628,23 @@ export class ModalManager {
                     <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
                     <div class="batch-location-container"></div>
                 </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Preferred Seasons (Optional)</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="season-winter cursor-pointer" value="winter"> Winter (Dec-Feb)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="season-spring cursor-pointer" value="spring"> Spring (Mar-May)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="season-summer cursor-pointer" value="summer"> Summer (Jun-Aug)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="season-fall cursor-pointer" value="fall"> Fall (Sep-Nov)
+                        </label>
+                    </div>
+                </div>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" class="can-consolidate cursor-pointer" ${event.canConsolidate ? 'checked' : ''}>
                     <label class="text-xs text-slate-700 dark:text-slate-200 cursor-pointer">Can consolidate with other trips</label>
@@ -1763,7 +1797,14 @@ export class ModalManager {
             const canConsolidate = row.querySelector('.can-consolidate').checked;
             const originalEventId = row.dataset.originalEventId || null;
 
-            return { title, type, location, canConsolidate, originalEventId };
+            // Collect selected seasons
+            const seasons = [];
+            if (row.querySelector('.season-winter')?.checked) seasons.push('winter');
+            if (row.querySelector('.season-spring')?.checked) seasons.push('spring');
+            if (row.querySelector('.season-summer')?.checked) seasons.push('summer');
+            if (row.querySelector('.season-fall')?.checked) seasons.push('fall');
+
+            return { title, type, location, canConsolidate, originalEventId, seasons };
         }).filter(t => t.location);
     }
 
@@ -1858,6 +1899,28 @@ export class ModalManager {
     }
 
     /**
+     * Get season filter display message
+     * @private
+     * @param {Array<string>} requestedSeasons - Array of season strings
+     * @returns {string} Display message for seasons or empty string
+     */
+    #getSeasonsFilterMessage(requestedSeasons) {
+        if (!requestedSeasons || requestedSeasons.length === 0) {
+            return ''; // No filter requested
+        }
+
+        const seasonLabels = {
+            winter: 'Winter',
+            spring: 'Spring',
+            summer: 'Summer',
+            fall: 'Fall'
+        };
+
+        const seasonNames = requestedSeasons.map(s => seasonLabels[s] || s).join('/');
+        return `Preferred: ${seasonNames}`;
+    }
+
+    /**
      * Show batch step screen for current trip
      * @private
      */
@@ -1876,8 +1939,12 @@ export class ModalManager {
             events,
             state.constraints,
             this.#batchWizardState.excludeEventIds,
-            selections // PASS PREVIOUS SELECTIONS
+            selections, // Previous selections for adjacency
+            currentTrip.seasons || [] // Season filter
         );
+
+        // Get season display message
+        const seasonMessage = this.#getSeasonsFilterMessage(currentTrip.seasons);
 
         // Build HTML
         const resultsContainer = document.getElementById('batchResults');
@@ -1909,6 +1976,7 @@ export class ModalManager {
                     <div class="text-sm text-slate-600 dark:text-slate-400">
                         Type: ${StateManager.getEventTypeConfig(currentTrip.type)?.label || currentTrip.type} |
                         Location: ${escapeHTML(currentTrip.location)}
+                        ${seasonMessage ? ` | ${escapeHTML(seasonMessage)}` : ''}
                     </div>
                 </div>
 
