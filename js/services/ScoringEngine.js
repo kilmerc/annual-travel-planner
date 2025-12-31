@@ -7,6 +7,8 @@
  * - Soft constraint (isHardStop=false): -20 points (discouraged)
  * - Location consolidation (same city): +500 points
  * - Location conflict (different city): -1000 points
+ * - Adjacency penalty (±1 week, different location): -15 points (travel fatigue)
+ * - Adjacency penalty (±1 week, same location): -7.5 points (extended visit)
  * - Filter viable: score > -500
  * - Return top 3 weeks sorted by score
  *
@@ -62,25 +64,28 @@ export class ScoringEngine {
     /**
      * Get suggestions for flexible trip in a specific time range
      * @param {string} timeRangeId - Time range ID (current-year, current-quarter, next-3-months, etc.)
-     * @param {number} referenceYear - Reference year for "current-year" option
+     * @param {number|Date} referenceYear - Reference year (number) or reference date (Date object)
      * @param {string} location - Desired location
      * @param {Array} events - Existing events
      * @param {Array} constraints - Existing constraints
+     * @param {Array<string>} excludeEventIds - Event IDs to exclude from scoring
+     * @param {Array} batchSelections - Selected weeks from batch (for adjacency penalty)
      * @returns {Array} Top 3 suggested weeks
      */
-    getSuggestionsForTimeRange(timeRangeId, referenceYear, location, events, constraints) {
+    getSuggestionsForTimeRange(timeRangeId, referenceYear, location, events, constraints, excludeEventIds = [], batchSelections = []) {
         // Get date range for the time range ID
+        // Handle Date object or year number for referenceYear
         const { startDate, endDate } = getTimeRangeDates(timeRangeId, referenceYear);
 
-        // Filter out archived events - they should not affect scheduling
-        const activeEvents = events.filter(e => !e.archived);
+        // Filter out archived events AND excluded events
+        const activeEvents = events.filter(e => !e.archived && !excludeEventIds.includes(e.id));
 
         // Generate candidate weeks (all Mondays in the time range)
         const candidates = getMondaysInRange(startDate, endDate);
 
-        // Score each candidate week
+        // Score each candidate week (pass batchSelections for adjacency)
         const scored = candidates.map(date => {
-            const score = this.scoreWeek(date, location, activeEvents, constraints);
+            const score = this.scoreWeek(date, location, activeEvents, constraints, batchSelections);
             return {
                 date,
                 iso: dateToISO(date),
@@ -103,9 +108,10 @@ export class ScoringEngine {
      * @param {string} location - Desired location
      * @param {Array} events - Existing events
      * @param {Array} constraints - Existing constraints
+     * @param {Array} batchSelections - Selected weeks from batch (for adjacency penalty)
      * @returns {object} Score result with score, reasons, and action
      */
-    scoreWeek(date, location, events, constraints) {
+    scoreWeek(date, location, events, constraints, batchSelections = []) {
         const monday = getMonday(date);
         const iso = dateToISO(monday);
         let score = 100; // Base score
@@ -151,6 +157,35 @@ export class ScoringEngine {
             } else {
                 score -= 1000; // Conflict penalty
                 reasons.push(`Already in ${trip.location}`);
+            }
+        });
+
+        // Adjacency penalties: Discourage back-to-back travel
+        // Check adjacency to existing events
+        events.forEach(event => {
+            if (this.#weeksAreAdjacent(iso, event.startDate)) {
+                const isSameLocation = this.#locationsMatch(location, event.location);
+                const penalty = isSameLocation ? -7.5 : -15;
+                score += penalty;
+                reasons.push(
+                    isSameLocation
+                        ? `Adjacent to ${event.location} trip (same location, light penalty)`
+                        : `Adjacent to ${event.location} trip (travel fatigue penalty)`
+                );
+            }
+        });
+
+        // Check adjacency to batch selections
+        batchSelections.forEach(selection => {
+            if (this.#weeksAreAdjacent(iso, selection.week)) {
+                const isSameLocation = this.#locationsMatch(location, selection.location);
+                const penalty = isSameLocation ? -7.5 : -15;
+                score += penalty;
+                reasons.push(
+                    isSameLocation
+                        ? `Adjacent to planned ${selection.location} trip (same location, light penalty)`
+                        : `Adjacent to planned ${selection.location} trip (travel fatigue penalty)`
+                );
             }
         });
 
@@ -349,6 +384,22 @@ export class ScoringEngine {
         const l2 = (loc2 || '').toLowerCase().trim();
 
         return l1.includes(l2) || l2.includes(l1);
+    }
+
+    /**
+     * Check if two weeks are adjacent (±1 week apart)
+     * @private
+     * @param {string} week1ISO - ISO date string (YYYY-MM-DD)
+     * @param {string} week2ISO - ISO date string (YYYY-MM-DD)
+     * @returns {boolean} True if weeks are adjacent
+     */
+    #weeksAreAdjacent(week1ISO, week2ISO) {
+        // Parse in local time to avoid timezone issues
+        const week1 = new Date(week1ISO + 'T00:00:00');
+        const week2 = new Date(week2ISO + 'T00:00:00');
+        const daysDiff = Math.abs((week2 - week1) / (1000 * 60 * 60 * 24));
+        // Adjacent = exactly 7 days apart (one week before/after)
+        return daysDiff === 7;
     }
 }
 

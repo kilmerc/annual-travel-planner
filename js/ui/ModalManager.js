@@ -14,7 +14,7 @@ import DataService from '../services/DataService.js';
 import TutorialService from '../services/TutorialService.js';
 import ToastService from '../services/ToastService.js';
 import ConfirmDialog from '../services/ConfirmDialog.js';
-import { formatDate, getFriday, dateToISO } from '../services/DateService.js';
+import { formatDate, getFriday, getMonday, dateToISO } from '../services/DateService.js';
 import ComboBox from './ComboBox.js';
 import { BUILT_IN_LOCATIONS } from '../config/calendarConfig.js';
 import { escapeHTML } from '../utils/htmlSanitizer.js';
@@ -501,6 +501,16 @@ export class ModalManager {
         const btnGenerateBatchPlan = document.getElementById('btnGenerateBatchPlan');
         if (btnGenerateBatchPlan) {
             btnGenerateBatchPlan.addEventListener('click', () => this.#generateBatchPlan());
+        }
+
+        const btnImportExistingTrips = document.getElementById('btnImportExistingTrips');
+        if (btnImportExistingTrips) {
+            btnImportExistingTrips.addEventListener('click', () => this.#openTripImportModal());
+        }
+
+        const btnConfirmImportTrips = document.getElementById('btnConfirmImportTrips');
+        if (btnConfirmImportTrips) {
+            btnConfirmImportTrips.addEventListener('click', () => this.#confirmTripImport());
         }
 
         // Export/Import buttons
@@ -1214,38 +1224,37 @@ export class ModalManager {
         // Get the selected time range
         const timeRangeId = document.getElementById('batchTimeRange').value;
 
-        // Collect batch trip data
-        const batchTrips = Array.from(container.children).map((row) => {
-            const title = row.querySelector('.batch-title').value.trim();
-            const type = row.typeComboBox ? row.typeComboBox.getValue() : '';
-            const locationSelect = row.querySelector('.batch-location-select').value;
-            const location = locationSelect === 'custom'
-                ? row.querySelector('.batch-location-custom').value.trim()
-                : locationSelect;
-            const canConsolidate = row.querySelector('.can-consolidate').checked;
-
-            return { title, type, location, canConsolidate };
-        }).filter(t => t.location);
+        // Collect batch trip data using helper method
+        const batchTrips = this.#collectBatchTrips(container);
 
         if (batchTrips.length === 0) {
             ToastService.warning('Please enter locations for your trips');
             return;
         }
 
+        // Collect all original event IDs to exclude from scoring
+        const excludeEventIds = batchTrips
+            .filter(t => t.originalEventId)
+            .map(t => t.originalEventId);
+
+        // Get reference date for time range calculation
+        const referenceDate = this.#getBatchReferenceDate(batchTrips);
+
         // Get suggestions for each trip
         const state = StateManager.getState();
-        const year = StateManager.getYear();
         const events = state.events;
         const constraints = state.constraints;
 
         const results = batchTrips.map((trip, idx) => {
-            // Get suggestions for the selected time range
+            // Get suggestions for the selected time range, EXCLUDING selected trips
             const suggestions = ScoringEngine.getSuggestionsForTimeRange(
                 timeRangeId,
-                year,
+                referenceDate,
                 trip.location,
                 events,
-                constraints
+                constraints,
+                excludeEventIds,
+                [] // No batch selections for now (simple approach)
             );
 
             return {
@@ -1269,27 +1278,70 @@ export class ModalManager {
         let html = '<div class="border-t dark:border-slate-600 pt-4"><h4 class="font-bold mb-4 text-lg">Batch Plan Results</h4>';
 
         results.forEach(({ trip, suggestions, tripIndex }) => {
+            const isExistingTrip = !!trip.originalEventId;
+            const containerClass = isExistingTrip ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600' : 'bg-white dark:bg-slate-800';
+
             html += `
-                <div class="mb-6 p-4 border dark:border-slate-600 rounded bg-white dark:bg-slate-800" data-trip-index="${tripIndex}">
-                    <h5 class="font-semibold mb-3">Trip ${tripIndex + 1}: ${escapeHTML(trip.title || trip.location)}</h5>
+                <div class="mb-6 p-4 border-2 dark:border-slate-600 rounded ${containerClass}" data-trip-index="${tripIndex}">
+                    <h5 class="font-semibold mb-3 flex items-center gap-2">
+                        Trip ${tripIndex + 1}: ${escapeHTML(trip.title || trip.location)}
+                        ${isExistingTrip ? '<span class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded">Existing Trip</span>' : ''}
+                    </h5>
                     ${suggestions.length === 0 ? '<p class="text-slate-500 text-sm">No available weeks found</p>' : ''}
                     <div class="space-y-2">
-                        ${suggestions.map((sug, idx) => `
-                            <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
-                                <label class="flex items-center gap-3 text-sm flex-1 cursor-pointer">
-                                    <input type="radio" name="batch-trip-${tripIndex}" class="batch-week-radio"
-                                           data-trip-index="${tripIndex}"
-                                           data-week="${escapeHTML(sug.iso)}"
-                                           data-title="${escapeHTML(trip.title || '')}"
-                                           data-type="${escapeHTML(trip.type)}"
-                                           data-location="${escapeHTML(trip.location)}">
-                                    <div>
-                                        <strong>Option ${idx + 1}:</strong> Week of ${escapeHTML(sug.iso)}
-                                        <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
-                                    </div>
-                                </label>
+            `;
+
+            // For existing trips, add "Keep original" option first
+            if (isExistingTrip) {
+                const originalEvent = StateManager.getEvent(trip.originalEventId);
+                const originalWeek = originalEvent?.startDate || '';
+                const originalWeekFormatted = originalWeek
+                    ? formatDate(originalWeek, { month: 'short', day: 'numeric' })
+                    : 'Unknown';
+
+                html += `
+                    <div class="flex justify-between items-center p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-600 rounded">
+                        <label class="flex items-center gap-3 text-sm flex-1 cursor-pointer">
+                            <input type="radio" name="batch-trip-${tripIndex}" class="batch-week-radio cursor-pointer"
+                                   data-trip-index="${tripIndex}"
+                                   data-week="${escapeHTML(originalWeek)}"
+                                   data-original-week="true"
+                                   data-original-event-id="${escapeHTML(trip.originalEventId)}"
+                                   data-action="keep"
+                                   checked>
+                            <div>
+                                <strong><i class="fas fa-anchor mr-1"></i>Keep Current Week:</strong> Week of ${escapeHTML(originalWeekFormatted)}
+                                <span class="text-xs text-slate-500 ml-2">(No change)</span>
                             </div>
-                        `).join('')}
+                        </label>
+                    </div>
+                `;
+            }
+
+            // Add suggestion options
+            suggestions.forEach((sug, idx) => {
+                const checkedAttr = !isExistingTrip && idx === 0 ? 'checked' : '';
+                html += `
+                    <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
+                        <label class="flex items-center gap-3 text-sm flex-1 cursor-pointer">
+                            <input type="radio" name="batch-trip-${tripIndex}" class="batch-week-radio cursor-pointer"
+                                   data-trip-index="${tripIndex}"
+                                   data-week="${escapeHTML(sug.iso)}"
+                                   data-title="${escapeHTML(trip.title || '')}"
+                                   data-type="${escapeHTML(trip.type)}"
+                                   data-location="${escapeHTML(trip.location)}"
+                                   ${isExistingTrip ? `data-original-event-id="${escapeHTML(trip.originalEventId)}"` : ''}
+                                   ${checkedAttr}>
+                            <div>
+                                <strong>${isExistingTrip ? 'Move to' : `Option ${idx + 1}:`}</strong> Week of ${escapeHTML(sug.iso)}
+                                <span class="text-xs text-slate-500 ml-2">(Score: ${sug.score})</span>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            });
+
+            html += `
                     </div>
                 </div>
             `;
@@ -1298,7 +1350,7 @@ export class ModalManager {
         html += `
             <div class="border-t dark:border-slate-600 pt-4 mt-4">
                 <button id="btnAddSelectedBatchTrips" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded shadow-sm font-medium transition">
-                    <i class="fas fa-check mr-2"></i>Add Selected Trips to Calendar
+                    <i class="fas fa-check mr-2"></i>Apply Changes to Calendar
                 </button>
             </div>
         `;
@@ -1309,6 +1361,11 @@ export class ModalManager {
 
         // Track selected weeks for real-time validation
         const selectedWeeks = new Set();
+
+        // Initialize with "keep original" selections
+        resultsContainer.querySelectorAll('.batch-week-radio[data-action="keep"]:checked').forEach(radio => {
+            selectedWeeks.add(radio.dataset.week);
+        });
 
         // Add event listeners for radio buttons
         resultsContainer.querySelectorAll('.batch-week-radio').forEach(radio => {
@@ -1322,7 +1379,6 @@ export class ModalManager {
                 // Disable radio buttons for weeks that are selected in other trips
                 resultsContainer.querySelectorAll('.batch-week-radio').forEach(r => {
                     const week = r.dataset.week;
-                    const tripIndex = r.dataset.tripIndex;
                     const isThisRadioChecked = r.checked;
 
                     // Disable if this week is selected by a different trip
@@ -1339,49 +1395,376 @@ export class ModalManager {
             });
         });
 
-        // Add event listener for "Add Selected Trips" button
+        // Add event listener for "Apply Changes" button
         const addSelectedBtn = document.getElementById('btnAddSelectedBatchTrips');
         if (addSelectedBtn) {
             addSelectedBtn.addEventListener('click', () => {
-                const selectedRadios = resultsContainer.querySelectorAll('.batch-week-radio:checked');
+                this.#applyBatchChanges(resultsContainer);
+            });
+        }
+    }
 
-                if (selectedRadios.length === 0) {
-                    ToastService.warning('Please select at least one trip to add');
-                    return;
-                }
+    /**
+     * Apply batch changes to calendar
+     * @private
+     * @param {HTMLElement} resultsContainer - Results container element
+     */
+    #applyBatchChanges(resultsContainer) {
+        const selectedRadios = resultsContainer.querySelectorAll('.batch-week-radio:checked');
 
-                // Add all selected trips
-                selectedRadios.forEach(radio => {
+        if (selectedRadios.length === 0) {
+            ToastService.warning('Please select at least one trip to add');
+            return;
+        }
+
+        let updateCount = 0;
+        let createCount = 0;
+        let keepCount = 0;
+
+        // Process each selected radio
+        selectedRadios.forEach(radio => {
+            const originalEventId = radio.dataset.originalEventId;
+            const isKeepOriginal = radio.dataset.action === 'keep';
+
+            if (originalEventId) {
+                // Existing trip
+                if (isKeepOriginal) {
+                    // No-op: Keep trip as-is
+                    keepCount++;
+                } else {
+                    // Update trip to new week
+                    const newWeek = radio.dataset.week;
                     const title = radio.dataset.title;
                     const type = radio.dataset.type;
                     const location = radio.dataset.location;
-                    const date = radio.dataset.week;
 
-                    StateManager.addEvent({
-                        id: Date.now().toString(),
-                        title: title || `Visit ${location}`,
-                        type: type || 'division',
-                        location,
-                        startDate: date,
-                        duration: 1,
-                        isFixed: false
+                    StateManager.updateEvent(originalEventId, {
+                        title: title || StateManager.getEvent(originalEventId).title,
+                        type: type || StateManager.getEvent(originalEventId).type,
+                        location: location || StateManager.getEvent(originalEventId).location,
+                        startDate: newWeek,
+                        endDate: null, // Flexible trip
+                        isFixed: false,
+                        duration: 1
                     });
+
+                    updateCount++;
+                }
+            } else {
+                // New trip
+                const title = radio.dataset.title;
+                const type = radio.dataset.type;
+                const location = radio.dataset.location;
+                const date = radio.dataset.week;
+
+                StateManager.addEvent({
+                    id: Date.now().toString(),
+                    title: title || `Visit ${location}`,
+                    type: type || 'division',
+                    location,
+                    startDate: date,
+                    duration: 1,
+                    isFixed: false
                 });
 
-                // Clear results and show success
-                resultsContainer.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-check-circle text-green-600 text-5xl mb-4"></i>
-                        <p class="text-lg font-semibold text-green-600 dark:text-green-400">
-                            ${selectedRadios.length} trip${selectedRadios.length > 1 ? 's' : ''} added to calendar!
-                        </p>
-                        <button class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="document.getElementById('batchResults').classList.add('hidden')">
-                            Close
-                        </button>
-                    </div>
-                `;
-            });
+                createCount++;
+            }
+        });
+
+        // Clear results and show success
+        const totalChanges = updateCount + createCount;
+        const summaryParts = [];
+        if (createCount > 0) summaryParts.push(`${createCount} new trip${createCount > 1 ? 's' : ''} added`);
+        if (updateCount > 0) summaryParts.push(`${updateCount} trip${updateCount > 1 ? 's' : ''} rescheduled`);
+        if (keepCount > 0) summaryParts.push(`${keepCount} trip${keepCount > 1 ? 's' : ''} kept unchanged`);
+
+        resultsContainer.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-check-circle text-green-600 text-5xl mb-4"></i>
+                <p class="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">
+                    Batch plan applied successfully!
+                </p>
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                    ${summaryParts.join(', ')}
+                </p>
+                <button class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="document.getElementById('batchResults').classList.add('hidden')">
+                    Close
+                </button>
+            </div>
+        `;
+    }
+
+    /**
+     * Open trip import modal
+     * @private
+     */
+    #openTripImportModal() {
+        const state = StateManager.getState();
+        const currentYear = StateManager.getYear();
+
+        // Filter trips for current year, non-archived
+        const currentYearTrips = state.events.filter(e => {
+            if (e.archived) return false;
+            const eventDate = new Date(e.startDate + 'T00:00:00');
+            const eventYear = eventDate.getFullYear();
+            return eventYear === currentYear;
+        });
+
+        if (currentYearTrips.length === 0) {
+            ToastService.info('No trips found for current year');
+            return;
         }
+
+        // Populate modal
+        const listContainer = document.getElementById('tripImportList');
+        listContainer.innerHTML = '';
+
+        currentYearTrips.forEach(event => {
+            const typeConfig = StateManager.getEventTypeConfig(event.type);
+            const typeLabel = typeConfig?.label || event.type;
+
+            const startDate = formatDate(event.startDate, { month: 'short', day: 'numeric' });
+            const endDate = event.endDate
+                ? formatDate(event.endDate, { month: 'short', day: 'numeric' })
+                : formatDate(getFriday(new Date(event.startDate + 'T00:00:00')), { month: 'short', day: 'numeric' });
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'flex items-center gap-3 p-3 border dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+            itemEl.innerHTML = `
+                <input type="checkbox" class="trip-import-checkbox cursor-pointer" data-event-id="${escapeHTML(event.id)}" id="import-${escapeHTML(event.id)}">
+                <label for="import-${escapeHTML(event.id)}" class="flex-1 cursor-pointer">
+                    <div class="font-medium text-slate-700 dark:text-slate-200">${escapeHTML(event.title)}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                        <span class="inline-block px-2 py-0.5 rounded text-xs mr-2" style="background-color: ${typeConfig?.color || '#6b7280'}22; color: ${typeConfig?.color || '#6b7280'}">
+                            ${escapeHTML(typeLabel)}
+                        </span>
+                        ${escapeHTML(event.location)} • ${escapeHTML(startDate)} - ${escapeHTML(endDate)}
+                    </div>
+                </label>
+            `;
+
+            listContainer.appendChild(itemEl);
+        });
+
+        this.open('tripImportModal');
+    }
+
+    /**
+     * Confirm trip import
+     * @private
+     */
+    #confirmTripImport() {
+        const checkboxes = document.querySelectorAll('.trip-import-checkbox:checked');
+
+        if (checkboxes.length === 0) {
+            ToastService.warning('Please select at least one trip to import');
+            return;
+        }
+
+        const eventIds = Array.from(checkboxes).map(cb => cb.dataset.eventId);
+
+        // Populate batch form with selected trips
+        this.#populateBatchFormWithTrips(eventIds);
+
+        this.close('tripImportModal');
+        ToastService.success(`Imported ${eventIds.length} trip${eventIds.length > 1 ? 's' : ''}`);
+
+        // Update reference date selector visibility
+        const container = document.getElementById('batchTripsContainer');
+        const batchTrips = this.#collectBatchTrips(container);
+        this.#updateReferenceDateSelector(batchTrips);
+    }
+
+    /**
+     * Populate batch form with existing trips
+     * @private
+     * @param {Array<string>} eventIds - Array of event IDs
+     */
+    #populateBatchFormWithTrips(eventIds) {
+        const container = document.getElementById('batchTripsContainer');
+
+        eventIds.forEach(eventId => {
+            const event = StateManager.getEvent(eventId);
+            if (!event) return;
+
+            const index = container.children.length;
+            const tripRow = document.createElement('div');
+            tripRow.className = 'p-4 border-2 border-indigo-300 dark:border-indigo-600 rounded bg-indigo-50 dark:bg-indigo-900/20 space-y-3';
+            tripRow.dataset.index = index;
+            tripRow.dataset.originalEventId = eventId; // CRITICAL: Track original event
+
+            tripRow.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <h4 class="font-semibold text-sm text-slate-700 dark:text-slate-200">Trip ${index + 1}</h4>
+                        <span class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded">Existing Trip</span>
+                    </div>
+                    <button type="button" class="remove-batch-trip text-red-500 hover:text-red-700" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Title</label>
+                        <input type="text" class="batch-title w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200" placeholder="e.g. London Team Visit" value="${escapeHTML(event.title)}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Type</label>
+                        <div class="batch-type-container"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location</label>
+                    <select class="batch-location-select w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200">
+                        <option value="">Select Division...</option>
+                        <option value="DAL" ${event.location === 'DAL' ? 'selected' : ''}>DAL</option>
+                        <option value="VAL" ${event.location === 'VAL' ? 'selected' : ''}>VAL</option>
+                        <option value="VCE" ${event.location === 'VCE' ? 'selected' : ''}>VCE</option>
+                        <option value="VCW" ${event.location === 'VCW' ? 'selected' : ''}>VCW</option>
+                        <option value="VER" ${event.location === 'VER' ? 'selected' : ''}>VER</option>
+                        <option value="VIN" ${event.location === 'VIN' ? 'selected' : ''}>VIN</option>
+                        <option value="VNE" ${event.location === 'VNE' ? 'selected' : ''}>VNE</option>
+                        <option value="VNY" ${event.location === 'VNY' ? 'selected' : ''}>VNY</option>
+                        <option value="VSC" ${event.location === 'VSC' ? 'selected' : ''}>VSC</option>
+                        <option value="VTX" ${event.location === 'VTX' ? 'selected' : ''}>VTX</option>
+                        <option value="VUT" ${event.location === 'VUT' ? 'selected' : ''}>VUT</option>
+                        <option value="custom" ${!BUILT_IN_LOCATIONS.includes(event.location) ? 'selected' : ''}>Other Location (Custom)...</option>
+                    </select>
+                    <input type="text" class="batch-location-custom w-full border dark:border-slate-600 rounded p-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-200 mt-2 ${BUILT_IN_LOCATIONS.includes(event.location) ? 'hidden' : ''}" placeholder="Enter city" value="${!BUILT_IN_LOCATIONS.includes(event.location) ? escapeHTML(event.location) : ''}">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" class="can-consolidate cursor-pointer" ${event.canConsolidate ? 'checked' : ''}>
+                    <label class="text-xs text-slate-700 dark:text-slate-200 cursor-pointer">Can consolidate with other trips</label>
+                </div>
+            `;
+
+            container.appendChild(tripRow);
+
+            // Create ComboBox for trip type
+            const eventTypeConfigs = StateManager.getAllEventTypeConfigs();
+            const eventTypeOptions = Object.entries(eventTypeConfigs).map(([id, config]) => ({
+                value: id,
+                label: config.label,
+                isBuiltIn: config.isBuiltIn
+            }));
+
+            const typeContainer = tripRow.querySelector('.batch-type-container');
+            const typeComboBox = new ComboBox({
+                options: eventTypeOptions,
+                value: event.type, // Pre-select current type
+                placeholder: 'Select trip type...',
+                onChange: (value) => {},
+                onAdd: (value, label) => {
+                    EventBus.emit('type-config:open', { kind: 'event', typeId: null, suggestedId: value, suggestedLabel: label });
+                },
+                onDelete: async (value) => {
+                    const result = await ConfirmDialog.confirm(
+                        'Delete Trip Type',
+                        `Are you sure you want to delete this trip type? This action cannot be undone.`
+                    );
+                    if (result) {
+                        StateManager.deleteEventTypeConfig(value);
+                        ToastService.success('Trip type deleted');
+                    }
+                }
+            });
+            typeComboBox.render(typeContainer);
+            tripRow.typeComboBox = typeComboBox;
+
+            // Add remove listener
+            tripRow.querySelector('.remove-batch-trip').addEventListener('click', (e) => {
+                e.target.closest('[data-index]').remove();
+                // Update reference date selector when trips removed
+                const updatedTrips = this.#collectBatchTrips(container);
+                this.#updateReferenceDateSelector(updatedTrips);
+            });
+
+            // Add location dropdown toggle listener
+            const locationSelect = tripRow.querySelector('.batch-location-select');
+            const customInput = tripRow.querySelector('.batch-location-custom');
+
+            locationSelect.addEventListener('change', () => {
+                if (locationSelect.value === 'custom') {
+                    customInput.classList.remove('hidden');
+                } else {
+                    customInput.classList.add('hidden');
+                    customInput.value = '';
+                }
+            });
+        });
+    }
+
+    /**
+     * Calculate reference date for batch planning
+     * @private
+     * @param {Array} batchTrips - Batch trips
+     * @returns {Date} Reference date
+     */
+    #getBatchReferenceDate(batchTrips) {
+        const referenceMode = document.querySelector('input[name="batchReferenceDate"]:checked')?.value;
+
+        if (referenceMode === 'current') {
+            return new Date();
+        }
+
+        // Get earliest trip date from existing trips
+        const existingTrips = batchTrips.filter(t => t.originalEventId);
+        if (existingTrips.length === 0) {
+            return new Date(); // Fallback to current if no existing trips
+        }
+
+        const earliestDate = existingTrips.reduce((earliest, trip) => {
+            const event = StateManager.getEvent(trip.originalEventId);
+            if (!event) return earliest;
+            const tripDate = new Date(event.startDate + 'T00:00:00');
+            return !earliest || tripDate < earliest ? tripDate : earliest;
+        }, null);
+
+        return earliestDate || new Date();
+    }
+
+    /**
+     * Update reference date selector visibility and values
+     * @private
+     * @param {Array} batchTrips - Batch trips
+     */
+    #updateReferenceDateSelector(batchTrips) {
+        const selector = document.getElementById('batchReferenceDateSelector');
+        const existingTrips = batchTrips.filter(t => t.originalEventId);
+
+        if (existingTrips.length > 0) {
+            selector.classList.remove('hidden');
+
+            // Calculate and display earliest date
+            const earliestDate = this.#getBatchReferenceDate(batchTrips);
+            document.getElementById('earliestTripDate').textContent = formatDate(earliestDate, { month: 'short', year: 'numeric' });
+
+            // Display current date
+            const currentDate = new Date();
+            document.getElementById('currentDate').textContent = formatDate(currentDate, { month: 'short', year: 'numeric' });
+        } else {
+            selector.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Collect batch trips from container
+     * @private
+     * @param {HTMLElement} container - Batch trips container
+     * @returns {Array} Array of batch trip objects
+     */
+    #collectBatchTrips(container) {
+        return Array.from(container.children).map((row) => {
+            const title = row.querySelector('.batch-title').value.trim();
+            const type = row.typeComboBox ? row.typeComboBox.getValue() : '';
+            const locationSelect = row.querySelector('.batch-location-select').value;
+            const customLocation = row.querySelector('.batch-location-custom').value.trim();
+            const location = locationSelect === 'custom' ? customLocation : locationSelect;
+            const canConsolidate = row.querySelector('.can-consolidate').checked;
+            const originalEventId = row.dataset.originalEventId || null;
+
+            return { title, type, location, canConsolidate, originalEventId };
+        }).filter(t => t.location);
     }
 }
 

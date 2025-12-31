@@ -229,60 +229,64 @@ export function overlapsWithWeek(startDate, endDate, weekDate) {
 
 /**
  * Get the current quarter (1-4)
+ * @param {Date|null} referenceDate - Optional reference date (defaults to current date)
  * @returns {number} Current quarter (1=Jan-Mar, 2=Apr-Jun, 3=Jul-Sep, 4=Oct-Dec)
  */
-export function getCurrentQuarter() {
-    const now = new Date();
-    const month = now.getMonth(); // 0-11
+export function getCurrentQuarter(referenceDate = null) {
+    const date = referenceDate || new Date();
+    const month = date.getMonth(); // 0-11
     return Math.floor(month / 3) + 1;
 }
 
 /**
  * Get date range for a time range ID
  * @param {string} timeRangeId - Time range ID (current-year, current-quarter, next-3-months, etc.)
- * @param {number} referenceYear - Reference year for "current-year" option
+ * @param {number|Date} referenceYear - Reference year (number) or reference date (Date object)
  * @returns {object} Object with startDate and endDate as Date objects
  */
 export function getTimeRangeDates(timeRangeId, referenceYear) {
-    const now = new Date();
+    // Handle Date object or year number for referenceYear
+    const referenceDate = referenceYear instanceof Date ? referenceYear : new Date();
+    const year = referenceYear instanceof Date ? referenceYear.getFullYear() : referenceYear;
+
     let startDate, endDate;
 
     switch (timeRangeId) {
         case 'current-year':
-            startDate = new Date(referenceYear, 0, 1); // Jan 1
-            endDate = new Date(referenceYear, 11, 31); // Dec 31
+            startDate = new Date(year, 0, 1); // Jan 1
+            endDate = new Date(year, 11, 31); // Dec 31
             break;
 
         case 'current-quarter':
-            const quarter = getCurrentQuarter();
+            const quarter = getCurrentQuarter(referenceDate);
             const quarterStartMonth = (quarter - 1) * 3;
             const quarterEndMonth = quarterStartMonth + 2;
-            startDate = new Date(now.getFullYear(), quarterStartMonth, 1);
-            endDate = new Date(now.getFullYear(), quarterEndMonth + 1, 0); // Last day of quarter
+            startDate = new Date(referenceDate.getFullYear(), quarterStartMonth, 1);
+            endDate = new Date(referenceDate.getFullYear(), quarterEndMonth + 1, 0); // Last day of quarter
             break;
 
         case 'next-3-months':
-            startDate = new Date(now);
-            endDate = new Date(now);
+            startDate = new Date(referenceDate);
+            endDate = new Date(referenceDate);
             endDate.setMonth(endDate.getMonth() + 3);
             break;
 
         case 'next-6-months':
-            startDate = new Date(now);
-            endDate = new Date(now);
+            startDate = new Date(referenceDate);
+            endDate = new Date(referenceDate);
             endDate.setMonth(endDate.getMonth() + 6);
             break;
 
         case 'next-12-months':
-            startDate = new Date(now);
-            endDate = new Date(now);
+            startDate = new Date(referenceDate);
+            endDate = new Date(referenceDate);
             endDate.setFullYear(endDate.getFullYear() + 1);
             break;
 
         default:
             // Default to current year
-            startDate = new Date(referenceYear, 0, 1);
-            endDate = new Date(referenceYear, 11, 31);
+            startDate = new Date(year, 0, 1);
+            endDate = new Date(year, 11, 31);
     }
 
     return { startDate, endDate };

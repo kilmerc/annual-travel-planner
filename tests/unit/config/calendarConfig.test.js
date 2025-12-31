@@ -152,9 +152,12 @@ describe('calendarConfig', () => {
   });
 
   describe('CONSTRAINT_TYPES', () => {
-    it('should have no built-in constraint types (all user-defined in StateManager)', () => {
+    it('should have built-in constraint types', () => {
       const keys = Object.keys(CONSTRAINT_TYPES);
-      expect(keys).toHaveLength(0);
+      expect(keys.length).toBeGreaterThan(0);
+      expect(keys).toContain('VACATION');
+      expect(keys).toContain('HOLIDAY');
+      expect(keys).toContain('BLACKOUT');
     });
 
     it('should be frozen (immutable)', () => {
@@ -163,9 +166,12 @@ describe('calendarConfig', () => {
   });
 
   describe('CONSTRAINT_TYPE_LABELS', () => {
-    it('should have no built-in labels (all user-defined in StateManager)', () => {
+    it('should have built-in labels', () => {
       const keys = Object.keys(CONSTRAINT_TYPE_LABELS);
-      expect(keys).toHaveLength(0);
+      expect(keys.length).toBeGreaterThan(0);
+      expect(keys).toContain('vacation');
+      expect(keys).toContain('holiday');
+      expect(keys).toContain('blackout');
     });
 
     it('should have matching keys with CONSTRAINT_TYPES values', () => {
@@ -180,8 +186,11 @@ describe('calendarConfig', () => {
   });
 
   describe('HARD_CONSTRAINT_TYPES', () => {
-    it('should have no built-in hard constraint types (all user-defined in StateManager)', () => {
-      expect(HARD_CONSTRAINT_TYPES).toHaveLength(0);
+    it('should have built-in hard constraint types', () => {
+      expect(HARD_CONSTRAINT_TYPES.length).toBeGreaterThan(0);
+      expect(HARD_CONSTRAINT_TYPES).toContain('vacation');
+      expect(HARD_CONSTRAINT_TYPES).toContain('holiday');
+      expect(HARD_CONSTRAINT_TYPES).toContain('blackout');
     });
 
     it('should be frozen (immutable)', () => {
@@ -282,16 +291,24 @@ describe('calendarConfig', () => {
     });
 
     it('should have consistent constraint type constants', () => {
-      // Both should be empty since constraint types are user-defined
+      // Both should have built-in types
       const typeKeys = Object.keys(CONSTRAINT_TYPES);
       const labelKeys = Object.keys(CONSTRAINT_TYPE_LABELS);
 
-      expect(typeKeys).toHaveLength(0);
-      expect(labelKeys).toHaveLength(0);
+      expect(typeKeys.length).toBeGreaterThan(0);
+      expect(labelKeys.length).toBeGreaterThan(0);
+
+      // All CONSTRAINT_TYPES values should have labels
+      Object.values(CONSTRAINT_TYPES).forEach(type => {
+        expect(CONSTRAINT_TYPE_LABELS).toHaveProperty(type);
+      });
     });
 
-    it('should have hard constraints as empty (user-defined in StateManager)', () => {
-      expect(HARD_CONSTRAINT_TYPES).toHaveLength(0);
+    it('should have built-in hard constraints', () => {
+      expect(HARD_CONSTRAINT_TYPES.length).toBeGreaterThan(0);
+      expect(HARD_CONSTRAINT_TYPES).toContain('vacation');
+      expect(HARD_CONSTRAINT_TYPES).toContain('holiday');
+      expect(HARD_CONSTRAINT_TYPES).toContain('blackout');
     });
 
     it('should have matching month names length', () => {
